@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AS 관리 - 건설 자재 ERP</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <nav class="nav">
+        <a href="dashboard.html">📊 대시보드</a>
+        <a href="contract.html">📋 견적</a>
+        <a href="inventory.html">📦 재고</a>
+        <a href="order.html">📝 발주</a>
+        <a href="receiving.html">📥 입고</a>
+        <a href="shipment.html">🚚 출고</a>
+        <!-- <a href="purchase.html">🛒 구매</a> -->
+        <a href="as.html" class="active">🔧 AS</a>
+        <a href="materials.html">📁 자재정보</a>
+        <a href="project.html">📊 현장 통합 현황</a>
+    </nav>
+
+    <main class="main">
+        <div class="search-box">
+            <div class="search-row">
+                <select class="filter-select">
+                    <option>상태 전체</option>
+                    <option>접수</option>
+                    <option>회수</option>
+                    <option>수리중</option>
+                    <option>완료</option>
+                </select>
+                <select class="filter-select">
+                    <option>현장 전체</option>
+                    <option>강남 오피스텔</option>
+                    <option>판교 공장</option>
+                </select>
+                <select class="filter-select">
+                    <option>문제유형 전체</option>
+                    <option>초기 불량</option>
+                    <option>고장</option>
+                    <option>파손</option>
+                </select>
+                <div style="display:flex;gap:0.5rem;flex:1;min-width:200px">
+                    <input type="text" class="search-input" placeholder="AS번호/자재명 검색..." style="flex:1">
+                    <button class="btn btn-primary" onclick="handleSearch()">검색</button>
+                </div>
+                <button class="btn btn-secondary" onclick="resetFilters()">초기화</button>
+            </div>
+        </div>
+
+        <div class="summary-box" style="display:flex;justify-content:space-between;align-items:center">
+            <div style="display:flex;flex-wrap:wrap;gap:1.5rem">
+                <span class="summary-item">접수: <strong>5건</strong></span>
+                <span class="summary-item">회수: <strong>3건</strong></span>
+                <span class="summary-item">수리중: <strong>2건</strong></span>
+                <span class="summary-item">완료: <strong>45건</strong></span>
+                <span class="summary-item">평균 처리: <strong>2.3일</strong></span>
+            </div>
+            <button class="btn btn-primary" onclick="openAddModal()" style="white-space:nowrap">+ 새 AS 접수</button>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>AS 번호</th>
+                        <th>현장</th>
+                        <th>자재</th>
+                        <th>문제 유형</th>
+                        <th>접수일</th>
+                        <th>경과</th>
+                        <th>상태</th>
+                        <th>작업</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>AS-2024-001</strong></td>
+                        <td>강남 오피스텔</td>
+                        <td>IP카메라 2MP</td>
+                        <td>초기 불량</td>
+                        <td>2024-01-20</td>
+                        <td>3일</td>
+                        <td><span class="status-badge status-pending">수리중</span></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td><strong>AS-2024-002</strong></td>
+                        <td>판교 공장</td>
+                        <td>NVR 16채널</td>
+                        <td>고장</td>
+                        <td>2024-01-22</td>
+                        <td>1일</td>
+                        <td><span class="status-badge status-approved">회수</span></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td><strong>AS-2024-003</strong></td>
+                        <td>인천 물류센터</td>
+                        <td>온도 센서</td>
+                        <td>파손</td>
+                        <td>2024-01-25</td>
+                        <td>0일</td>
+                        <td><span class="status-badge status-danger">접수</span></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td><strong>AS-2024-004</strong></td>
+                        <td>강남 오피스텔</td>
+                        <td>IP카메라 4MP</td>
+                        <td>초기 불량</td>
+                        <td>2024-01-18</td>
+                        <td>5일</td>
+                        <td><span class="status-badge status-ok">준비완료</span></td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- 신규 AS 접수 모달 -->
+    <div class="modal" id="addModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">새 AS 접수</h2>
+                <button class="close-btn" onclick="closeModal('addModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">현장 *</label>
+                        <select class="form-select" id="siteSelect" required>
+                            <option value="">현장 선택</option>
+                            <option value="SITE-001">강남 오피스텔 - PRJ-2024-001</option>
+                            <option value="SITE-002">판교 공장 - PRJ-2024-002</option>
+                            <option value="SITE-003">인천 물류센터 - PRJ-2024-003</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">발주</label>
+                        <select class="form-select" id="orderSelect">
+                            <option value="">발주 선택</option>
+                            <option value="IT260115-01">IT260115-01 - 강남 오피스텔 CCTV</option>
+                            <option value="IT260118-01">IT260118-01 - 판교 공장 센서</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">자재 *</label>
+                        <input type="text" class="form-input" id="materialInput" placeholder="자재명 입력" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">시리얼 번호</label>
+                        <input type="text" class="form-input" id="serialInput" placeholder="시리얼 번호 (선택)">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">문제 유형 *</label>
+                        <select class="form-select" id="issueType" required>
+                            <option value="">선택</option>
+                            <option value="초기 불량">초기 불량</option>
+                            <option value="고장">고장</option>
+                            <option value="파손">파손</option>
+                            <option value="오작동">오작동</option>
+                            <option value="기타">기타</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">접수일 *</label>
+                        <input type="datetime-local" class="form-input" id="receiveDate" value="2024-02-03T14:00"
+                            required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">문제 설명 *</label>
+                    <textarea class="form-textarea" id="issueDesc" placeholder="문제 상황을 상세히 입력해주세요" rows="4"
+                        required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">접수자</label>
+                    <input type="text" class="form-input" id="receiverInput" value="이현장" placeholder="접수자명">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('addModal')">취소</button>
+                <button class="btn btn-primary" onclick="submitAS()">접수 등록</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="detailModal">
+        <div class="modal-content lg">
+            <div class="modal-header">
+                <h2 class="modal-title">🔧 AS 상세 - AS-2024-001</h2>
+                <button class="close-btn" onclick="closeModal('detailModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="info-box">
+                    <div class="info-row"><span class="info-label">AS 번호</span><strong>AS-2024-001</strong></div>
+                    <div class="info-row"><span class="info-label">상태</span><span class="status-badge status-pending">수리
+                            중</span></div>
+                    <div class="info-row"><span class="info-label">현장</span><span>강남 오피스텔 (SITE-2024-001)</span></div>
+                    <div class="info-row"><span class="info-label">자재</span><span>IP카메라 2MP (CAM-001)</span></div>
+                    <div class="info-row"><span class="info-label">시리얼</span><span>CAM-2024-015</span></div>
+                    <div class="info-row"><span class="info-label">문제 유형</span><strong style="color:var(--danger)">초기
+                            불량</strong></div>
+                    <div class="info-row"><span class="info-label">접수일</span><span>2024-01-20 10:00</span></div>
+                    <div class="info-row"><span class="info-label">경과 시간</span><strong style="color:var(--warning)">3일
+                            2시간</strong></div>
+                </div>
+                <div style="background:var(--gray-50);padding:1rem;border-radius:6px;margin-bottom:1rem">
+                    <div style="font-weight:600;margin-bottom:0.375rem;font-size:0.8125rem">문제 설명</div>
+                    <div style="font-size:0.8125rem;color:var(--gray-500)">영상이 나오지 않음. 전원은 들어오나 화면 출력 안 됨. 케이블 교체해도 동일
+                        증상.</div>
+                </div>
+                <div style="font-weight:600;margin-bottom:0.5rem;font-size:0.875rem">🔄 처리 진행 상황</div>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-time">2024-01-20 10:00</div>
+                        <div class="timeline-content"><strong>접수 완료</strong> - 이현장</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-time">2024-01-21 09:00</div>
+                        <div class="timeline-content"><strong>회수 완료</strong> - 김창고<br><span
+                                style="color:var(--gray-500)">현장에서 회수 완료. AS 창고 입고.</span></div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-time">2024-01-21 14:00</div>
+                        <div class="timeline-content"><strong>검수 완료</strong> - 김수리<br><span
+                                style="color:var(--gray-500)">메인보드 불량 의심.</span></div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-time">2024-01-22 09:00</div>
+                        <div class="timeline-content"><strong>수리 중</strong> - 김수리<br><span
+                                style="color:var(--gray-500)">메인보드 교체 작업 시작.</span></div>
+                    </div>
+                    <div class="timeline-item pending">
+                        <div class="timeline-time">예정</div>
+                        <div class="timeline-content" style="color:var(--gray-500)">재출고 대기</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('detailModal')">닫기</button>
+                <button class="btn" style="background:var(--warning);color:#fff">상태 변경</button>
+                <!-- <button class="btn btn-primary">재출고 처리</button> -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showDetail() { document.getElementById('detailModal').classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        function openAddModal() { document.getElementById('addModal').classList.add('active'); }
+
+        function submitAS() {
+            const site = document.getElementById('siteSelect').value;
+            const material = document.getElementById('materialInput').value;
+            const issueType = document.getElementById('issueType').value;
+            const issueDesc = document.getElementById('issueDesc').value;
+
+            if (!site || !material || !issueType || !issueDesc) {
+                alert('필수 항목을 모두 입력해주세요');
+                return;
+            }
+
+            alert('✅ AS가 접수되었습니다!\nAS 번호: AS-2024-005');
+            closeModal('addModal');
+        }
+
+        document.querySelectorAll('.modal').forEach(m => m.onclick = e => { if (e.target.classList.contains('modal')) e.target.classList.remove('active'); });
+    </script>
+</body>
+
+</html>

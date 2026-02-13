@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>대시보드 - 건설 자재 ERP</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="nav">
+        <a href="dashboard.html" class="active">📊 대시보드</a>
+        <a href="contract.html">📋 견적</a>
+        <a href="inventory.html">📦 재고</a>
+        <a href="order.html">📝 발주</a>
+        <a href="receiving.html">📥 입고</a>
+        <a href="shipment.html">🚚 출고</a>
+        <!-- <a href="purchase.html">🛒 구매</a> -->
+        <a href="as.html">🔧 AS</a>
+        <a href="materials.html">📁 자재정보</a>
+        <a href="project.html">📊 현장 통합 현황</a>
+    </nav>
+    
+    <main class="main">
+        <div class="kpi-grid">
+            <div class="kpi-card" onclick="location.href='inventory.html'">
+                <div class="kpi-label">📦 총 재고</div>
+                <div class="kpi-value">1,234</div>
+                <div class="kpi-change">↑ 5.2% 전월대비</div>
+            </div>
+            <div class="kpi-card" onclick="location.href='contract.html'">
+                <div class="kpi-label">🏗️ 진행 현장</div>
+                <div class="kpi-value">15</div>
+                <div class="kpi-change">↑ 2개 신규</div>
+            </div>
+            <div class="kpi-card danger" onclick="location.href='inventory.html'">
+                <div class="kpi-label">⚠️ 안전재고 미달</div>
+                <div class="kpi-value">8</div>
+                <div class="kpi-change down">주의 필요</div>
+            </div>
+            <div class="kpi-card" onclick="location.href='contract.html'">
+                <div class="kpi-label">📋 진행 견적</div>
+                <div class="kpi-value">23</div>
+                <div class="kpi-change">완료율 68%</div>
+            </div>
+            <div class="kpi-card warning" onclick="location.href='as.html'">
+                <div class="kpi-label">🔧 처리중 AS</div>
+                <div class="kpi-value">12</div>
+                <div class="kpi-change">평균 2.3일</div>
+            </div>
+            <div class="kpi-card warning" onclick="location.href='purchase.html'">
+                <div class="kpi-label">📦 미입고 구매</div>
+                <div class="kpi-value">5</div>
+                <div class="kpi-change down">지연 2건</div>
+            </div>
+        </div>
+        
+        <div class="widget-grid">
+            <div class="widget" style="grid-column: span 2;">
+                <div class="widget-header">
+                    <span class="widget-title">📊 월별 출고 현황</span>
+                    <select class="filter-select" style="padding: 0.25rem 0.5rem;">
+                        <option>최근 6개월</option>
+                        <option>최근 3개월</option>
+                    </select>
+                </div>
+                <div class="widget-body">
+                    <div class="chart-bar">
+                        <div class="bar" style="height:80%"><span class="bar-value">120</span><span class="bar-label">1월</span></div>
+                        <div class="bar" style="height:97%"><span class="bar-value">145</span><span class="bar-label">2월</span></div>
+                        <div class="bar" style="height:65%"><span class="bar-value">98</span><span class="bar-label">3월</span></div>
+                        <div class="bar" style="height:88%"><span class="bar-value">132</span><span class="bar-label">4월</span></div>
+                        <div class="bar" style="height:73%"><span class="bar-value">110</span><span class="bar-label">5월</span></div>
+                        <div class="bar" style="height:92%"><span class="bar-value">138</span><span class="bar-label">6월</span></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="widget">
+                <div class="widget-header">
+                    <span class="widget-title">🔔 최근 알림</span>
+                    <a href="#" class="widget-link">모두 보기 →</a>
+                </div>
+                <div class="widget-body">
+                    <div class="notification warning">
+                        <div class="notification-text">⚠️ IP카메라 안전재고 미달 (현재: 8개)</div>
+                        <div class="notification-time">2시간 전</div>
+                    </div>
+                    <div class="notification">
+                        <div class="notification-text">📦 PO-2024-015 입고 완료</div>
+                        <div class="notification-time">10분 전</div>
+                    </div>
+                    <div class="notification">
+                        <div class="notification-text">🔧 AS-2024-023 처리 완료</div>
+                        <div class="notification-time">1시간 전</div>
+                    </div>
+                    <div class="notification">
+                        <div class="notification-text">📋 CT-2024-008 견적 체결</div>
+                        <div class="notification-time">2시간 전</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="widget">
+                <div class="widget-header">
+                    <span class="widget-title">🏗️ 현장별 진행 현황</span>
+                    <a href="contract.html" class="widget-link">전체 보기 →</a>
+                </div>
+                <div class="widget-body">
+                    <div style="margin-bottom:1rem">
+                        <div style="display:flex;justify-content:space-between;margin-bottom:0.375rem;font-size:0.8125rem">
+                            <span style="font-weight:600">강남 오피스텔</span>
+                            <span style="color:var(--primary);font-weight:600">80%</span>
+                        </div>
+                        <div class="progress-bar"><div class="progress-fill" style="width:80%"></div></div>
+                        <div style="font-size:0.75rem;color:var(--gray-500);margin-top:0.25rem">계획: 120 | 출고: 96 | 남은: 24</div>
+                    </div>
+                    <div style="margin-bottom:1rem">
+                        <div style="display:flex;justify-content:space-between;margin-bottom:0.375rem;font-size:0.8125rem">
+                            <span style="font-weight:600">판교 공장</span>
+                            <span style="color:var(--warning);font-weight:600">60%</span>
+                        </div>
+                        <div class="progress-bar"><div class="progress-fill medium" style="width:60%"></div></div>
+                        <div style="font-size:0.75rem;color:var(--gray-500);margin-top:0.25rem">계획: 200 | 출고: 120 | 남은: 80</div>
+                    </div>
+                    <div>
+                        <div style="display:flex;justify-content:space-between;margin-bottom:0.375rem;font-size:0.8125rem">
+                            <span style="font-weight:600">인천 물류센터</span>
+                            <span style="color:var(--danger);font-weight:600">30%</span>
+                        </div>
+                        <div class="progress-bar"><div class="progress-fill low" style="width:30%"></div></div>
+                        <div style="font-size:0.75rem;color:var(--gray-500);margin-top:0.25rem">계획: 150 | 출고: 45 | 남은: 105</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

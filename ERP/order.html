@@ -1,0 +1,1793 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>발주 관리 - 건설 자재 ERP</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .draggable-row {
+            cursor: move;
+            transition: background-color 0.2s;
+        }
+        .draggable-row:hover {
+            background-color: var(--gray-50);
+        }
+        .draggable-row.drag-over {
+            border-top: 2px solid var(--primary);
+            background-color: var(--gray-50);
+        }
+        .draggable-row:active {
+            cursor: grabbing;
+        }
+        .modal-content.xl {
+            width: 90vw;
+            max-width: 1200px;
+            max-height: 90vh;
+        }
+        .modal-content.fullscreen {
+            width: 95vw !important;
+            height: 95vh !important;
+            max-width: 95vw !important;
+            max-height: 95vh !important;
+            margin: 2.5vh auto;
+        }
+        .modal-content.fullscreen .modal-body {
+            max-height: calc(95vh - 140px);
+            overflow-y: auto;
+        }
+        #fullscreenToggle:hover {
+            background: var(--gray-200) !important;
+        }
+        .autocomplete-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border: 1px solid var(--gray-300);
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .autocomplete-item {
+            padding: 0.75rem;
+            cursor: pointer;
+            border-bottom: 1px solid var(--gray-100);
+            transition: background-color 0.2s;
+        }
+        .autocomplete-item:hover,
+        .autocomplete-item.selected {
+            background-color: var(--gray-50);
+        }
+        .autocomplete-item:last-child {
+            border-bottom: none;
+        }
+        .autocomplete-item-code {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+            margin-bottom: 0.25rem;
+        }
+        .autocomplete-item-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        .autocomplete-item-info {
+            font-size: 0.8125rem;
+            color: var(--gray-600);
+        }
+        @media (max-width: 1200px) {
+            .contract-select-grid {
+                grid-template-columns: 1fr 2fr !important;
+            }
+            .contract-select-grid > div:nth-child(n+3) {
+                grid-column: span 2;
+            }
+        }
+        @media (max-width: 768px) {
+            .contract-select-grid {
+                grid-template-columns: 1fr !important;
+            }
+            .contract-select-grid > div:nth-child(n+3) {
+                grid-column: span 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <a href="dashboard.html">📊 대시보드</a>
+        <a href="contract.html">📋 견적</a>
+        <a href="inventory.html">📦 재고</a>
+        <a href="order.html" class="active">📝 발주</a>
+        <a href="receiving.html">📥 입고</a>
+        <a href="shipment.html">🚚 출고</a>
+        <!-- <a href="purchase.html">🛒 구매</a> -->
+        <a href="as.html">🔧 AS</a>
+        <a href="materials.html">📁 자재정보</a>
+        <a href="project.html">📊 현장 통합 현황</a>
+    </nav>
+    
+    <main class="main">
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('list')">발주 목록</button>
+            <button class="tab" onclick="switchTab('register')">발주 등록</button>
+        </div>
+        
+        <!-- 발주 목록 탭 -->
+        <div id="listTab" class="tab-content">
+            <div class="search-box">
+                <div class="search-row">
+                    <select class="filter-select"><option>상태 전체</option><option>출고대기</option><option>출고완료</option></select>
+                    <select class="filter-select"><option>견적 전체</option><option>CT-2024-001</option><option>CT-2024-002</option></select>
+                    <div style="display:flex;gap:0.5rem;flex:1;min-width:200px">
+                        <input type="text" class="search-input" placeholder="발주번호/견적명 검색..." style="flex:1">
+                        <button class="btn btn-primary" onclick="handleSearch()">검색</button>
+                    </div>
+                    <button class="btn btn-secondary" onclick="resetFilters()">초기화</button>
+                </div>
+            </div>
+            
+            <div class="summary-box" style="display:flex;justify-content:space-between;align-items:center">
+                <div style="display:flex;flex-wrap:wrap;gap:1.5rem">
+                    <span class="summary-item">전체: <strong>28건</strong></span>
+                    <span class="summary-item">출고대기: <strong>5건</strong></span>
+                    <span class="summary-item">출고완료: <strong>23건</strong></span>
+                </div>
+                <button class="btn btn-primary" onclick="switchTab('register')" style="white-space:nowrap">+ 새 발주 등록</button>
+            </div>
+            
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>발주 번호</th>
+                            <th>본사</th>
+                            <th>현장</th>
+                            <th>견적명</th>
+                            <th>발주일</th>
+                            <th>자재 수</th>
+                            <th>총 수량</th>
+                            <th>상태</th>
+                            <th>작업</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr onclick="showDetail('IT260115-01')" style="cursor:pointer">
+                            <td><strong>IT260115-01</strong></td>
+                            <td>강남건설</td>
+                            <td>강남 오피스텔</td>
+                            <td>
+                                강남 오피스텔 CCTV 설치
+                                <span class="status-badge status-warning" style="margin-left:4px">견적변경</span>
+                            </td>
+                            <td>2024-01-15</td>
+                            <td>5종</td>
+                            <td>120개</td>
+                            <td><span class="status-badge status-active">출고완료</span></td>
+                            <td></td>
+                        </tr>
+                        <tr onclick="showDetail('IT260118-01')" style="cursor:pointer">
+                            <td><strong>IT260118-01</strong></td>
+                            <td>판교건설</td>
+                            <td>판교 공장</td>
+                            <td>
+                                판교 공장 센서 설치
+                                <span class="status-badge status-warning" style="margin-left:4px">견적변경</span>
+                            </td>
+                            <td>2024-01-18</td>
+                            <td>8종</td>
+                            <td>200개</td>
+                            <td><span class="status-badge status-active">출고완료</span></td>
+                            <td></td>
+                        </tr>
+                        <tr onclick="showDetail('IT260125-01')" style="cursor:pointer">
+                            <td><strong>IT260125-01</strong></td>
+                            <td>인천건설</td>
+                            <td>인천 물류센터</td>
+                            <td>인천 물류센터 통합 설치</td>
+                            <td>2024-01-25</td>
+                            <td>12종</td>
+                            <td>150개</td>
+                            <td><span class="status-badge status-pending">출고대기</span></td>
+                            <td></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- 발주 등록 탭 -->
+        <div id="registerTab" class="tab-content" style="display:none">
+            <div class="card" style="margin-bottom:0">
+                <div class="card-header" style="padding:0.5rem 1rem"><span class="card-title" style="font-size:0.9375rem">📝 발주 기본정보</span></div>
+                <div class="card-body" style="padding:0.75rem 1rem">
+                    <!-- 한 줄 배치: 검색(2) + 현장/견적 선택 + 최근 수주 건(1) -->
+                    <div class="contract-select-grid" style="display:grid;grid-template-columns:1.5fr 1.2fr 1.2fr 1fr;gap:1rem;align-items:start">
+                        <!-- 좌측: 통합 검색 -->
+                        <div>
+                            <label class="form-label" style="margin-bottom:0.375rem">🔍 검색</label>
+                            <div style="position:relative">
+                                <input type="text" class="form-input" id="regContractSearch" placeholder="본사, 현장 또는 견적명 검색..." oninput="handleContractSearch()" onfocus="handleContractSearch()" onkeydown="handleContractSearchKeydown(event)" onblur="setTimeout(() => hideContractSearchResults(), 200)">
+                                <div id="contractSearchResults" class="autocomplete-dropdown" style="display:none"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- 중앙: 현장 선택 -->
+                        <div class="form-group" style="margin-bottom:0">
+                            <label class="form-label">현장 선택 *</label>
+                            <select class="form-select" id="regSiteSelect" onchange="loadRegisterSite()">
+                                <option value="">현장 선택</option>
+                                <option value="강남건설_강남 오피스텔">강남 오피스텔 (강남건설)</option>
+                                <option value="삼성물산_판교 공장">판교 공장 (삼성물산)</option>
+                                <option value="인천건설_인천 물류센터">인천 물류센터 (인천건설)</option>
+                            </select>
+                        </div>
+                        
+                        <!-- 중앙: 견적 선택 -->
+                        <div class="form-group" style="margin-bottom:0">
+                            <label class="form-label">견적 선택 *</label>
+                            <select class="form-select" id="regContractSelect" onchange="loadRegisterContract()" disabled>
+                                <option value="">현장을 먼저 선택해주세요</option>
+                            </select>
+                        </div>
+                        
+                        <!-- 우측: 최근 수주 건 -->
+                        <div>
+                            <label class="form-label" style="margin-bottom:0.375rem">📋 최근 수주 건</label>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="openRecentContractsModal()" style="width:100%;font-size:0.8125rem;padding:0.5rem 0.75rem;white-space:nowrap;text-align:center">
+                                최근 수주 건 선택
+                            </button>
+                        </div>
+                    </div>
+                    <div class="info-box highlight" id="regContractInfo" style="display:none;margin-top:0.5rem;padding:0.5rem 0.75rem;font-size:0.8125rem">
+                        <div style="font-weight:600;margin-bottom:0.25rem">📋 견적 정보</div>
+                        <div style="margin-bottom:0.5rem">현장: <strong>강남 오피스텔</strong> | 발주처: <strong>강남건설</strong> | 금액: <strong style="color:var(--primary)">150,000,000원</strong> | 소유구분: <strong>판매</strong> | 품질: <strong>신품</strong></div>
+                        <div style="display:flex;gap:0.5rem;margin-top:0.5rem;padding-top:0.5rem;border-top:1px solid var(--gray-200)">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="viewContractDocument()" style="font-size:0.8125rem;padding:0.375rem 0.75rem">
+                                📄 견적서 보기
+                            </button>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="downloadContractDocument()" style="font-size:0.8125rem;padding:0.375rem 0.75rem">
+                                ⬇️ 견적서 다운로드
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card" style="margin-top:0.75rem">
+                <div class="card-header"><span class="card-title">📦 발주 자재 선택</span></div>
+                <div class="card-body">
+                    <div style="display:flex;gap:1rem;align-items:stretch;min-height:620px">
+                        <!-- 좌측: 자재 검색/추가 -->
+                        <div style="flex:0 0 40%;min-width:320px;border:1px solid var(--gray-200);border-radius:8px;overflow:hidden;background:#fff">
+                            <div style="padding:0.75rem;background:var(--gray-50);border-bottom:1px solid var(--gray-200);display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
+                                <select class="filter-select" id="regMaterialCategory" onchange="renderMaterialSearchResults()" style="min-width:130px">
+                                    <option value="">카테고리 전체</option>
+                                    <option value="CCTV">CCTV</option>
+                                    <option value="네트워크">네트워크</option>
+                                    <option value="부자재">부자재</option>
+                                </select>
+                                <select class="filter-select" id="regMaterialSerial" onchange="renderMaterialSearchResults()" style="min-width:140px">
+                                    <option value="false" selected>시리얼 미대상</option>
+                                    <option value="true">시리얼 대상</option>
+                                </select>
+                                <input type="text" id="regMaterialKeyword" class="form-input" placeholder="🔍 자재코드/자재명/규격 검색..." style="flex:1;min-width:160px" oninput="renderMaterialSearchResults()">
+                            </div>
+                            <div class="table-container" style="box-shadow:none;margin:0;min-height:560px;max-height:560px;overflow:auto">
+                                <table style="margin:0">
+                                    <thead>
+                                        <tr>
+                                            <th style="width:100px">코드</th>
+                                            <th>자재명 / 규격</th>
+                                            <th style="width:60px">단위</th>
+                                            <th style="width:70px">추가</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="regMaterialResultBody">
+                                        <tr><td colspan="4" style="text-align:center;color:var(--gray-500);padding:1.5rem">검색어를 입력하거나 필터를 선택하세요</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- 우측: 발주 품목 편집 -->
+                        <div style="flex:0 0 60%;border:1px solid var(--gray-200);border-radius:8px;overflow:hidden;background:#fff">
+                            <div style="padding:0.75rem;background:var(--gray-50);border-bottom:1px solid var(--gray-200);display:flex;justify-content:space-between;align-items:center;gap:0.75rem">
+                                <div style="display:flex;gap:0.75rem;align-items:center">
+                                    <div style="font-weight:600">📋 발주 품목</div>
+                                    <div style="display:flex;gap:0.5rem;align-items:center;font-size:0.8125rem;color:var(--gray-500)">
+                                        <span>품목 수: <strong id="regItemCount">0</strong></span>
+                                        <span style="width:1px;height:12px;background:var(--gray-200)"></span>
+                                        <span>총 수량: <strong id="regTotalQty">0</strong></span>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="openSetSelectModal()" style="white-space:nowrap">📦 세트 불러오기</button>
+                            </div>
+                            <!-- 묶음 수량 계산 영역 -->
+                            <div style="padding:0.5rem 0.75rem;border-bottom:1px solid var(--gray-200);display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;font-size:0.8125rem;color:var(--gray-600)">
+                                <span style="font-weight:600">🔗 묶음 수량 계산</span>
+                                <input type="text" id="bundleKeyInput" class="form-input" placeholder="예: CCTV-1식" style="width:130px;padding:0.35rem;font-size:0.8125rem">
+                                <span>×</span>
+                                <input type="number" id="bundleCountInput" class="form-input" min="1" value="1" style="width:80px;padding:0.35rem;font-size:0.8125rem">
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="applyBundleQuantity()">계산</button>
+                                <span style="color:var(--gray-400)">※ 묶음 ID가 같은 행들의 [1식 기준 수량] × 식 수량으로 발주 수량을 계산합니다.</span>
+                            </div>
+                            <div class="table-container" style="box-shadow:none;margin:0;min-height:560px;max-height:560px;overflow:auto">
+                                <table style="margin:0">
+                                    <thead>
+                                        <tr>
+                                            <th style="width:30px"></th>
+                                            <th>자재명 / 규격</th>
+                                            <th style="width:120px">묶음 ID</th>
+                                            <th style="width:110px">발주 수량</th>
+                                            <th style="width:70px">단위</th>
+                                            <th style="width:100px">품질</th>
+                                            <th style="width:60px">삭제</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="regSelectedBody">
+                                        <tr><td colspan="7" style="text-align:center;color:var(--gray-500);padding:2rem">좌측에서 자재를 추가해주세요</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" style="margin-top:1rem;padding-top:0.75rem;border-top:1px solid var(--gray-200)">
+                        <label class="form-label">비고</label>
+                        <textarea class="form-textarea" id="regOrderNote" placeholder="발주 관련 특이사항" rows="2"></textarea>
+                    </div>
+                    
+                    <!-- 액션 버튼 (출고등록과 동일하게 박스 밖) -->
+                    <div style="margin-top:1rem;display:flex;gap:0.5rem;justify-content:flex-end;flex-wrap:wrap">
+                        <button class="btn btn-secondary" onclick="resetRegisterForm()">초기화</button>
+                        <button class="btn btn-secondary" onclick="mockTempSave()">임시저장</button>
+                        <button class="btn btn-success" onclick="submitRegisterOrder()">등록</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- 탭 이동 시 작성중 안내(목업) -->
+    <div class="modal" id="leaveConfirmModal">
+        <div class="modal-content" style="max-width:420px">
+            <div class="modal-header">
+                <h2 class="modal-title">작성 중입니다.</h2>
+                <button class="close-btn" onclick="closeLeaveConfirm()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="font-size:0.875rem;color:var(--gray-600);line-height:1.5">
+                    발주 등록 내용이 저장되지 않았습니다.<br>
+                    이동하기 전에 임시저장을 하거나, 그냥 나가기를 선택할 수 있습니다.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="mockTempSave()">임시저장</button>
+                <button class="btn btn-danger" onclick="leaveWithoutSaving()">그냥 나가기</button>
+                <button class="btn btn-primary" onclick="closeLeaveConfirm()">취소</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="detailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">발주 상세 - IT260115-01</h2>
+                <button class="close-btn" onclick="closeDetail()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="info-box">
+                    <div class="info-row"><span class="info-label">발주 번호</span><strong>IT260115-01</strong></div>
+                    <div class="info-row">
+                        <span class="info-label">견적</span>
+                        <span>
+                            CT-2024-001 - 강남 오피스텔 CCTV 설치
+                            <span class="status-badge status-warning" style="margin-left:4px">견적변경</span>
+                        </span>
+                    </div>
+                    <div class="info-row"><span class="info-label">본사</span><span>강남건설</span></div>
+                    <div class="info-row"><span class="info-label">현장</span><span>강남 오피스텔</span></div>
+                    <div class="info-row"><span class="info-label">발주일</span><span>2024-01-15</span></div>
+                    <div class="info-row"><span class="info-label">상태</span><span class="status-badge status-active">출고완료</span></div>
+                </div>
+                <div style="font-weight:600;margin-bottom:0.5rem;font-size:0.875rem">📦 발주 자재</div>
+                <table><thead><tr><th>자재명</th><th>수량</th><th>단위</th></tr></thead>
+                <tbody>
+                    <tr><td>IP카메라 2MP</td><td>50</td><td>개</td></tr>
+                    <tr><td>NVR 16채널</td><td>10</td><td>개</td></tr>
+                    <tr><td>UTP 케이블</td><td>30</td><td>박스</td></tr>
+                </tbody></table>
+                <div style="font-weight:600;margin:1.25rem 0 0.5rem;font-size:0.875rem">📋 수정 이력</div>
+                <div class="table-container" style="box-shadow:none;margin:0">
+                    <table>
+                        <thead><tr><th style="width:140px">수정일시</th><th style="width:80px">수정자</th><th>수정 사유</th></tr></thead>
+                        <tbody id="detailOrderHistory">
+                            <tr><td style="font-size:0.8125rem">2024-01-20 14:30</td><td>김발주</td><td style="font-size:0.875rem">UTP 케이블 수량 20박스에서 30박스로 증량 요청 반영</td></tr>
+                            <tr><td style="font-size:0.8125rem">2024-01-18 09:15</td><td>이담당</td><td style="font-size:0.875rem">견적 변경에 따른 자재 구성 수정</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="detailOrderHistoryEmpty" style="display:none;text-align:center;padding:1.5rem;color:var(--gray-500);font-size:0.875rem">수정 이력이 없습니다.</div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeDetail()">닫기</button>
+                <button class="btn btn-primary" onclick="closeDetail(); openEditOrderModal(currentOrderNo)">수정</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 발주 수정 모달 -->
+    <div class="modal" id="editOrderModal">
+        <div class="modal-content xl" id="editOrderModalContent">
+            <div class="modal-header">
+                <h2 class="modal-title">발주 수정 - <span id="editOrderNo">IT260115-01</span></h2>
+                <div style="display:flex;gap:0.5rem;align-items:center">
+                    <button class="btn btn-sm" id="fullscreenToggle" onclick="toggleFullscreenModal()" style="background:var(--gray-100);border:1px solid var(--gray-300);padding:0.25rem 0.5rem;font-size:1rem" title="전체 화면">⛶</button>
+                    <button class="close-btn" onclick="closeEditOrderModal()">&times;</button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">발주 번호</label>
+                        <input type="text" class="form-input" id="editOrderNumber" value="IT260115-01" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">견적 *</label>
+                        <select class="form-select" id="editContractSelect" onchange="loadEditContract()" disabled>
+                            <option value="1" selected>CT-2024-001 - 강남 오피스텔 CCTV 설치</option>
+                            <option value="2">CT-2024-002 - 판교 공장 센서 설치</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="info-box highlight" id="editContractInfo">
+                    <div style="font-weight:600;margin-bottom:0.5rem">📋 견적 정보</div>
+                    <div style="font-size:0.875rem;margin-bottom:0.375rem">본사: <strong>강남건설</strong> | 현장: <strong>강남 오피스텔</strong> | 금액: <strong style="color:var(--primary)">150,000,000원</strong></div>
+                    <div style="font-size:0.875rem">소유구분: <strong>판매</strong> | 품질: <strong>신품</strong></div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">발주 자재 *</label>
+                    <div style="border:1px solid var(--gray-200);border-radius:6px;overflow:hidden;position:relative">
+                        <div style="padding:0.75rem;background:var(--gray-50);display:flex;gap:0.5rem">
+                            <div style="flex:1;position:relative">
+                                <input type="text" id="editMaterialSearch" class="form-input" placeholder="자재 코드, 자재명, 카테고리로 검색..." style="width:100%" autocomplete="off" oninput="handleEditMaterialSearch()" onkeydown="handleEditMaterialKeydown(event)" onfocus="handleEditMaterialFocus()" onblur="setTimeout(() => hideEditMaterialAutocomplete(), 200)">
+                                <div id="editMaterialAutocomplete" class="autocomplete-dropdown" style="display:none"></div>
+                            </div>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="openSetSelectModal()">세트 선택</button>
+                        </div>
+                        <table style="margin:0">
+                            <thead><tr><th style="width:30px"></th><th style="width:100px">자재 코드</th><th>자재명</th><th style="width:150px">규격</th><th style="width:100px">수량</th><th style="width:80px">단위</th><th style="width:100px">품질</th><th style="width:60px">삭제</th></tr></thead>
+                            <tbody id="editMaterialList">
+                                <tr draggable="true" class="draggable-row"><td style="cursor:move;color:var(--gray-400);text-align:center">⋮⋮</td><td><strong>CAM-001</strong></td><td>IP카메라 2MP</td><td>2MP, IP67</td><td><input type="number" class="form-input" value="50" min="1" style="padding:0.25rem"></td><td>개</td><td><select class="form-select" style="padding:0.25rem;font-size:0.875rem"><option value="new" selected>신품</option><option value="used">중고</option></select></td><td><button type="button" class="btn btn-sm" style="background:var(--danger);color:#fff" onclick="this.closest('tr').remove(); initEditDragAndDrop();">삭제</button></td></tr>
+                                <tr draggable="true" class="draggable-row"><td style="cursor:move;color:var(--gray-400);text-align:center">⋮⋮</td><td><strong>NVR-016</strong></td><td>NVR 16채널</td><td>16CH, H.265</td><td><input type="number" class="form-input" value="10" min="1" style="padding:0.25rem"></td><td>개</td><td><select class="form-select" style="padding:0.25rem;font-size:0.875rem"><option value="new" selected>신품</option><option value="used">중고</option></select></td><td><button type="button" class="btn btn-sm" style="background:var(--danger);color:#fff" onclick="this.closest('tr').remove(); initEditDragAndDrop();">삭제</button></td></tr>
+                                <tr draggable="true" class="draggable-row"><td style="cursor:move;color:var(--gray-400);text-align:center">⋮⋮</td><td><strong>CBL-C6</strong></td><td>UTP 케이블</td><td>CAT6, 305m</td><td><input type="number" class="form-input" value="30" min="1" style="padding:0.25rem"></td><td>박스</td><td><select class="form-select" style="padding:0.25rem;font-size:0.875rem"><option value="new" selected>신품</option><option value="used">중고</option></select></td><td><button type="button" class="btn btn-sm" style="background:var(--danger);color:#fff" onclick="this.closest('tr').remove(); initEditDragAndDrop();">삭제</button></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">수정 사유 *</label>
+                    <textarea class="form-textarea" id="editOrderReason" placeholder="수정 사유를 입력해주세요" rows="2" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">비고</label>
+                    <textarea class="form-textarea" id="editOrderNote" placeholder="발주 관련 특이사항" rows="2"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeEditOrderModal()">취소</button>
+                <button class="btn btn-primary" onclick="submitEditOrder()">저장</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 견적서 보기 모달 -->
+    <div class="modal" id="contractViewModal">
+        <div class="modal-content" style="max-width:fit-content;max-height:90vh;width:auto">
+            <div class="modal-header">
+                <h2 class="modal-title">견적서 보기 - <span id="contractViewNo">-</span></h2>
+                <button class="close-btn" onclick="closeContractViewModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="text-align:center;padding:1rem;overflow:auto">
+                <img src="quote.png" alt="견적서" id="contractViewImage" style="max-width:100%;height:auto;border:1px solid var(--gray-300);display:block">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeContractViewModal()">닫기</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 최근 수주 건 선택 모달 -->
+    <div class="modal" id="recentContractsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">📋 최근 수주 건 선택</h2>
+                <button class="close-btn" onclick="closeModal('recentContractsModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="display:flex;flex-direction:column;gap:0.5rem">
+                    <button type="button" class="btn btn-secondary" onclick="selectRecentContractFromModal('1')" style="font-size:0.875rem;padding:0.75rem;text-align:left;justify-content:flex-start">
+                        <div style="font-weight:600;margin-bottom:0.25rem">CT-2024-001 - 강남 오피스텔 CCTV 설치</div>
+                        <div style="font-size:0.8125rem;color:var(--gray-600)">강남건설 > 강남 오피스텔</div>
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="selectRecentContractFromModal('2')" style="font-size:0.875rem;padding:0.75rem;text-align:left;justify-content:flex-start">
+                        <div style="font-weight:600;margin-bottom:0.25rem">CT-2024-002 - 판교 공장 센서 설치</div>
+                        <div style="font-size:0.8125rem;color:var(--gray-600)">삼성물산 > 판교 공장</div>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('recentContractsModal')">닫기</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 세트 선택 모달 -->
+    <div class="modal" id="setSelectModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">자재 세트 선택</h2>
+                <button class="close-btn" onclick="closeSetSelectModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="display:flex;flex-direction:column;gap:0.75rem">
+                    <label style="padding:1rem;border:1px solid var(--gray-200);border-radius:6px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='var(--gray-50)'" onmouseout="this.style.background='#fff'" onclick="selectSet('1')">
+                        <div style="display:flex;align-items:center;gap:0.75rem">
+                            <input type="radio" name="setSelect" value="1">
+                            <div style="flex:1">
+                                <div style="font-weight:600;margin-bottom:0.25rem">표준 CCTV 세트 (16채널)</div>
+                                <div style="font-size:0.8125rem;color:var(--gray-500)">8종 자재 포함</div>
+                            </div>
+                        </div>
+                    </label>
+                    <label style="padding:1rem;border:1px solid var(--gray-200);border-radius:6px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='var(--gray-50)'" onmouseout="this.style.background='#fff'" onclick="selectSet('2')">
+                        <div style="display:flex;align-items:center;gap:0.75rem">
+                            <input type="radio" name="setSelect" value="2">
+                            <div style="flex:1">
+                                <div style="font-weight:600;margin-bottom:0.25rem">네트워크 기본 구성</div>
+                                <div style="font-size:0.8125rem;color:var(--gray-500)">5종 자재 포함</div>
+                            </div>
+                        </div>
+                    </label>
+                    <label style="padding:1rem;border:1px solid var(--gray-200);border-radius:6px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='var(--gray-50)'" onmouseout="this.style.background='#fff'" onclick="selectSet('3')">
+                        <div style="display:flex;align-items:center;gap:0.75rem">
+                            <input type="radio" name="setSelect" value="3">
+                            <div style="flex:1">
+                                <div style="font-weight:600;margin-bottom:0.25rem">센서 패키지</div>
+                                <div style="font-size:0.8125rem;color:var(--gray-500)">6종 자재 포함</div>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeSetSelectModal()">취소</button>
+                <button class="btn btn-primary" onclick="loadSelectedSet()">선택</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 자재 수량 입력 모달 -->
+    <div class="modal" id="materialQtyModal">
+        <div class="modal-content" style="max-width:400px">
+            <div class="modal-header">
+                <h2 class="modal-title">자재 수량 입력</h2>
+                <button class="close-btn" onclick="closeMaterialQtyModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="info-box highlight" id="materialQtyInfo" style="margin-bottom:1rem">
+                    <div style="font-size:0.875rem">
+                        <div style="font-weight:600;margin-bottom:0.25rem" id="materialQtyName">-</div>
+                        <div style="font-size:0.8125rem;color:var(--gray-600)" id="materialQtySpec">-</div>
+                        <div style="font-size:0.8125rem;color:var(--gray-600);margin-top:0.25rem">단위: <span id="materialQtyUnit">-</span></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">수량 *</label>
+                    <input type="number" class="form-input" id="materialQtyInput" min="1" value="1" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeMaterialQtyModal()">취소</button>
+                <button class="btn btn-primary" onclick="confirmMaterialQty()">추가</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let selectedSetId = null;
+        let pendingTab = null;
+        let isRegisterDirty = false;
+        let activeTab = 'list';
+        
+        const MATERIALS = [
+            { code: 'CAM-001', name: 'IP카메라 2MP 실외형', spec: '2MP, 1920x1080, IR 30m, IP67', unit: '개', category: 'CCTV', useYn: 'Y', serialTracking: true },
+            { code: 'CAM-002', name: 'IP카메라 4MP 실내용', spec: '4MP, 2560x1440, WDR, 실내용 돔', unit: '개', category: 'CCTV', useYn: 'Y', serialTracking: true },
+            { code: 'CAM-003', name: 'IP카메라 5MP 실외형', spec: '5MP, 2592x1944, IR 40m, IP67', unit: '개', category: 'CCTV', useYn: 'Y', serialTracking: true },
+            { code: 'NVR-016', name: 'NVR 16채널', spec: '16CH, H.265, 2Bay', unit: '개', category: '녹화기', useYn: 'Y', serialTracking: true },
+            { code: 'NVR-032', name: 'NVR 32채널', spec: '32CH, H.265, 4Bay', unit: '개', category: '녹화기', useYn: 'Y', serialTracking: true },
+            { code: 'MON-032', name: '32인치 모니터', spec: '32\", FHD, 벽걸이/스탠드 겸용', unit: '개', category: '모니터', useYn: 'Y', serialTracking: false },
+            { code: 'SW-024P', name: 'PoE 스위치 24포트', spec: '24포트 PoE, 250W, 기가비트', unit: '개', category: '네트워크', useYn: 'Y', serialTracking: false },
+            { code: 'SW-008P', name: 'PoE 스위치 8포트', spec: '8포트 PoE, 120W, 기가비트', unit: '개', category: '네트워크', useYn: 'Y', serialTracking: false },
+            { code: 'CBL-C6-305', name: 'UTP 케이블 CAT6', spec: 'CAT6, 305m/Box, LSZH', unit: '박스', category: '케이블', useYn: 'Y', serialTracking: false },
+            { code: 'CBL-C5E-305', name: 'UTP 케이블 CAT5E', spec: 'CAT5E, 305m/Box, PVC', unit: '박스', category: '케이블', useYn: 'Y', serialTracking: false },
+            { code: 'BRKT-CAM-UNV', name: '카메라 벽부 브라켓', spec: '알루미늄, 범용형', unit: '개', category: '부자재', useYn: 'Y', serialTracking: false },
+            { code: 'BRKT-POLE', name: '카메라 폴 브라켓', spec: '폴 마운트, 스테인리스 밴드 포함', unit: '개', category: '부자재', useYn: 'Y', serialTracking: false },
+            { code: 'TIE-200W', name: '케이블 타이 200mm', spec: '200mm, 백색, 100EA/PK', unit: '팩', category: '부자재', useYn: 'Y', serialTracking: false },
+            { code: 'TIE-300B', name: '케이블 타이 300mm', spec: '300mm, 흑색, 100EA/PK', unit: '팩', category: '부자재', useYn: 'Y', serialTracking: false },
+            { code: 'JBOX-150', name: '방수 점검함 150x150', spec: '150x150x70, IP66', unit: '개', category: '부자재', useYn: 'Y', serialTracking: false },
+            { code: 'CON-UTP', name: 'UTP RJ45 커넥터', spec: 'CAT6, 100EA/PK', unit: '팩', category: '커넥터', useYn: 'Y', serialTracking: false },
+            { code: 'PS-48V-2A', name: '48V 2A 어댑터', spec: '48V DC, 2A, 플러그형', unit: '개', category: '전원', useYn: 'Y', serialTracking: false },
+            { code: 'HDD-4TB', name: 'HDD 4TB', spec: '4TB, 3.5\", 7200RPM', unit: '개', category: '저장장치', useYn: 'Y', serialTracking: true },
+            { code: 'SEN-TEMP', name: '온도 센서', spec: ' -40~85℃, MODBUS RTU', unit: '개', category: '센서', useYn: 'Y', serialTracking: true },
+            { code: 'SEN-HUMI', name: '온습도 센서', spec: '0~100%RH, -20~60℃, RS-485', unit: '개', category: '센서', useYn: 'Y', serialTracking: true }
+        ];
+        
+        // 탭 전환 (출고관리와 동일 패턴)
+        function switchTab(tab) {
+            if (tab === activeTab) return;
+            if (activeTab === 'register' && tab === 'list' && isRegisterDirty) {
+                pendingTab = tab;
+                openLeaveConfirm();
+                return;
+            }
+            
+            activeTab = tab;
+            document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+            
+            if (tab === 'list') {
+                document.querySelectorAll('.tab')[0].classList.add('active');
+                document.getElementById('listTab').style.display = 'block';
+            } else {
+                document.querySelectorAll('.tab')[1].classList.add('active');
+                document.getElementById('registerTab').style.display = 'block';
+                renderMaterialSearchResults();
+            }
+        }
+        
+        function markRegisterDirty() { isRegisterDirty = true; }
+        
+        function openLeaveConfirm() {
+            document.getElementById('leaveConfirmModal').classList.add('active');
+        }
+        function closeLeaveConfirm() {
+            document.getElementById('leaveConfirmModal').classList.remove('active');
+            pendingTab = null;
+        }
+        function leaveWithoutSaving() {
+            document.getElementById('leaveConfirmModal').classList.remove('active');
+            isRegisterDirty = false;
+            const tab = pendingTab || 'list';
+            pendingTab = null;
+            switchTab(tab);
+        }
+        
+        let currentOrderNo = 'IT260115-01';
+        function showDetail(orderNo) {
+            currentOrderNo = orderNo || 'IT260115-01';
+            document.querySelector('#detailModal .modal-title').textContent = '발주 상세 - ' + currentOrderNo;
+            
+            // 발주 정보 데이터
+            const orderData = {
+                'IT260115-01': {
+                    company: '강남건설',
+                    site: '강남 오피스텔',
+                    contract: 'CT-2024-001 - 강남 오피스텔 CCTV 설치',
+                    date: '2024-01-15',
+                    status: 'active',
+                    statusText: '출고완료',
+                    hasChange: true
+                },
+                'IT260118-01': {
+                    company: '판교건설',
+                    site: '판교 공장',
+                    contract: 'CT-2024-002 - 판교 공장 센서 설치',
+                    date: '2024-01-18',
+                    status: 'active',
+                    statusText: '출고완료',
+                    hasChange: true
+                },
+                'IT260125-01': {
+                    company: '인천건설',
+                    site: '인천 물류센터',
+                    contract: 'CT-2024-003 - 인천 물류센터 통합 설치',
+                    date: '2024-01-25',
+                    status: 'pending',
+                    statusText: '출고대기',
+                    hasChange: false
+                }
+            };
+            
+            const order = orderData[currentOrderNo] || orderData['IT260115-01'];
+            
+            // 정보 업데이트
+            const infoRows = document.querySelectorAll('#detailModal .info-box .info-row');
+            if (infoRows.length >= 6) {
+                // 발주 번호
+                infoRows[0].querySelector('strong').textContent = currentOrderNo;
+                // 견적
+                const contractSpan = infoRows[1].querySelector('span:last-child');
+                if (contractSpan) {
+                    contractSpan.innerHTML = order.contract + (order.hasChange ? ' <span class="status-badge status-warning" style="margin-left:4px">견적변경</span>' : '');
+                }
+                // 본사
+                infoRows[2].querySelector('span:last-child').textContent = order.company;
+                // 현장
+                infoRows[3].querySelector('span:last-child').textContent = order.site;
+                // 발주일
+                infoRows[4].querySelector('span:last-child').textContent = order.date;
+                // 상태
+                const statusBadge = infoRows[5].querySelector('.status-badge');
+                if (statusBadge) {
+                    statusBadge.className = 'status-badge status-' + order.status;
+                    statusBadge.textContent = order.statusText;
+                }
+            }
+            
+            document.getElementById('detailModal').classList.add('active');
+        }
+        function closeDetail() { document.getElementById('detailModal').classList.remove('active'); }
+        
+        function openEditOrderModal(orderNo) {
+            orderNo = orderNo || 'IT260115-01';
+            document.getElementById('editOrderNo').textContent = orderNo;
+            document.getElementById('editOrderNumber').value = orderNo;
+            document.getElementById('editOrderReason').value = '';
+            // 모달 열 때 전체 화면 모드 초기화
+            const content = document.getElementById('editOrderModalContent');
+            const toggleBtn = document.getElementById('fullscreenToggle');
+            if (content) {
+                content.classList.remove('fullscreen');
+            }
+            if (toggleBtn) {
+                toggleBtn.textContent = '⛶';
+                toggleBtn.title = '전체 화면';
+            }
+            // 자재 검색 필드 초기화
+            const searchInput = document.getElementById('editMaterialSearch');
+            if (searchInput) {
+                searchInput.value = '';
+                hideEditMaterialAutocomplete();
+            }
+            document.getElementById('editOrderModal').classList.add('active');
+            setTimeout(initEditDragAndDrop, 100);
+        }
+        
+        // 발주 수정 모달 - 드래그 앤 드롭 기능
+        let draggedEditRow = null;
+        function initEditDragAndDrop() {
+            const tbody = document.getElementById('editMaterialList');
+            if (!tbody) return;
+            
+            const rows = tbody.querySelectorAll('tr.draggable-row');
+            rows.forEach(function(row) {
+                row.draggable = true;
+                row.removeEventListener('dragstart', handleEditDragStart);
+                row.removeEventListener('dragend', handleEditDragEnd);
+                row.removeEventListener('dragover', handleEditDragOver);
+                row.removeEventListener('dragleave', handleEditDragLeave);
+                row.removeEventListener('drop', handleEditDrop);
+                
+                row.addEventListener('dragstart', handleEditDragStart);
+                row.addEventListener('dragend', handleEditDragEnd);
+                row.addEventListener('dragover', handleEditDragOver);
+                row.addEventListener('dragleave', handleEditDragLeave);
+                row.addEventListener('drop', handleEditDrop);
+            });
+        }
+        
+        function handleEditDragStart(e) {
+            draggedEditRow = this;
+            this.style.opacity = '0.5';
+            e.dataTransfer.effectAllowed = 'move';
+        }
+        
+        function handleEditDragEnd(e) {
+            this.style.opacity = '';
+            const tbody = document.getElementById('editMaterialList');
+            if (tbody) {
+                const allRows = tbody.querySelectorAll('tr.draggable-row');
+                allRows.forEach(function(r) {
+                    r.classList.remove('drag-over');
+                });
+            }
+        }
+        
+        function handleEditDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            if (this !== draggedEditRow) {
+                this.classList.add('drag-over');
+            }
+        }
+        
+        function handleEditDragLeave(e) {
+            this.classList.remove('drag-over');
+        }
+        
+        function handleEditDrop(e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+            if (draggedEditRow && this !== draggedEditRow) {
+                const tbody = document.getElementById('editMaterialList');
+                if (tbody) {
+                    const allRows = Array.from(tbody.querySelectorAll('tr.draggable-row'));
+                    const draggedIndex = allRows.indexOf(draggedEditRow);
+                    const targetIndex = allRows.indexOf(this);
+                    if (draggedIndex < targetIndex) {
+                        tbody.insertBefore(draggedEditRow, this.nextSibling);
+                    } else {
+                        tbody.insertBefore(draggedEditRow, this);
+                    }
+                }
+            }
+        }
+        function closeEditOrderModal() { 
+            const modal = document.getElementById('editOrderModal');
+            const content = document.getElementById('editOrderModalContent');
+            modal.classList.remove('active');
+            // 모달 닫을 때 전체 화면 모드 해제
+            if (content) {
+                content.classList.remove('fullscreen');
+                const toggleBtn = document.getElementById('fullscreenToggle');
+                if (toggleBtn) toggleBtn.textContent = '⛶';
+            }
+            // 자동완성 드롭다운 닫기
+            hideEditMaterialAutocomplete();
+        }
+        
+        function toggleFullscreenModal() {
+            const content = document.getElementById('editOrderModalContent');
+            const toggleBtn = document.getElementById('fullscreenToggle');
+            if (!content || !toggleBtn) return;
+            
+            if (content.classList.contains('fullscreen')) {
+                content.classList.remove('fullscreen');
+                toggleBtn.textContent = '⛶';
+                toggleBtn.title = '전체 화면';
+            } else {
+                content.classList.add('fullscreen');
+                toggleBtn.textContent = '⊡';
+                toggleBtn.title = '일반 화면';
+            }
+        }
+        function loadEditContract() { document.getElementById('editContractInfo').style.display = document.getElementById('editContractSelect').value ? 'block' : 'none'; }
+        // 발주 수정 모달 - 자재 자동완성 기능
+        let editMaterialAutocompleteIndex = -1;
+        let editMaterialAutocompleteItems = [];
+        
+        function handleEditMaterialSearch() {
+            const keyword = document.getElementById('editMaterialSearch').value.trim().toLowerCase();
+            const dropdown = document.getElementById('editMaterialAutocomplete');
+            
+            if (!keyword) {
+                hideEditMaterialAutocomplete();
+                return;
+            }
+            
+            // 자재 코드, 자재명, 카테고리로 검색
+            const filtered = MATERIALS.filter(m => 
+                m.useYn === 'Y' && (
+                    m.code.toLowerCase().includes(keyword) ||
+                    m.name.toLowerCase().includes(keyword) ||
+                    m.category.toLowerCase().includes(keyword)
+                )
+            );
+            
+            if (filtered.length === 0) {
+                dropdown.innerHTML = '<div class="autocomplete-item" style="color:var(--gray-500);cursor:default">검색 결과가 없습니다</div>';
+                dropdown.style.display = 'block';
+                return;
+            }
+            
+            editMaterialAutocompleteItems = filtered;
+            editMaterialAutocompleteIndex = -1;
+            
+            dropdown.innerHTML = filtered.map((m, idx) => `
+                <div class="autocomplete-item" data-index="${idx}" onclick="selectEditMaterial(${idx})" onmouseover="highlightEditMaterial(${idx})">
+                    <div class="autocomplete-item-code">${m.code}</div>
+                    <div class="autocomplete-item-name">${m.name}</div>
+                    <div class="autocomplete-item-info">${m.spec} | ${m.category} | ${m.unit}</div>
+                </div>
+            `).join('');
+            
+            dropdown.style.display = 'block';
+        }
+        
+        function handleEditMaterialKeydown(event) {
+            const dropdown = document.getElementById('editMaterialAutocomplete');
+            if (dropdown.style.display === 'none' || editMaterialAutocompleteItems.length === 0) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    const keyword = document.getElementById('editMaterialSearch').value.trim();
+                    if (keyword) {
+                        // 검색어로 직접 추가 (기존 방식 유지)
+                        addEditMaterialByName(keyword);
+                    }
+                }
+                return;
+            }
+            
+            if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                editMaterialAutocompleteIndex = Math.min(editMaterialAutocompleteIndex + 1, editMaterialAutocompleteItems.length - 1);
+                highlightEditMaterial(editMaterialAutocompleteIndex);
+            } else if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                editMaterialAutocompleteIndex = Math.max(editMaterialAutocompleteIndex - 1, -1);
+                if (editMaterialAutocompleteIndex >= 0) {
+                    highlightEditMaterial(editMaterialAutocompleteIndex);
+                } else {
+                    clearEditMaterialHighlight();
+                }
+            } else if (event.key === 'Enter') {
+                event.preventDefault();
+                if (editMaterialAutocompleteIndex >= 0) {
+                    selectEditMaterial(editMaterialAutocompleteIndex);
+                }
+            } else if (event.key === 'Escape') {
+                hideEditMaterialAutocomplete();
+            }
+        }
+        
+        function handleEditMaterialFocus() {
+            const keyword = document.getElementById('editMaterialSearch').value.trim();
+            if (keyword) {
+                handleEditMaterialSearch();
+            }
+        }
+        
+        function highlightEditMaterial(index) {
+            clearEditMaterialHighlight();
+            editMaterialAutocompleteIndex = index;
+            const items = document.querySelectorAll('#editMaterialAutocomplete .autocomplete-item');
+            if (items[index]) {
+                items[index].classList.add('selected');
+                items[index].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            }
+        }
+        
+        function clearEditMaterialHighlight() {
+            document.querySelectorAll('#editMaterialAutocomplete .autocomplete-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+        }
+        
+        function selectEditMaterial(index) {
+            const material = editMaterialAutocompleteItems[index];
+            if (!material) return;
+            
+            addEditMaterialFromData(material);
+            hideEditMaterialAutocomplete();
+        }
+        
+        function hideEditMaterialAutocomplete() {
+            document.getElementById('editMaterialAutocomplete').style.display = 'none';
+            editMaterialAutocompleteIndex = -1;
+        }
+        
+        function addEditMaterialFromData(material) {
+            const tbody = document.getElementById('editMaterialList');
+            // 이미 추가된 자재인지 확인
+            const existingRows = tbody.querySelectorAll('tr.draggable-row');
+            for (let row of existingRows) {
+                const nameCell = row.querySelector('td:nth-child(2)');
+                if (nameCell && nameCell.textContent.trim() === material.name) {
+                    alert('이미 추가된 자재입니다.');
+                    return;
+                }
+            }
+            
+            tbody.insertAdjacentHTML('beforeend',
+                '<tr draggable="true" class="draggable-row">' +
+                    '<td style="cursor:move;color:var(--gray-400);text-align:center">⋮⋮</td>' +
+                    '<td><strong>' + material.code + '</strong></td>' +
+                    '<td>' + material.name + '</td>' +
+                    '<td>' + material.spec + '</td>' +
+                    '<td><input type="number" class="form-input" value="1" min="1" style="padding:0.25rem"></td>' +
+                    '<td>' + material.unit + '</td>' +
+                    '<td><select class="form-select" style="padding:0.25rem;font-size:0.875rem"><option value="new" selected>신품</option><option value="used">중고</option></select></td>' +
+                    '<td><button type="button" class="btn btn-sm" style="background:var(--danger);color:#fff" onclick="this.closest(\'tr\').remove(); initEditDragAndDrop();">삭제</button></td>' +
+                '</tr>'
+            );
+            document.getElementById('editMaterialSearch').value = '';
+            initEditDragAndDrop();
+        }
+        
+        // 기존 방식 유지 (검색어로 직접 추가)
+        function addEditMaterialByName(name) {
+            if (!name || !name.trim()) return;
+            const tbody = document.getElementById('editMaterialList');
+            tbody.insertAdjacentHTML('beforeend',
+                '<tr draggable="true" class="draggable-row">' +
+                    '<td style="cursor:move;color:var(--gray-400);text-align:center">⋮⋮</td>' +
+                    '<td>-</td>' +
+                    '<td>' + name.trim() + '</td>' +
+                    '<td>-</td>' +
+                    '<td><input type="number" class="form-input" value="1" min="1" style="padding:0.25rem"></td>' +
+                    '<td>개</td>' +
+                    '<td><select class="form-select" style="padding:0.25rem;font-size:0.875rem"><option value="new" selected>신품</option><option value="used">중고</option></select></td>' +
+                    '<td><button type="button" class="btn btn-sm" style="background:var(--danger);color:#fff" onclick="this.closest(\'tr\').remove(); initEditDragAndDrop();">삭제</button></td>' +
+                '</tr>'
+            );
+            document.getElementById('editMaterialSearch').value = '';
+            initEditDragAndDrop();
+        }
+        function submitEditOrder() {
+            const reason = document.getElementById('editOrderReason').value.trim();
+            if (!reason) {
+                alert('수정 사유를 입력해주세요.');
+                document.getElementById('editOrderReason').focus();
+                return;
+            }
+            const rows = document.querySelectorAll('#editMaterialList tr');
+            if (!rows.length) return alert('발주 자재를 1종 이상 등록해주세요');
+            alert('✅ 발주 정보가 수정되었습니다.');
+            closeEditOrderModal();
+        }
+        
+        // 견적 데이터 구조 (본사_현장 키로 관리)
+        const CONTRACTS_DATA = {
+            '강남건설_강남 오피스텔': {
+                company: '강남건설',
+                site: '강남 오피스텔',
+                contracts: [
+                    { value: '1', text: 'CT-2024-001 - 강남 오피스텔 CCTV 설치', site: '강남 오피스텔', company: '강남건설', amount: '150,000,000', ownership: '판매', quality: '신품' }
+                ]
+            },
+            '삼성물산_판교 공장': {
+                company: '삼성물산',
+                site: '판교 공장',
+                contracts: [
+                    { value: '2', text: 'CT-2024-002 - 판교 공장 센서 설치', site: '판교 공장', company: '삼성물산', amount: '80,000,000', ownership: '판매', quality: '신품' }
+                ]
+            },
+            '인천건설_인천 물류센터': {
+                company: '인천건설',
+                site: '인천 물류센터',
+                contracts: []
+            }
+        };
+        
+        // 통합 검색을 위한 전체 견적 목록
+        const ALL_CONTRACTS = [];
+        Object.keys(CONTRACTS_DATA).forEach(key => {
+            const data = CONTRACTS_DATA[key];
+            data.contracts.forEach(contract => {
+                ALL_CONTRACTS.push({
+                    ...contract,
+                    key: key,
+                    searchText: `${data.company} ${data.site} ${contract.text}`.toLowerCase()
+                });
+            });
+        });
+        
+        function loadRegisterSite() {
+            const siteKey = document.getElementById('regSiteSelect').value;
+            const contractSelect = document.getElementById('regContractSelect');
+            const contractInfo = document.getElementById('regContractInfo');
+            
+            // 견적 선택 드롭다운 초기화
+            contractSelect.innerHTML = '<option value="">견적 선택</option>';
+            contractSelect.disabled = !siteKey;
+            
+            if (!siteKey) {
+                contractInfo.style.display = 'none';
+                markRegisterDirty();
+                return;
+            }
+            
+            // 선택된 현장의 견적 목록 로드
+            const siteData = CONTRACTS_DATA[siteKey];
+            if (!siteData || !siteData.contracts || siteData.contracts.length === 0) {
+                contractSelect.innerHTML = '<option value="">해당 현장의 견적이 없습니다</option>';
+                contractInfo.style.display = 'none';
+            } else {
+                siteData.contracts.forEach(contract => {
+                    const option = document.createElement('option');
+                    option.value = contract.value;
+                    option.textContent = contract.text;
+                    contractSelect.appendChild(option);
+                });
+            }
+            
+            // 기존 견적 정보 숨기기
+            contractInfo.style.display = 'none';
+            contractSelect.value = '';
+            markRegisterDirty();
+        }
+        
+        function loadRegisterContract() {
+            const siteKey = document.getElementById('regSiteSelect').value;
+            const contractId = document.getElementById('regContractSelect').value;
+            const contractInfo = document.getElementById('regContractInfo');
+            
+            if (!contractId || !siteKey) {
+                contractInfo.style.display = 'none';
+                markRegisterDirty();
+                return;
+            }
+            
+            // 선택된 견적 정보 표시
+            const siteData = CONTRACTS_DATA[siteKey];
+            if (!siteData) {
+                contractInfo.style.display = 'none';
+                markRegisterDirty();
+                return;
+            }
+            const contract = siteData.contracts.find(c => c.value === contractId);
+            
+            if (contract) {
+                // 견적 정보 업데이트
+                const infoDivs = contractInfo.querySelectorAll('div');
+                if (infoDivs.length >= 2) {
+                    infoDivs[1].innerHTML = `현장: <strong>${contract.site}</strong> | 발주처: <strong>${contract.company}</strong> | 금액: <strong style="color:var(--primary)">${contract.amount}원</strong> | 소유구분: <strong>${contract.ownership}</strong> | 품질: <strong>${contract.quality}</strong>`;
+                }
+                contractInfo.style.display = 'block';
+            } else {
+                contractInfo.style.display = 'none';
+            }
+            
+            markRegisterDirty();
+        }
+        
+        function openRecentContractsModal() {
+            document.getElementById('recentContractsModal').classList.add('active');
+        }
+        
+        function selectRecentContractFromModal(contractId) {
+            selectRecentContract(contractId);
+            closeModal('recentContractsModal');
+        }
+        
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+        
+        // 최근 이력에서 견적 선택
+        function selectRecentContract(contractId) {
+            // 전체 데이터에서 해당 견적 찾기
+            let foundContract = null;
+            let foundKey = null;
+            
+            Object.keys(CONTRACTS_DATA).forEach(key => {
+                const siteData = CONTRACTS_DATA[key];
+                const contract = siteData.contracts.find(c => c.value === contractId);
+                if (contract) {
+                    foundContract = contract;
+                    foundKey = key;
+                }
+            });
+            
+            if (!foundContract || !foundKey) return;
+            
+            // 드롭다운에 자동 선택
+            document.getElementById('regSiteSelect').value = foundKey;
+            loadRegisterSite();
+            
+            setTimeout(() => {
+                document.getElementById('regContractSelect').value = contractId;
+                loadRegisterContract();
+            }, 50);
+        }
+        
+        // 통합 검색 기능
+        let contractSearchSelectedIndex = -1;
+        function handleContractSearch() {
+            const query = document.getElementById('regContractSearch').value.toLowerCase().trim();
+            const resultsDiv = document.getElementById('contractSearchResults');
+            
+            if (!query) {
+                resultsDiv.style.display = 'none';
+                contractSearchSelectedIndex = -1;
+                return;
+            }
+            
+            // 검색어로 필터링
+            const results = ALL_CONTRACTS.filter(contract => 
+                contract.searchText.includes(query)
+            ).slice(0, 10); // 최대 10개만 표시
+            
+            if (results.length === 0) {
+                resultsDiv.innerHTML = '<div class="autocomplete-item" style="color:var(--gray-500);text-align:center;padding:1rem">검색 결과가 없습니다</div>';
+                resultsDiv.style.display = 'block';
+                return;
+            }
+            
+            // 검색 결과 표시
+            resultsDiv.innerHTML = '';
+            results.forEach((contract, index) => {
+                const siteData = CONTRACTS_DATA[contract.key];
+                const item = document.createElement('div');
+                item.className = 'autocomplete-item';
+                item.dataset.index = index;
+                item.onclick = () => selectContractFromSearch(contract.key, contract.value);
+                item.onmouseover = () => highlightContractSearchItem(index);
+                
+                item.innerHTML = `
+                    <div class="autocomplete-item-name">${contract.text}</div>
+                    <div class="autocomplete-item-info">${siteData.company} > ${siteData.site}</div>
+                `;
+                resultsDiv.appendChild(item);
+            });
+            
+            resultsDiv.style.display = 'block';
+            contractSearchSelectedIndex = -1;
+        }
+        
+        function handleContractSearchKeydown(event) {
+            const resultsDiv = document.getElementById('contractSearchResults');
+            const items = resultsDiv.querySelectorAll('.autocomplete-item');
+            
+            if (items.length === 0) return;
+            
+            if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                contractSearchSelectedIndex = Math.min(contractSearchSelectedIndex + 1, items.length - 1);
+                highlightContractSearchItem(contractSearchSelectedIndex);
+            } else if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                contractSearchSelectedIndex = Math.max(contractSearchSelectedIndex - 1, -1);
+                highlightContractSearchItem(contractSearchSelectedIndex);
+            } else if (event.key === 'Enter') {
+                event.preventDefault();
+                if (contractSearchSelectedIndex >= 0 && contractSearchSelectedIndex < items.length) {
+                    items[contractSearchSelectedIndex].click();
+                }
+            }
+        }
+        
+        function highlightContractSearchItem(index) {
+            const items = document.getElementById('contractSearchResults').querySelectorAll('.autocomplete-item');
+            items.forEach((item, i) => {
+                if (i === index) {
+                    item.classList.add('selected');
+                } else {
+                    item.classList.remove('selected');
+                }
+            });
+            contractSearchSelectedIndex = index;
+        }
+        
+        function selectContractFromSearch(siteKey, contractId) {
+            // 드롭다운에 자동 선택
+            document.getElementById('regSiteSelect').value = siteKey;
+            loadRegisterSite();
+            
+            setTimeout(() => {
+                document.getElementById('regContractSelect').value = contractId;
+                loadRegisterContract();
+            }, 50);
+            
+            // 검색창 초기화
+            document.getElementById('regContractSearch').value = '';
+            hideContractSearchResults();
+        }
+        
+        function hideContractSearchResults() {
+            document.getElementById('contractSearchResults').style.display = 'none';
+            contractSearchSelectedIndex = -1;
+        }
+        
+        function viewContractDocument() {
+            const contractSelect = document.getElementById('regContractSelect');
+            const contractId = contractSelect.value;
+            if (!contractId) {
+                alert('견적을 선택해주세요.');
+                return;
+            }
+            // 견적서 번호 가져오기 (선택된 옵션의 텍스트에서 추출)
+            const selectedOption = contractSelect.options[contractSelect.selectedIndex];
+            const contractNo = selectedOption ? selectedOption.textContent.split(' - ')[0] : '-';
+            
+            // 견적서 이미지 보기 모달 열기
+            const modal = document.getElementById('contractViewModal');
+            if (modal) {
+                document.getElementById('contractViewNo').textContent = contractNo;
+                modal.classList.add('active');
+            }
+        }
+        
+        function downloadContractDocument() {
+            const contractId = document.getElementById('regContractSelect').value;
+            if (!contractId) {
+                alert('견적을 선택해주세요.');
+                return;
+            }
+            // 견적서 다운로드
+            const contractNames = {
+                '1': 'CT-2024-001_견적서.pdf',
+                '2': 'CT-2024-002_견적서.pdf'
+            };
+            const fileName = contractNames[contractId] || contractNames['1'];
+            alert('✅ 견적서 다운로드가 시작됩니다.\n파일명: ' + fileName + '\n\n(실제 구현 시 서버에서 파일을 다운로드합니다)');
+            // 실제 구현 시:
+            // const link = document.createElement('a');
+            // link.href = '/api/contracts/' + contractId + '/download';
+            // link.download = fileName;
+            // link.click();
+        }
+        
+        function closeContractViewModal() {
+            document.getElementById('contractViewModal').classList.remove('active');
+        }
+        
+        function renderMaterialSearchResults() {
+            const keyword = (document.getElementById('regMaterialKeyword')?.value || '').trim().toLowerCase();
+            const category = document.getElementById('regMaterialCategory')?.value || '';
+            const serialFilter = document.getElementById('regMaterialSerial')?.value || 'false';
+            
+            let rows = MATERIALS.slice();
+            // 사용 중인 자재만 표시
+            rows = rows.filter(m => m.useYn === 'Y');
+            // 시리얼 필터 적용 (항상 필터링됨)
+            const isSerial = serialFilter === 'true';
+            rows = rows.filter(m => m.serialTracking === isSerial);
+            if (category) rows = rows.filter(m => m.category === category);
+            if (keyword) {
+                rows = rows.filter(m =>
+                    (m.code || '').toLowerCase().includes(keyword) ||
+                    (m.name || '').toLowerCase().includes(keyword) ||
+                    (m.spec || '').toLowerCase().includes(keyword)
+                );
+            }
+            
+            const tbody = document.getElementById('regMaterialResultBody');
+            if (!tbody) return;
+            
+            // 시리얼 필터는 항상 적용되므로, 검색어나 카테고리가 없어도 결과 표시
+            // (시리얼 필터가 기본값으로 설정되어 있음)
+            if (!rows.length) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--gray-500);padding:1.5rem">검색 결과가 없습니다</td></tr>`;
+                return;
+            }
+            
+            tbody.innerHTML = rows.map(m => `
+                <tr>
+                    <td><strong>${m.code}</strong></td>
+                    <td>
+                        <div style="font-weight:500">${m.name}</div>
+                        <div style="font-size:0.8125rem;color:var(--gray-500);margin-top:0.25rem">${m.spec || '-'}</div>
+                    </td>
+                    <td>${m.unit}</td>
+                    <td>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="openMaterialQtyModal('${m.code}')" style="white-space:nowrap;writing-mode:horizontal-tb">추가</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function getSelectedRowByCode(code) {
+            return document.querySelector(`#regSelectedBody tr[data-code="${code}"]`);
+        }
+        
+        let pendingMaterialCode = null;
+        
+        function openMaterialQtyModal(code) {
+            const material = MATERIALS.find(m => m.code === code);
+            if (!material) return alert('자재 정보를 찾을 수 없습니다.');
+            
+            pendingMaterialCode = code;
+            document.getElementById('materialQtyName').textContent = material.name;
+            document.getElementById('materialQtySpec').textContent = material.spec || '-';
+            document.getElementById('materialQtyUnit').textContent = material.unit || '-';
+            document.getElementById('materialQtyInput').value = '1';
+            document.getElementById('materialQtyModal').classList.add('active');
+        }
+        
+        function closeMaterialQtyModal() {
+            document.getElementById('materialQtyModal').classList.remove('active');
+            pendingMaterialCode = null;
+        }
+        
+        function confirmMaterialQty() {
+            if (!pendingMaterialCode) return;
+            
+            const qtyInput = document.getElementById('materialQtyInput');
+            const qty = parseInt(qtyInput.value, 10);
+            
+            if (!qty || qty < 1) {
+                alert('수량을 1 이상 입력해주세요.');
+                qtyInput.focus();
+                return;
+            }
+            
+            addMaterialToRegister(pendingMaterialCode, qty);
+            closeMaterialQtyModal();
+        }
+        
+        function addMaterialToRegister(code, qtyToAdd = 1) {
+            const material = MATERIALS.find(m => m.code === code);
+            if (!material) return alert('자재 정보를 찾을 수 없습니다.');
+            
+            const tbody = document.getElementById('regSelectedBody');
+            if (!tbody) return;
+            
+            // 빈 안내 row 제거
+            if (tbody.querySelector('td[colspan]')) tbody.innerHTML = '';
+            
+            // 동일 자재를 또 추가해도 항상 새로운 행으로 추가
+            const uniqueId = Date.now() + Math.random(); // 고유 ID 생성
+            
+            tbody.insertAdjacentHTML('beforeend', `
+                <tr draggable="true" class="draggable-row" data-code="${material.code}" data-row-id="${uniqueId}" data-unit-per-set="${qtyToAdd}">
+                    <td style="cursor:move;color:var(--gray-400);text-align:center">⋮⋮</td>
+                    <td>
+                        <div style="font-weight:500">${material.name}</div>
+                        <div style="font-size:0.8125rem;color:var(--gray-500);margin-top:0.25rem">${material.spec}</div>
+                    </td>
+                    <td>
+                        <input data-role="bundle" type="text" class="form-input" placeholder="예: CCTV-1식" style="padding:0.25rem;font-size:0.8125rem" oninput="markRegisterDirty()">
+                    </td>
+                    <td>
+                        <input data-role="qty" type="number" class="form-input" value="${qtyToAdd}" min="0" style="padding:0.25rem" onchange="updateRegisterSummary(); markRegisterDirty()">
+                    </td>
+                    <td>${material.unit}</td>
+                    <td>
+                        <select class="form-select" style="padding:0.25rem;font-size:0.875rem" onchange="markRegisterDirty()">
+                            <option value="new" selected>신품</option>
+                            <option value="used">중고</option>
+                        </select>
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-sm" style="background:var(--danger);color:#fff;white-space:nowrap;writing-mode:horizontal-tb" onclick="removeRegisterRowById('${uniqueId}')">삭제</button>
+                    </td>
+                </tr>
+            `);
+            
+            initRegisterDragAndDrop();
+            updateRegisterSummary();
+            markRegisterDirty();
+        }
+        
+        function removeRegisterRowById(rowId) {
+            const row = document.querySelector(`#regSelectedBody tr[data-row-id="${rowId}"]`);
+            let bundleKey = '';
+            if (row) {
+                const bundleInput = row.querySelector('input[data-role="bundle"]');
+                bundleKey = (bundleInput?.value || '').trim();
+                row.remove();
+            }
+            
+            const tbody = document.getElementById('regSelectedBody');
+            if (tbody && !tbody.querySelector('tr')) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--gray-500);padding:2rem">좌측에서 자재를 추가해주세요</td></tr>`;
+            }
+            initRegisterDragAndDrop();
+            updateRegisterSummary();
+            // 해당 묶음에 더 이상 행이 없으면 헤더도 제거
+            if (bundleKey) {
+                const stillExists = tbody && tbody.querySelectorAll('tr[data-code] input[data-role="bundle"]').length &&
+                    Array.from(tbody.querySelectorAll('tr[data-code] input[data-role="bundle"]')).some(input => (input.value || '').trim() === bundleKey);
+                if (!stillExists) {
+                    document.querySelectorAll(`#regSelectedBody tr[data-bundle-header="${bundleKey}"]`).forEach(h => h.remove());
+                }
+            }
+            updateRegisterSummary();
+            markRegisterDirty();
+        }
+        
+        function removeRegisterRow(code) {
+            const row = getSelectedRowByCode(code);
+            let bundleKey = '';
+            if (row) {
+                const bundleInput = row.querySelector('input[data-role="bundle"]');
+                bundleKey = (bundleInput?.value || '').trim();
+                row.remove();
+            }
+            
+            const tbody = document.getElementById('regSelectedBody');
+            if (tbody && !tbody.querySelector('tr')) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--gray-500);padding:2rem">좌측에서 자재를 추가해주세요</td></tr>`;
+            }
+            initRegisterDragAndDrop();
+            updateRegisterSummary();
+            // 해당 묶음에 더 이상 행이 없으면 헤더도 제거
+            if (bundleKey) {
+                const stillExists = tbody && tbody.querySelectorAll('tr[data-code] input[data-role="bundle"]').length &&
+                    Array.from(tbody.querySelectorAll('tr[data-code] input[data-role="bundle"]')).some(input => (input.value || '').trim() === bundleKey);
+                if (!stillExists) {
+                    document.querySelectorAll(`#regSelectedBody tr[data-bundle-header="${bundleKey}"]`).forEach(h => h.remove());
+                }
+            }
+            updateRegisterSummary();
+            markRegisterDirty();
+        }
+        
+        function updateRegisterSummary() {
+            const rows = Array.from(document.querySelectorAll('#regSelectedBody tr[data-code]'));
+            const itemCount = rows.length;
+            const totalQty = rows.reduce((sum, r) => {
+                const qty = parseInt(r.querySelector('input[data-role="qty"]')?.value || '0', 10) || 0;
+                return sum + qty;
+            }, 0);
+            
+            const itemEl = document.getElementById('regItemCount');
+            const qtyEl = document.getElementById('regTotalQty');
+            if (itemEl) itemEl.textContent = String(itemCount);
+            if (qtyEl) qtyEl.textContent = String(totalQty);
+        }
+        
+        // 발주 등록 탭 - 드래그 앤 드롭 기능
+        let draggedRegisterRow = null;
+        function initRegisterDragAndDrop() {
+            const tbody = document.getElementById('regSelectedBody');
+            if (!tbody) return;
+            
+            const rows = tbody.querySelectorAll('tr.draggable-row');
+            rows.forEach(function(row) {
+                row.draggable = true;
+                row.removeEventListener('dragstart', handleRegisterDragStart);
+                row.removeEventListener('dragend', handleRegisterDragEnd);
+                row.removeEventListener('dragover', handleRegisterDragOver);
+                row.removeEventListener('dragleave', handleRegisterDragLeave);
+                row.removeEventListener('drop', handleRegisterDrop);
+                
+                row.addEventListener('dragstart', handleRegisterDragStart);
+                row.addEventListener('dragend', handleRegisterDragEnd);
+                row.addEventListener('dragover', handleRegisterDragOver);
+                row.addEventListener('dragleave', handleRegisterDragLeave);
+                row.addEventListener('drop', handleRegisterDrop);
+            });
+        }
+        
+        function handleRegisterDragStart(e) {
+            draggedRegisterRow = this;
+            this.style.opacity = '0.5';
+            e.dataTransfer.effectAllowed = 'move';
+        }
+        
+        function handleRegisterDragEnd(e) {
+            this.style.opacity = '';
+            const tbody = document.getElementById('regSelectedBody');
+            if (tbody) {
+                const allRows = tbody.querySelectorAll('tr.draggable-row');
+                allRows.forEach(function(r) {
+                    r.classList.remove('drag-over');
+                });
+            }
+        }
+        
+        function handleRegisterDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            // 묶음 헤더 행은 드롭 대상에서 제외
+            if (this.hasAttribute('data-bundle-header')) return;
+            if (this !== draggedRegisterRow && this.classList.contains('draggable-row')) {
+                this.classList.add('drag-over');
+            }
+        }
+        
+        function handleRegisterDragLeave(e) {
+            this.classList.remove('drag-over');
+        }
+        
+        function handleRegisterDrop(e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+            // 묶음 헤더 행은 드롭 대상에서 제외
+            if (this.hasAttribute('data-bundle-header')) return;
+            if (draggedRegisterRow && this !== draggedRegisterRow && this.classList.contains('draggable-row')) {
+                const tbody = document.getElementById('regSelectedBody');
+                if (tbody) {
+                    const allRows = Array.from(tbody.querySelectorAll('tr.draggable-row'));
+                    const draggedIndex = allRows.indexOf(draggedRegisterRow);
+                    const targetIndex = allRows.indexOf(this);
+                    if (draggedIndex < targetIndex) {
+                        tbody.insertBefore(draggedRegisterRow, this.nextSibling);
+                    } else {
+                        tbody.insertBefore(draggedRegisterRow, this);
+                    }
+                    markRegisterDirty();
+                }
+            }
+        }
+        
+        function resetRegisterForm() {
+            if (!confirm('작성 중인 발주 등록 내용을 초기화하시겠습니까?')) return;
+            document.getElementById('regSiteSelect').value = '';
+            document.getElementById('regContractSelect').value = '';
+            document.getElementById('regContractSelect').disabled = true;
+            document.getElementById('regContractSelect').innerHTML = '<option value="">현장을 먼저 선택해주세요</option>';
+            document.getElementById('regContractSearch').value = '';
+            hideContractSearchResults();
+            document.getElementById('regOrderNote').value = '';
+            document.getElementById('regContractInfo').style.display = 'none';
+            document.getElementById('regMaterialKeyword').value = '';
+            document.getElementById('regMaterialCategory').value = '';
+            document.getElementById('regMaterialSerial').value = 'false';
+            document.getElementById('bundleKeyInput').value = '';
+            document.getElementById('bundleCountInput').value = '1';
+            document.getElementById('regSelectedBody').innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--gray-500);padding:2rem">좌측에서 자재를 추가해주세요</td></tr>`;
+            updateRegisterSummary();
+            isRegisterDirty = false;
+            renderMaterialSearchResults();
+        }
+        
+        function mockTempSave() {
+            alert('💾 (목업) 임시저장되었습니다.');
+            isRegisterDirty = false;
+            closeLeaveConfirm();
+        }
+        
+        function submitRegisterOrder() {
+            const contract = document.getElementById('regContractSelect').value;
+            const rows = Array.from(document.querySelectorAll('#regSelectedBody tr[data-code]'));
+            
+            if (!contract) return alert('견적을 선택해주세요.');
+            if (!rows.length) return alert('발주 자재를 1종 이상 추가해주세요.');
+            
+            // 발주일은 등록 시점의 날짜로 자동 설정
+            const orderDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD 형식
+            
+            alert('✅ (목업) 발주가 등록되었습니다!');
+            isRegisterDirty = false;
+            switchTab('list');
+        }
+        
+        function applyBundleQuantity() {
+            const key = (document.getElementById('bundleKeyInput')?.value || '').trim();
+            const count = parseInt(document.getElementById('bundleCountInput')?.value || '0', 10);
+            
+            if (!key) return alert('묶음 ID를 입력해주세요. (예: CCTV-1식)');
+            if (!count || count <= 0) return alert('식 수량을 1 이상으로 입력해주세요.');
+            
+            const rows = Array.from(document.querySelectorAll('#regSelectedBody tr[data-code]'));
+            let affected = 0;
+            let firstMatchedRow = null;
+            rows.forEach(row => {
+                const bundleInput = row.querySelector('input[data-role="bundle"]');
+                const qtyInput = row.querySelector('input[data-role="qty"]');
+                if (!bundleInput || !qtyInput) return;
+                
+                if ((bundleInput.value || '').trim() === key) {
+                    const base = parseInt(row.getAttribute('data-unit-per-set') || qtyInput.value || '0', 10) || 0;
+                    qtyInput.value = String(base * count);
+                    affected++;
+                    if (!firstMatchedRow) firstMatchedRow = row;
+                }
+            });
+            
+            if (!affected) {
+                alert('해당 묶음 ID를 가진 행이 없습니다.\n발주 품목의 묶음 ID를 먼저 입력해주세요.');
+                return;
+            }
+            
+            updateRegisterSummary();
+            markRegisterDirty();
+            
+            // 묶음 요약 헤더(시각적 구분용) 추가/갱신
+            if (firstMatchedRow) {
+                let header = document.querySelector(`#regSelectedBody tr[data-bundle-header="${key}"]`);
+                if (!header) {
+                    header = document.createElement('tr');
+                    header.setAttribute('data-bundle-header', key);
+                    header.style.background = 'var(--gray-50)';
+                    firstMatchedRow.parentNode.insertBefore(header, firstMatchedRow);
+                }
+                header.innerHTML = `<td colspan="7" style="font-size:0.8125rem;color:var(--gray-600);padding:0.35rem 0.75rem">
+                    묶음: <strong>${key}</strong> (${count}식)
+                </td>`;
+            }
+            alert(`🔗 묶음 "${key}"의 발주 수량이 식 수량 ${count} 기준으로 계산되었습니다.`);
+        }
+        
+        // 세트 선택 모달
+        function openSetSelectModal() {
+            document.getElementById('setSelectModal').classList.add('active');
+        }
+        
+        function closeSetSelectModal() {
+            document.getElementById('setSelectModal').classList.remove('active');
+            selectedSetId = null;
+        }
+        
+        function selectSet(setId) {
+            selectedSetId = setId;
+            document.querySelectorAll('input[name="setSelect"]').forEach(r => r.checked = false);
+            event.target.closest('label').querySelector('input').checked = true;
+        }
+        
+        function loadSelectedSet() {
+            if (!selectedSetId) return alert('세트를 선택해주세요');
+
+            // 샘플 데이터 (실제로는 선택된 세트에 따라 다른 데이터)
+            const setData = {
+                '1': [
+                    ['CAM-001', 'IP카메라 2MP', '2MP, IP67', 50, '개'],
+                    ['CAM-002', 'IP카메라 4MP', '4MP, 실내용', 20, '개'],
+                    ['NVR-016', 'NVR 16채널', '16CH, H.265', 10, '개'],
+                    ['CBL-C6', 'UTP 케이블 CAT6', '305m/박스', 30, '박스'],
+                    ['NET-024', 'PoE 스위치 24포트', '24포트, 250W', 5, '개'],
+                    ['ACC-001', '브라켓', '범용형, 스틸', 70, '개'],
+                    ['ACC-002', '케이블 타이', '200mm, 흰색', 200, '개'],
+                    ['HDD-4TB', 'HDD 4TB', '4TB, 7200RPM', 10, '개']
+                ],
+                '2': [
+                    ['NET-024', 'PoE 스위치 24포트', '24포트, 250W', 10, '개'],
+                    ['CBL-C6', 'UTP 케이블 CAT6', '305m/박스', 50, '박스'],
+                    ['ACC-002', '케이블 타이', '200mm, 흰색', 50, '개']
+                ],
+                '3': [
+                    ['ACC-001', '브라켓', '범용형, 스틸', 10, '개'],
+                    ['ACC-002', '케이블 타이', '200mm, 흰색', 100, '개']
+                ]
+            };
+            
+            const materials = setData[selectedSetId] || [];
+            
+            // 발주 수정 모달이 열려있는지 확인
+            const editModal = document.getElementById('editOrderModal');
+            if (editModal && editModal.classList.contains('active')) {
+                // 발주 수정 모달에 자재 추가
+                const tbody = document.getElementById('editMaterialList');
+                materials.forEach(([code, name, spec, qty, unit]) => {
+                    // 이미 추가된 자재인지 확인
+                    const existingRows = tbody.querySelectorAll('tr.draggable-row');
+                    let alreadyExists = false;
+                    for (let row of existingRows) {
+                        const nameCell = row.querySelector('td:nth-child(3)');
+                        if (nameCell && nameCell.textContent.trim() === name) {
+                            alreadyExists = true;
+                            break;
+                        }
+                    }
+                    if (!alreadyExists) {
+                        tbody.insertAdjacentHTML('beforeend',
+                            '<tr draggable="true" class="draggable-row">' +
+                                '<td style="cursor:move;color:var(--gray-400);text-align:center">⋮⋮</td>' +
+                                '<td><strong>' + code + '</strong></td>' +
+                                '<td>' + name + '</td>' +
+                                '<td>' + spec + '</td>' +
+                                '<td><input type="number" class="form-input" value="' + qty + '" min="1" style="padding:0.25rem"></td>' +
+                                '<td>' + unit + '</td>' +
+                                '<td><select class="form-select" style="padding:0.25rem;font-size:0.875rem"><option value="new" selected>신품</option><option value="used">중고</option></select></td>' +
+                                '<td><button type="button" class="btn btn-sm" style="background:var(--danger);color:#fff" onclick="this.closest(\'tr\').remove(); initEditDragAndDrop();">삭제</button></td>' +
+                            '</tr>'
+                        );
+                    }
+                });
+                initEditDragAndDrop();
+                alert('✅ 세트가 불러와졌습니다!\n수량을 조정하거나 자재를 추가/삭제할 수 있습니다.');
+            } else {
+                // 발주 등록 화면에 자재 추가
+                materials.forEach(([code, name, spec, qty, unit]) => {
+                    // MATERIALS에 없을 경우도 대비해서 추가
+                    if (!MATERIALS.find(m => m.code === code)) {
+                        MATERIALS.push({ code, name, spec, unit, category: '부자재', useYn: 'Y', serialTracking: false });
+                    }
+                    addMaterialToRegister(code, qty);
+                });
+                alert('✅ 세트가 불러와졌습니다!\n수량을 조정하거나 자재를 추가/삭제할 수 있습니다.');
+            }
+            
+            closeSetSelectModal();
+        }
+        
+        document.getElementById('regOrderNote')?.addEventListener('input', markRegisterDirty);
+        
+        // 초기 렌더
+        renderMaterialSearchResults();
+        updateRegisterSummary();
+        
+        document.querySelectorAll('.modal').forEach(m => m.onclick = e => { if(e.target.classList.contains('modal')) e.target.classList.remove('active'); });
+        
+        // 발주 수정 모달이 열릴 때 드래그 앤 드롭 자동 초기화
+        const editOrderModal = document.getElementById('editOrderModal');
+        if (editOrderModal) {
+            const observer = new MutationObserver(function(mutations) {
+                if (editOrderModal.classList.contains('active')) {
+                    setTimeout(initEditDragAndDrop, 100);
+                }
+            });
+            observer.observe(editOrderModal, { attributes: true, attributeFilter: ['class'] });
+        }
+    </script>
+</body>
+</html>

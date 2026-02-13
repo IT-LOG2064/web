@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>자재 정보 관리 - 건설 자재 ERP</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .draggable-row {
+            cursor: move;
+            transition: background-color 0.2s;
+        }
+        .draggable-row:hover {
+            background-color: var(--gray-50);
+        }
+        .draggable-row.drag-over {
+            border-top: 2px solid var(--primary);
+            background-color: var(--gray-50);
+        }
+        .draggable-row:active {
+            cursor: grabbing;
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <a href="dashboard.html">📊 대시보드</a>
+        <a href="contract.html">📋 견적</a>
+        <a href="inventory.html">📦 재고</a>
+        <a href="order.html">📝 발주</a>
+        <a href="receiving.html">📥 입고</a>
+        <a href="shipment.html">🚚 출고</a>
+        <!-- <a href="purchase.html">🛒 구매</a> -->
+        <a href="as.html">🔧 AS</a>
+        <a href="materials.html" class="active">📁 자재정보</a>
+        <a href="project.html">📊 현장 통합 현황</a>
+    </nav>
+    
+    <main class="main">
+        <div class="tabs">
+            <button class="tab active" onclick="switchMaterialsTab('items')">자재 품목</button>
+            <button class="tab" onclick="switchMaterialsTab('sets')">자재 세트 관리</button>
+        </div>
+        
+        <!-- 탭1: 자재 품목 -->
+        <div id="tab-items" class="tab-content">
+        <div class="search-box">
+            <div class="search-row">
+                <select class="filter-select"><option>카테고리 전체</option><option>CCTV</option><option>네트워크</option><option>센서</option><option>케이블</option></select>
+                <select class="filter-select"><option>제조사 전체</option><option>한화테크윈</option><option>하이크비전</option><option>대한전선</option></select>
+                <div style="display:flex;gap:0.5rem;flex:1;min-width:200px">
+                    <input type="text" class="search-input" placeholder="자재명/코드/제조사 검색..." style="flex:1">
+                    <button class="btn btn-primary" onclick="handleSearch()">검색</button>
+                </div>
+                <button class="btn btn-secondary" onclick="resetFilters()">초기화</button>
+            </div>
+        </div>
+        
+        <div class="summary-box" style="display:flex;justify-content:space-between;align-items:center">
+            <div style="display:flex;flex-wrap:wrap;gap:1.5rem">
+                <span class="summary-item">전체 자재: <strong>1,234개</strong></span>
+                <span class="summary-item">카테고리: <strong>15개</strong></span>
+            </div>
+            <button class="btn btn-primary" id="btnAddMaterial" onclick="openAddModal()" style="white-space:nowrap">+ 새 자재 등록</button>
+        </div>
+        
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>자재 코드</th>
+                        <th>대분류</th>
+                        <th>소분류</th>
+                        <th>자재명</th>
+                        <th>모델명</th>
+                        <th>규격/사양</th>
+                        <th>제조사</th>
+                        <th>단위</th>
+                        <th>단가</th>
+                        <th>작업</th>
+                    </tr>
+                </thead>
+                <tbody id="materialsTableBody">
+                    <tr>
+                        <td colspan="10" style="text-align:center;color:var(--gray-500);padding:1.5rem">
+                            자재 마스터 데이터를 불러오는 중입니다...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        </div>
+        
+        <!-- 탭2: 자재 세트 관리 -->
+        <div id="tab-sets" class="tab-content" style="display:none">
+            <div class="summary-box">
+                <span class="summary-item">전체 세트: <strong>3개</strong></span>
+                <span class="summary-item">총 자재 종류: <strong>19종</strong></span>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>세트 코드</th>
+                            <th>세트명</th>
+                            <th>자재 수</th>
+                            <th>작성일</th>
+                            <th>작업</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr onclick="showSetDetail('1')" style="cursor:pointer">
+                            <td><strong>SET-001</strong></td>
+                            <td>표준 CCTV 세트 (16채널)</td>
+                            <td>8종</td>
+                            <td>2024-01-10</td>
+                            <td onclick="event.stopPropagation()">
+                                <button class="btn btn-primary btn-sm" onclick="editSet('1')">수정</button>
+                            </td>
+                        </tr>
+                        <tr onclick="showSetDetail('2')" style="cursor:pointer">
+                            <td><strong>SET-002</strong></td>
+                            <td>네트워크 기본 구성</td>
+                            <td>5종</td>
+                            <td>2024-01-12</td>
+                            <td onclick="event.stopPropagation()">
+                                <button class="btn btn-primary btn-sm" onclick="editSet('2')">수정</button>
+                            </td>
+                        </tr>
+                        <tr onclick="showSetDetail('3')" style="cursor:pointer">
+                            <td><strong>SET-003</strong></td>
+                            <td>센서 패키지</td>
+                            <td>6종</td>
+                            <td>2024-01-15</td>
+                            <td onclick="event.stopPropagation()">
+                                <button class="btn btn-primary btn-sm" onclick="editSet('3')">수정</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+    
+    <!-- 세트 상세 모달 -->
+    <div class="modal" id="setDetailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">세트 상세 - SET-001</h2>
+                <button class="close-btn" onclick="closeSetDetailModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="info-box">
+                    <div class="info-row"><span class="info-label">세트 코드</span><strong>SET-001</strong></div>
+                    <div class="info-row"><span class="info-label">세트명</span><strong>표준 CCTV 세트 (16채널)</strong></div>
+                    <div class="info-row"><span class="info-label">자재 수</span><span>8종</span></div>
+                    <div class="info-row"><span class="info-label">작성일</span><span>2024-01-10</span></div>
+                </div>
+                <div style="font-weight:600;margin-bottom:0.5rem;font-size:0.875rem">📦 구성 자재</div>
+                <table>
+                    <thead><tr><th>자재명</th><th>규격</th><th>수량</th><th>단위</th></tr></thead>
+                    <tbody>
+                        <tr><td>IP카메라 2MP 실외형</td><td>2MP, 1920x1080, IP67</td><td>50</td><td>개</td></tr>
+                        <tr><td>IP카메라 4MP 실내형</td><td>4MP, 2560x1440</td><td>20</td><td>개</td></tr>
+                        <tr><td>NVR 16채널</td><td>16CH, H.265, 4TB</td><td>10</td><td>개</td></tr>
+                        <tr><td>UTP 케이블 CAT6</td><td>CAT6, 305m/박스</td><td>30</td><td>박스</td></tr>
+                        <tr><td>PoE 스위치 24포트</td><td>24포트, 250W</td><td>5</td><td>개</td></tr>
+                        <tr><td>브라켓</td><td>범용형, 스틸</td><td>70</td><td>개</td></tr>
+                        <tr><td>케이블 타이</td><td>200mm, 흰색</td><td>200</td><td>개</td></tr>
+                        <tr><td>HDD 4TB</td><td>4TB, 7200RPM</td><td>10</td><td>개</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeSetDetailModal()">닫기</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 세트 등록/수정 모달 -->
+    <div class="modal" id="setModal">
+        <div class="modal-content lg">
+            <div class="modal-header">
+                <h2 class="modal-title">새 세트 등록</h2>
+                <button class="close-btn" onclick="closeSetModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group" style="flex:1">
+                        <label class="form-label">세트명 *</label>
+                        <input type="text" class="form-input" placeholder="예: 표준 CCTV 세트" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">구성 자재 *</label>
+                    <div style="border:1px solid var(--gray-200);border-radius:6px;overflow:hidden">
+                        <div style="padding:0.75rem;background:var(--gray-50);display:flex;gap:0.5rem">
+                            <input type="text" class="form-input" placeholder="자재 검색..." style="flex:1">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="addSetMaterial()">+ 추가</button>
+                        </div>
+                        <table style="margin:0">
+                            <thead><tr><th style="width:30px"></th><th>자재명</th><th style="width:100px">수량</th><th style="width:80px">단위</th><th style="width:60px">삭제</th></tr></thead>
+                            <tbody id="setMaterialList"><tr><td colspan="5" style="text-align:center;color:var(--gray-500);padding:2rem">자재를 추가해주세요</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeSetModal()">취소</button>
+                <button class="btn btn-success" onclick="submitSet()">저장</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="formModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">새 자재 등록</h2>
+                <button class="close-btn" onclick="closeModal('formModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="materialForm">
+                    <div class="form-row">
+                        <div class="form-group" style="flex:1">
+                            <label class="form-label">카테고리 *</label>
+                            <select class="form-select" id="category" required>
+                                <option value="">선택</option>
+                                <option>CCTV</option>
+                                <option>네트워크</option>
+                                <option>센서</option>
+                                <option>케이블</option>
+                                <option>기타</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex:1">
+                            <label class="form-label">자재 코드</label>
+                            <input type="text" class="form-input" id="materialCode" placeholder="예: CAM-001">
+                        </div>
+                    </div>
+                    <div class="form-group"><label class="form-label">자재명 *</label><input type="text" class="form-input" id="materialName" placeholder="예: IP카메라 2MP 실외형" required></div>
+                    <div class="form-row">
+                        <div class="form-group"><label class="form-label">제조사</label><input type="text" class="form-input" id="manufacturer" placeholder="예: 한화테크윈"></div>
+                        <div class="form-group"><label class="form-label">모델명</label><input type="text" class="form-input" id="modelName" placeholder="예: XNO-6120R"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label class="form-label">규격/사양</label><input type="text" class="form-input" id="specification" placeholder="예: 2MP, 1920x1080, IP67"></div>
+                        <div class="form-group"><label class="form-label">단위 *</label><select class="form-select" id="unit" required><option value="">선택</option><option>개</option><option>박스</option><option>세트</option><option>미터</option></select></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label class="form-label">단가 *</label><input type="number" class="form-input" id="unitPrice" placeholder="350000" required></div>
+                        <div class="form-group">
+                            <label class="form-label">시리얼 관리</label>
+                            <div style="display:flex;gap:1rem;align-items:center;padding-top:0.5rem">
+                                <label style="display:flex;align-items:center;gap:0.375rem;cursor:pointer">
+                                    <input type="radio" name="serialTracking" value="false" checked> 미사용
+                                </label>
+                                <label style="display:flex;align-items:center;gap:0.375rem;cursor:pointer">
+                                    <input type="radio" name="serialTracking" value="true"> 사용
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label class="form-label">안전재고 수량</label><input type="number" class="form-input" id="safetyStock" placeholder="10" min="0"></div>
+                        <div class="form-group"><label class="form-label">납기 소요일</label><input type="number" class="form-input" id="leadTime" placeholder="7" min="1"></div>
+                    </div>
+                    <div class="form-group"><label class="form-label">설명</label><textarea class="form-textarea" id="description" placeholder="자재에 대한 상세 설명"></textarea></div>
+                    <div class="form-group">
+                        <label class="form-label">자재 이미지 (이미지 파일)</label>
+                        <input type="file" class="form-input" id="materialImage" accept="image/*" multiple onchange="previewImages(this, 'materialImagePreview')">
+                        <div id="materialImagePreview" style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.5rem"></div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('formModal')">취소</button>
+                <button class="btn btn-success" onclick="submitForm()">저장</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="detailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">자재 상세 정보</h2>
+                <button class="close-btn" onclick="closeModal('detailModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="info-box" id="materialDetailContent">
+                    <div class="info-row"><span class="info-label">자재 코드</span><strong id="detailCode">-</strong></div>
+                    <div class="info-row"><span class="info-label">자재명</span><strong id="detailName">-</strong></div>
+                    <div class="info-row"><span class="info-label">카테고리</span><span id="detailCategory">-</span></div>
+                    <div class="info-row"><span class="info-label">제조사</span><span id="detailManufacturer">-</span></div>
+                    <div class="info-row"><span class="info-label">모델명</span><span id="detailModel">-</span></div>
+                    <div class="info-row"><span class="info-label">단가</span><strong id="detailPrice" style="color:var(--primary)">-</strong></div>
+                    <div class="info-row"><span class="info-label">단위</span><span id="detailUnit">-</span></div>
+                    <div class="info-row"><span class="info-label">규격/사양</span><span id="detailSpec">-</span></div>
+                    <div class="info-row"><span class="info-label">안전재고</span><span id="detailSafetyStock">-</span></div>
+                    <div class="info-row"><span class="info-label">납기 소요일</span><span id="detailLeadTime">-</span></div>
+                    <div class="info-row"><span class="info-label">시리얼 관리</span><span id="detailSerial">-</span></div>
+                    <div class="info-row">
+                        <span class="info-label">이미지</span>
+                        <div id="detailImagePreview" style="flex:1;display:flex;flex-wrap:wrap;gap:0.5rem;justify-content:flex-end"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('detailModal')">닫기</button>
+                <button class="btn btn-primary" onclick="closeModal('detailModal');openEditModal()">수정</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 자재 마스터 목록 (서버 없이 직접 포함)
+        const MATERIALS_MASTER = [
+  {
+    "code": "CAM-001",
+    "name": "IP카메라 2MP 실외형",
+    "category": "CCTV",
+    "spec": "2MP, 1920x1080, IR 30m, IP67",
+    "manufacturer": "한화테크윈",
+    "model": "XNO-6120R",
+    "unit": "EA",
+    "defaultUnitPrice": 350000,
+    "safetyStockQty": 10,
+    "leadTimeDays": 7,
+    "serialTracking": true
+  },
+  {
+    "code": "CAM-002",
+    "name": "IP카메라 4MP 실내용",
+    "category": "CCTV",
+    "spec": "4MP, 2560x1440, WDR, 실내용 돔",
+    "manufacturer": "한화테크윈",
+    "model": "XND-6080R",
+    "unit": "EA",
+    "defaultUnitPrice": 420000,
+    "safetyStockQty": 8,
+    "leadTimeDays": 10,
+    "serialTracking": true
+  },
+  {
+    "code": "CAM-003",
+    "name": "IP카메라 5MP 실외형",
+    "category": "CCTV",
+    "spec": "5MP, 2592x1944, IR 40m, IP67",
+    "manufacturer": "HIKVISION",
+    "model": "DS-2CD2T85FWD",
+    "unit": "EA",
+    "defaultUnitPrice": 480000,
+    "safetyStockQty": 5,
+    "leadTimeDays": 14,
+    "serialTracking": true
+  },
+  {
+    "code": "NVR-016",
+    "name": "NVR 16채널",
+    "category": "녹화기",
+    "spec": "16CH, H.265, 2Bay",
+    "manufacturer": "한화테크윈",
+    "model": "XRN-1610S",
+    "unit": "EA",
+    "defaultUnitPrice": 650000,
+    "safetyStockQty": 3,
+    "leadTimeDays": 14,
+    "serialTracking": true
+  },
+  {
+    "code": "NVR-032",
+    "name": "NVR 32채널",
+    "category": "녹화기",
+    "spec": "32CH, H.265, 4Bay",
+    "manufacturer": "HIKVISION",
+    "model": "DS-7732NI-I4",
+    "unit": "EA",
+    "defaultUnitPrice": 980000,
+    "safetyStockQty": 2,
+    "leadTimeDays": 21,
+    "serialTracking": true
+  },
+  {
+    "code": "MON-032",
+    "name": "32인치 모니터",
+    "category": "모니터",
+    "spec": "32\", FHD, 벽걸이/스탠드 겸용",
+    "manufacturer": "LG",
+    "model": "32MN500",
+    "unit": "EA",
+    "defaultUnitPrice": 280000,
+    "safetyStockQty": 4,
+    "leadTimeDays": 7,
+    "serialTracking": false
+  },
+  {
+    "code": "SW-024P",
+    "name": "PoE 스위치 24포트",
+    "category": "네트워크",
+    "spec": "24포트 PoE, 250W, 기가비트",
+    "manufacturer": "IPTIME",
+    "model": "G2400P",
+    "unit": "EA",
+    "defaultUnitPrice": 390000,
+    "safetyStockQty": 5,
+    "leadTimeDays": 10,
+    "serialTracking": false
+  },
+  {
+    "code": "SW-008P",
+    "name": "PoE 스위치 8포트",
+    "category": "네트워크",
+    "spec": "8포트 PoE, 120W, 기가비트",
+    "manufacturer": "TP-LINK",
+    "model": "TL-SG1008P",
+    "unit": "EA",
+    "defaultUnitPrice": 160000,
+    "safetyStockQty": 6,
+    "leadTimeDays": 7,
+    "serialTracking": false
+  },
+  {
+    "code": "CBL-C6-305",
+    "name": "UTP 케이블 CAT6",
+    "category": "케이블",
+    "spec": "CAT6, 305m/Box, LSZH",
+    "manufacturer": "DRAKA",
+    "model": "UC 400",
+    "unit": "BOX",
+    "defaultUnitPrice": 95000,
+    "safetyStockQty": 20,
+    "leadTimeDays": 5,
+    "serialTracking": false
+  },
+  {
+    "code": "CBL-C5E-305",
+    "name": "UTP 케이블 CAT5E",
+    "category": "케이블",
+    "spec": "CAT5E, 305m/Box, PVC",
+    "manufacturer": "LS전선",
+    "model": "HITELAN",
+    "unit": "BOX",
+    "defaultUnitPrice": 65000,
+    "safetyStockQty": 20,
+    "leadTimeDays": 5,
+    "serialTracking": false
+  },
+  {
+    "code": "BRKT-CAM-UNV",
+    "name": "카메라 벽부 브라켓",
+    "category": "부자재",
+    "spec": "알루미늄, 범용형",
+    "manufacturer": "UNV",
+    "model": "TR-JB03-G-IN",
+    "unit": "EA",
+    "defaultUnitPrice": 18000,
+    "safetyStockQty": 30,
+    "leadTimeDays": 3,
+    "serialTracking": false
+  },
+  {
+    "code": "BRKT-POLE",
+    "name": "카메라 폴 브라켓",
+    "category": "부자재",
+    "spec": "폴 마운트, 스테인리스 밴드 포함",
+    "manufacturer": "UNV",
+    "model": "TR-UP06-C-IN",
+    "unit": "EA",
+    "defaultUnitPrice": 32000,
+    "safetyStockQty": 15,
+    "leadTimeDays": 7,
+    "serialTracking": false
+  },
+  {
+    "code": "TIE-200W",
+    "name": "케이블 타이 200mm",
+    "category": "부자재",
+    "spec": "200mm, 백색, 100EA/PK",
+    "manufacturer": "국내",
+    "model": "CT-200W",
+    "unit": "PK",
+    "defaultUnitPrice": 2500,
+    "safetyStockQty": 50,
+    "leadTimeDays": 3,
+    "serialTracking": false
+  },
+  {
+    "code": "TIE-300B",
+    "name": "케이블 타이 300mm",
+    "category": "부자재",
+    "spec": "300mm, 흑색, 100EA/PK",
+    "manufacturer": "국내",
+    "model": "CT-300B",
+    "unit": "PK",
+    "defaultUnitPrice": 3500,
+    "safetyStockQty": 40,
+    "leadTimeDays": 3,
+    "serialTracking": false
+  },
+  {
+    "code": "JBOX-150",
+    "name": "방수 점검함 150x150",
+    "category": "부자재",
+    "spec": "150x150x70, IP66",
+    "manufacturer": "국내",
+    "model": "JB-150",
+    "unit": "EA",
+    "defaultUnitPrice": 12000,
+    "safetyStockQty": 10,
+    "leadTimeDays": 5,
+    "serialTracking": false
+  },
+  {
+    "code": "CON-UTP",
+    "name": "UTP RJ45 커넥터",
+    "category": "커넥터",
+    "spec": "CAT6, 100EA/PK",
+    "manufacturer": "국내",
+    "model": "RJ45-C6",
+    "unit": "PK",
+    "defaultUnitPrice": 8000,
+    "safetyStockQty": 30,
+    "leadTimeDays": 3,
+    "serialTracking": false
+  },
+  {
+    "code": "PS-48V-2A",
+    "name": "48V 2A 어댑터",
+    "category": "전원",
+    "spec": "48V DC, 2A, 플러그형",
+    "manufacturer": "국내",
+    "model": "ADP-48-2",
+    "unit": "EA",
+    "defaultUnitPrice": 28000,
+    "safetyStockQty": 10,
+    "leadTimeDays": 7,
+    "serialTracking": false
+  },
+  {
+    "code": "HDD-4TB",
+    "name": "HDD 4TB",
+    "category": "저장장치",
+    "spec": "4TB, 3.5\", 7200RPM",
+    "manufacturer": "Seagate",
+    "model": "SkyHawk 4TB",
+    "unit": "EA",
+    "defaultUnitPrice": 170000,
+    "safetyStockQty": 8,
+    "leadTimeDays": 10,
+    "serialTracking": true
+  },
+  {
+    "code": "SEN-TEMP",
+    "name": "온도 센서",
+    "category": "센서",
+    "spec": " -40~85℃, MODBUS RTU",
+    "manufacturer": "국내",
+    "model": "TS-485",
+    "unit": "EA",
+    "defaultUnitPrice": 95000,
+    "safetyStockQty": 5,
+    "leadTimeDays": 14,
+    "serialTracking": true
+  },
+  {
+    "code": "SEN-HUMI",
+    "name": "온습도 센서",
+    "category": "센서",
+    "spec": "0~100%RH, -20~60℃, RS-485",
+    "manufacturer": "국내",
+    "model": "TH-485",
+    "unit": "EA",
+    "defaultUnitPrice": 115000,
+    "safetyStockQty": 5,
+    "leadTimeDays": 14,
+    "serialTracking": true
+  }
+];
+
+        function formatPrice(value) {
+            if (value == null || isNaN(value)) return '-';
+            return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '원';
+        }
+
+        function previewImages(input, targetId = 'materialImagePreview') {
+            const preview = document.getElementById(targetId);
+            if (!preview) return;
+            preview.innerHTML = '';
+            Array.from(input.files || []).forEach(file => {
+                if (!file.type || !file.type.startsWith('image/')) return;
+                const reader = new FileReader();
+                reader.onload = e => {
+                    preview.innerHTML += `<div style="position:relative"><img src="${e.target.result}" style="width:80px;height:80px;object-fit:cover;border-radius:4px;border:1px solid var(--gray-200)"><button type="button" onclick="this.parentElement.remove()" style="position:absolute;top:-6px;right:-6px;background:var(--danger);color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:12px;cursor:pointer">×</button></div>`;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function mapUnit(unit) {
+            if (unit === 'EA') return '개';
+            if (unit === 'BOX') return '박스';
+            if (unit === 'PK') return '팩';
+            return unit || '';
+        }
+
+        function renderMaterialsTable() {
+            const tbody = document.getElementById('materialsTableBody');
+            if (!tbody) return;
+
+            if (!MATERIALS_MASTER.length) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="10" style="text-align:center;color:var(--gray-500);padding:1.5rem">
+                            자재 마스터 데이터가 없습니다.
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            function getCategoryParts(category) {
+                // 카테고리를 대분류/소분류로 분리
+                const categoryMap = {
+                    'CCTV': { main: 'CCTV', sub: '-' },
+                    '녹화기': { main: 'CCTV', sub: '녹화기' },
+                    '모니터': { main: 'CCTV', sub: '모니터' },
+                    '네트워크': { main: '네트워크', sub: '-' },
+                    '케이블': { main: '네트워크', sub: '케이블' },
+                    '부자재': { main: '부자재', sub: '-' },
+                    '커넥터': { main: '부자재', sub: '커넥터' },
+                    '전원': { main: '부자재', sub: '전원' },
+                    '저장장치': { main: '부자재', sub: '저장장치' },
+                    '센서': { main: '센서', sub: '-' }
+                };
+                
+                if (category && categoryMap[category]) {
+                    return categoryMap[category];
+                }
+                return { main: category || '-', sub: '-' };
+            }
+
+            tbody.innerHTML = '';
+            MATERIALS_MASTER.forEach(item => {
+                const unitLabel = mapUnit(item.unit);
+                const priceLabel = formatPrice(item.defaultUnitPrice);
+                const categoryParts = getCategoryParts(item.category);
+                tbody.insertAdjacentHTML('beforeend', `
+                    <tr onclick="showDetail('${item.code}')" style="cursor:pointer">
+                        <td><strong>${item.code}</strong></td>
+                        <td>${categoryParts.main}</td>
+                        <td>${categoryParts.sub}</td>
+                        <td>${item.name || '-'}</td>
+                        <td>${item.model || '-'}</td>
+                        <td>${item.spec || '-'}</td>
+                        <td>${item.manufacturer || '-'}</td>
+                        <td>${unitLabel}</td>
+                        <td>${priceLabel}</td>
+                        <td onclick="event.stopPropagation()">
+                            <button class="btn btn-primary btn-sm" onclick="openEditModal(); return false;">수정</button>
+                        </td>
+                    </tr>
+                `);
+            });
+        }
+
+        function switchMaterialsTab(tabName) {
+            document.querySelectorAll('.main .tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('tab-items').style.display = tabName === 'items' ? 'block' : 'none';
+            document.getElementById('tab-sets').style.display = tabName === 'sets' ? 'block' : 'none';
+            var btn = document.getElementById('btnAddMaterial');
+            if (tabName === 'items') {
+                btn.textContent = '+ 새 자재 등록';
+                btn.onclick = function() { openAddModal(); };
+            } else {
+                btn.textContent = '+ 새 세트 등록';
+                btn.onclick = function() { openSetModal(); };
+            }
+        }
+        function openAddModal() {
+            document.getElementById('modalTitle').textContent = '새 자재 등록';
+            document.getElementById('materialForm').reset();
+            // 자재 코드는 신규 등록 시 자동 부여
+            document.getElementById('formModal').classList.add('active');
+        }
+        function openEditModal() {
+            document.getElementById('modalTitle').textContent = '자재 정보 수정';
+            document.getElementById('materialName').value = 'IP카메라 2MP 실외형';
+            document.getElementById('category').value = 'CCTV';
+            document.getElementById('manufacturer').value = '한화테크윈';
+            document.getElementById('modelName').value = 'XNO-6120R';
+            document.getElementById('unitPrice').value = '350000';
+            document.getElementById('unit').value = '개';
+            document.getElementById('formModal').classList.add('active');
+        }
+        function showDetail(code) {
+            const material = MATERIALS_MASTER.find(m => m.code === code);
+            if (!material) {
+                alert('자재 정보를 찾을 수 없습니다.');
+                return;
+            }
+            
+            document.getElementById('detailCode').textContent = material.code || '-';
+            document.getElementById('detailName').textContent = material.name || '-';
+            document.getElementById('detailCategory').textContent = material.category || '-';
+            document.getElementById('detailManufacturer').textContent = material.manufacturer || '-';
+            document.getElementById('detailModel').textContent = material.model || '-';
+            document.getElementById('detailPrice').textContent = material.defaultUnitPrice ? formatPrice(material.defaultUnitPrice) : '-';
+            document.getElementById('detailUnit').textContent = material.unit ? mapUnit(material.unit) : '-';
+            document.getElementById('detailSpec').textContent = material.spec || '-';
+            document.getElementById('detailSafetyStock').textContent = material.safetyStockQty ? material.safetyStockQty + (material.unit ? ' ' + mapUnit(material.unit) : '') : '-';
+            document.getElementById('detailLeadTime').textContent = material.leadTimeDays ? material.leadTimeDays + '일' : '-';
+            document.getElementById('detailSerial').textContent = material.serialTracking ? '사용' : '미사용';
+
+            // 자재 이미지 (예시 이미지 사용)
+            const detailImagePreview = document.getElementById('detailImagePreview');
+            if (detailImagePreview) {
+                detailImagePreview.innerHTML = `
+                    <div style="position:relative">
+                        <img src="image.png" alt="자재 이미지 예시" style="width:120px;height:120px;object-fit:cover;border-radius:8px;border:1px solid var(--gray-200)">
+                    </div>
+                `;
+            }
+            
+            document.getElementById('detailModal').classList.add('active');
+        }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        function submitForm() { alert('✅ 자재 정보가 저장되었습니다!'); closeModal('formModal'); }
+        // 자재 세트 관리
+        function showSetDetail(setId) { document.getElementById('setDetailModal').classList.add('active'); }
+        function closeSetDetailModal() { document.getElementById('setDetailModal').classList.remove('active'); }
+        function openSetModal() {
+            var modal = document.getElementById('setModal');
+            modal.querySelector('.modal-title').textContent = '새 세트 등록';
+            var nameInput = modal.querySelector('input[placeholder="예: 표준 CCTV 세트"]');
+            if (nameInput) nameInput.value = '';
+            document.getElementById('setMaterialList').innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--gray-500);padding:2rem">자재를 추가해주세요</td></tr>';
+            modal.classList.add('active');
+        }
+        function closeSetModal() { document.getElementById('setModal').classList.remove('active'); }
+        function editSet(setId) {
+            var modal = document.getElementById('setModal');
+            var title = modal.querySelector('.modal-title');
+            var nameInput = modal.querySelector('input[placeholder="예: 표준 CCTV 세트"]');
+            var tbody = document.getElementById('setMaterialList');
+            var setData = {
+                '1': { code: 'SET-001', name: '표준 CCTV 세트 (16채널)', materials: [['IP카메라 2MP 실외형', 50, '개'], ['IP카메라 4MP 실내형', 20, '개'], ['NVR 16채널', 10, '개'], ['UTP 케이블 CAT6', 30, '박스'], ['PoE 스위치 24포트', 5, '개'], ['브라켓', 70, '개'], ['케이블 타이', 200, '개'], ['HDD 4TB', 10, '개']] },
+                '2': { code: 'SET-002', name: '네트워크 기본 구성', materials: [['PoE 스위치 24포트', 10, '개'], ['UTP 케이블 CAT6', 50, '박스'], ['광케이블', 20, '미터'], ['라우터', 5, '개'], ['패치패널', 10, '개']] },
+                '3': { code: 'SET-003', name: '센서 패키지', materials: [['온도센서', 30, '개'], ['습도센서', 30, '개'], ['화재감지센서', 20, '개'], ['센서 컨트롤러', 5, '개'], ['센서 케이블', 100, '미터'], ['센서 브라켓', 80, '개']] }
+            };
+            var set = setData[setId];
+            if (!set) return;
+            title.textContent = '세트 수정';
+            if (nameInput) nameInput.value = set.name;
+            tbody.innerHTML = '';
+            set.materials.forEach(function(m) {
+                tbody.insertAdjacentHTML('beforeend', '<tr draggable="true" class="draggable-row"><td style="cursor:move;color:var(--gray-400);text-align:center">⋮⋮</td><td>'+m[0]+'</td><td><input type="number" value="'+m[1]+'" min="1" class="form-input" style="padding:0.25rem"></td><td>'+m[2]+'</td><td><button class="btn btn-sm" style="background:var(--danger);color:#fff" onclick="this.closest(\'tr\').remove()">삭제</button></td></tr>');
+            });
+            initDragAndDrop();
+            modal.classList.add('active');
+        }
+        function addSetMaterial() { alert('자재 검색 기능 (추후 구현)'); }
+        function submitSet() {
+            var modal = document.getElementById('setModal');
+            var nameInput = modal.querySelector('input[placeholder="예: 표준 CCTV 세트"]');
+            var tbody = document.getElementById('setMaterialList');
+            if (!nameInput || !nameInput.value.trim()) return alert('세트명을 입력해주세요');
+            if (tbody.querySelector('td[colspan]')) return alert('자재를 추가해주세요');
+            var isEdit = modal.querySelector('.modal-title').textContent.indexOf('수정') !== -1;
+            alert(isEdit ? '✅ 세트가 수정되었습니다!' : '✅ 세트가 등록되었습니다!');
+            closeSetModal();
+        }
+        
+        // 드래그 앤 드롭 기능
+        let draggedRow = null;
+        function initDragAndDrop() {
+            const tbody = document.getElementById('setMaterialList');
+            if (!tbody) return;
+            
+            const rows = tbody.querySelectorAll('tr.draggable-row');
+            rows.forEach(function(row) {
+                row.draggable = true;
+                row.addEventListener('dragstart', function(e) {
+                    draggedRow = this;
+                    this.style.opacity = '0.5';
+                    e.dataTransfer.effectAllowed = 'move';
+                });
+                row.addEventListener('dragend', function(e) {
+                    this.style.opacity = '';
+                    const allRows = tbody.querySelectorAll('tr.draggable-row');
+                    allRows.forEach(function(r) {
+                        r.classList.remove('drag-over');
+                    });
+                });
+                row.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                    if (this !== draggedRow) {
+                        this.classList.add('drag-over');
+                    }
+                });
+                row.addEventListener('dragleave', function(e) {
+                    this.classList.remove('drag-over');
+                });
+                row.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    this.classList.remove('drag-over');
+                    if (draggedRow && this !== draggedRow) {
+                        const allRows = Array.from(tbody.querySelectorAll('tr.draggable-row'));
+                        const draggedIndex = allRows.indexOf(draggedRow);
+                        const targetIndex = allRows.indexOf(this);
+                        if (draggedIndex < targetIndex) {
+                            tbody.insertBefore(draggedRow, this.nextSibling);
+                        } else {
+                            tbody.insertBefore(draggedRow, this);
+                        }
+                    }
+                });
+            });
+        }
+        
+        // 모달이 열릴 때마다 드래그 앤 드롭 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            // 세트 모달 드래그 앤 드롭 초기화
+            const setModal = document.getElementById('setModal');
+            if (setModal) {
+                const observer = new MutationObserver(function(mutations) {
+                    if (setModal.classList.contains('active')) {
+                        setTimeout(initDragAndDrop, 100);
+                    }
+                });
+                observer.observe(setModal, { attributes: true, attributeFilter: ['class'] });
+            }
+
+            // 자재 마스터 테이블 렌더링
+            renderMaterialsTable();
+        });
+        document.querySelectorAll('.modal').forEach(m => m.onclick = e => { if(e.target.classList.contains('modal')) e.target.classList.remove('active'); });
+    </script>
+</body>
+</html>

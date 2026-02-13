@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>구매 관리 - 건설 자재 ERP</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="nav">
+        <a href="dashboard.html">📊 대시보드</a>
+        <a href="contract.html">📋 견적</a>
+        <a href="inventory.html">📦 재고</a>
+        <a href="order.html">📝 발주</a>
+        <a href="receiving.html">📥 입고</a>
+        <a href="shipment.html">🚚 출고</a>
+        <!-- <a href="purchase.html" class="active">🛒 구매</a> -->
+        <a href="as.html">🔧 AS</a>
+        <a href="materials.html">📁 자재정보</a>
+        <a href="project.html">📊 현장 통합 현황</a>
+    </nav>
+    
+    <main class="main">
+        <div class="page-header">
+            <button class="btn btn-primary" onclick="openAddModal()">+ 새 구매</button>
+        </div>
+        
+        <div class="search-box">
+            <div class="search-row">
+                <input type="text" class="search-input" placeholder="🔍 구매번호/자재명 검색...">
+                <select class="filter-select"><option>상태 전체</option><option>대기</option><option>승인</option><option>입고중</option><option>완료</option></select>
+                <select class="filter-select"><option>공급사 전체</option><option>한화테크윈</option><option>하이크비전</option></select>
+                <select class="filter-select"><option>기간 전체</option><option>이번 달</option><option>최근 3개월</option></select>
+            </div>
+        </div>
+        
+        <div class="summary-box">
+            <span class="summary-item">대기: <strong>3건</strong></span>
+            <span class="summary-item">승인: <strong>5건</strong></span>
+            <span class="summary-item">입고중: <strong>2건</strong></span>
+            <span class="summary-item">완료: <strong>45건</strong></span>
+            <span class="summary-item">총 구매 금액: <strong>125,000,000원</strong></span>
+        </div>
+        
+        <div class="table-container">
+            <table>
+                <thead><tr><th>구매 번호</th><th>공급사</th><th>구매일</th><th>금액</th><th>입고 예정</th><th>상태</th><th>작업</th></tr></thead>
+                <tbody>
+                    <tr>
+                        <td><strong>PO-2024-001</strong></td>
+                        <td>한화테크윈</td>
+                        <td>2024-01-20</td>
+                        <td>5,200,000원</td>
+                        <td>2024-01-27</td>
+                        <td><span class="status-badge status-pending">승인</span></td>
+                        <td><a href="#" class="btn-link" onclick="showDetail()">상세</a> <a href="#" class="btn-link" onclick="showReceive()">입고</a></td>
+                    </tr>
+                    <tr>
+                        <td><strong>PO-2024-002</strong></td>
+                        <td>하이크비전</td>
+                        <td>2024-01-22</td>
+                        <td>3,800,000원</td>
+                        <td>2024-01-29</td>
+                        <td><span class="status-badge status-approved">입고중</span></td>
+                        <td><a href="#" class="btn-link" onclick="showDetail()">상세</a> <a href="#" class="btn-link" onclick="showReceive()">입고</a></td>
+                    </tr>
+                    <tr>
+                        <td><strong>PO-2024-003</strong></td>
+                        <td>대한전선</td>
+                        <td>2024-01-25</td>
+                        <td>2,100,000원</td>
+                        <td>2024-02-01</td>
+                        <td><span class="status-badge status-warning">대기</span></td>
+                        <td><a href="#" class="btn-link" onclick="showDetail()">상세</a> <a href="#" class="btn-link">승인</a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+    
+    <!-- 신규 구매 모달 -->
+    <div class="modal" id="addModal">
+        <div class="modal-content lg">
+            <div class="modal-header">
+                <h2 class="modal-title">새 구매 요청</h2>
+                <button class="close-btn" onclick="closeModal('addModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">발주 (선택)</label>
+                        <select class="form-select" id="orderSelect">
+                            <option value="">발주 선택</option>
+                            <option value="IT260115-01">IT260115-01 - 강남 오피스텔 CCTV</option>
+                            <option value="IT260118-01">IT260118-01 - 판교 공장 센서</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">입고 예정일 *</label>
+                        <input type="date" class="form-input" id="expectedDate" value="2024-02-10" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">구매 자재 *</label>
+                    <div style="border:1px solid var(--gray-200);border-radius:6px;overflow:hidden">
+                        <div style="padding:0.75rem;background:var(--gray-50);display:flex;gap:0.5rem">
+                            <input type="text" id="materialSearch" class="form-input" placeholder="자재 검색..." style="flex:1">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="addPurchaseMaterial()">+ 추가</button>
+                        </div>
+                        <table style="margin:0">
+                            <thead><tr><th>자재명</th><th style="width:80px">수량</th><th style="width:120px">단가</th><th style="width:120px">금액</th><th style="width:50px">삭제</th></tr></thead>
+                            <tbody id="purchaseMaterialList"><tr><td colspan="5" style="text-align:center;color:var(--gray-500);padding:2rem">자재를 추가해주세요</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="info-box" style="margin-top:1rem">
+                    <div class="info-row"><span class="info-label">소계</span><span id="subtotal">0원</span></div>
+                    <div class="info-row"><span class="info-label">부가세(10%)</span><span id="vat">0원</span></div>
+                    <div class="info-row" style="border-top:1px solid var(--gray-200);padding-top:0.5rem;margin-top:0.5rem"><span style="font-weight:600">합계</span><strong id="total" style="color:var(--primary);font-size:1.125rem">0원</strong></div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">비고</label>
+                    <textarea class="form-textarea" id="purchaseNote" placeholder="구매 관련 특이사항"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('addModal')">취소</button>
+                <button class="btn btn-primary" onclick="submitPurchase()">구매 요청</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="detailModal">
+        <div class="modal-content lg">
+            <div class="modal-header">
+                <h2 class="modal-title">🛒 구매 상세 - PO-2024-001</h2>
+                <button class="close-btn" onclick="closeModal('detailModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="info-box">
+                    <div class="info-row"><span class="info-label">구매 번호</span><strong>PO-2024-001</strong></div>
+                    <div class="info-row"><span class="info-label">상태</span><span class="status-badge status-pending">승인 완료</span></div>
+                    <div class="info-row"><span class="info-label">공급사</span><span>한화테크윈</span></div>
+                    <div class="info-row"><span class="info-label">담당자</span><span>김영업 (010-1234-5678)</span></div>
+                    <div class="info-row"><span class="info-label">구매 일자</span><span>2024-01-20</span></div>
+                    <div class="info-row"><span class="info-label">입고 예정일</span><span>2024-01-27</span></div>
+                    <div class="info-row"><span class="info-label">입고 창고</span><span>본사 창고</span></div>
+                </div>
+                <div style="font-weight:600;margin-bottom:0.5rem;font-size:0.875rem">📦 구매 자재</div>
+                <table><thead><tr><th>자재명</th><th>수량</th><th>단가</th><th>금액</th></tr></thead>
+                <tbody>
+                    <tr><td>IP카메라 2MP</td><td>50개</td><td>350,000원</td><td>17,500,000원</td></tr>
+                    <tr><td>NVR 16채널</td><td>10개</td><td>1,200,000원</td><td>12,000,000원</td></tr>
+                </tbody></table>
+                <div class="info-box" style="margin-top:1rem">
+                    <div class="info-row"><span class="info-label">소계</span><span>29,500,000원</span></div>
+                    <div class="info-row"><span class="info-label">부가세(10%)</span><span>2,950,000원</span></div>
+                    <div class="info-row" style="border-top:1px solid var(--gray-200);padding-top:0.5rem;margin-top:0.5rem"><span style="font-weight:600">합계</span><strong style="color:var(--primary);font-size:1.125rem">32,450,000원</strong></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('detailModal')">닫기</button>
+                <button class="btn btn-primary" onclick="closeModal('detailModal');showReceive()">입고 처리</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="receiveModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">입고 처리 - PO-2024-001</h2>
+                <button class="close-btn" onclick="closeModal('receiveModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="font-weight:600;margin-bottom:0.5rem;font-size:0.875rem">📦 입고 자재</div>
+                <table><thead><tr><th>자재명</th><th>구매 수량</th><th style="width:100px">입고 수량</th><th style="width:120px">로트 번호</th></tr></thead>
+                <tbody>
+                    <tr><td>IP카메라 2MP</td><td>50</td><td><input type="number" class="form-input" value="50" style="padding:0.25rem"></td><td><input type="text" class="form-input" value="LOT-2024-002" style="padding:0.25rem"></td></tr>
+                    <tr><td>NVR 16채널</td><td>10</td><td><input type="number" class="form-input" value="10" style="padding:0.25rem"></td><td><input type="text" class="form-input" value="LOT-2024-003" style="padding:0.25rem"></td></tr>
+                </tbody></table>
+                <div class="form-row" style="margin-top:1rem">
+                    <div class="form-group"><label class="form-label">입고 일시</label><input type="datetime-local" class="form-input" value="2024-02-03T14:00"></div>
+                    <div class="form-group"><label class="form-label">입고 창고</label><select class="form-select"><option>본사 창고</option><option>강남 창고</option></select></div>
+                </div>
+                <div class="form-group"><label class="form-label">비고</label><input type="text" class="form-input" placeholder="비고 입력..."></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('receiveModal')">취소</button>
+                <button class="btn btn-success" onclick="processReceive()">입고 처리</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function showDetail() { document.getElementById('detailModal').classList.add('active'); }
+        function showReceive() { document.getElementById('receiveModal').classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        function openAddModal() { document.getElementById('addModal').classList.add('active'); }
+        function processReceive() { alert('✅ 입고 처리가 완료되었습니다!\n입고 번호: IN-2024-050'); closeModal('receiveModal'); }
+        
+        function addPurchaseMaterial() {
+            const search = document.getElementById('materialSearch').value;
+            if (!search) return alert('자재를 검색해주세요');
+            const tbody = document.getElementById('purchaseMaterialList');
+            if (tbody.querySelector('td[colspan]')) tbody.innerHTML = '';
+            tbody.insertAdjacentHTML('beforeend', `
+                <tr>
+                    <td>${search}</td>
+                    <td><input type="number" class="form-input" value="1" min="1" style="padding:0.25rem" onchange="calculateTotal()"></td>
+                    <td><input type="number" class="form-input" value="0" min="0" style="padding:0.25rem" onchange="calculateTotal()"></td>
+                    <td><strong>0원</strong></td>
+                    <td><button class="btn btn-sm" style="background:var(--danger);color:#fff" onclick="this.closest('tr').remove();calculateTotal()">삭제</button></td>
+                </tr>
+            `);
+            document.getElementById('materialSearch').value = '';
+            calculateTotal();
+        }
+        
+        function calculateTotal() {
+            const rows = document.querySelectorAll('#purchaseMaterialList tr');
+            let subtotal = 0;
+            rows.forEach(row => {
+                const inputs = row.querySelectorAll('input[type="number"]');
+                if (inputs.length === 2) {
+                    const qty = parseInt(inputs[0].value) || 0;
+                    const price = parseInt(inputs[1].value) || 0;
+                    const amount = qty * price;
+                    row.querySelector('td:nth-child(4) strong').textContent = amount.toLocaleString() + '원';
+                    subtotal += amount;
+                }
+            });
+            const vat = Math.floor(subtotal * 0.1);
+            const total = subtotal + vat;
+            document.getElementById('subtotal').textContent = subtotal.toLocaleString() + '원';
+            document.getElementById('vat').textContent = vat.toLocaleString() + '원';
+            document.getElementById('total').textContent = total.toLocaleString() + '원';
+        }
+        
+        function submitPurchase() {
+            if (document.getElementById('purchaseMaterialList').querySelector('td[colspan]')) return alert('자재를 추가해주세요');
+            alert('✅ 구매 요청이 등록되었습니다!\n구매 번호: PO-2024-010');
+            closeModal('addModal');
+        }
+        
+        document.querySelectorAll('.modal').forEach(m => m.onclick = e => { if(e.target.classList.contains('modal')) e.target.classList.remove('active'); });
+    </script>
+</body>
+</html>

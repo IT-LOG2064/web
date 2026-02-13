@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>입고 관리 - 건설 자재 ERP</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .autocomplete-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border: 1px solid var(--gray-300);
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1001;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .autocomplete-item {
+            padding: 0.75rem;
+            cursor: pointer;
+            border-bottom: 1px solid var(--gray-100);
+            transition: background-color 0.2s;
+        }
+        .autocomplete-item:hover,
+        .autocomplete-item.selected {
+            background-color: var(--gray-50);
+        }
+        .autocomplete-item:last-child {
+            border-bottom: none;
+        }
+        .autocomplete-item-code {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+            margin-bottom: 0.25rem;
+        }
+        .autocomplete-item-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        .autocomplete-item-info {
+            font-size: 0.8125rem;
+            color: var(--gray-600);
+        }
+        #materialTable.hide-as-receive th.as-receive-col,
+        #materialTable.hide-as-receive td.as-receive-col {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <a href="dashboard.html">📊 대시보드</a>
+        <a href="contract.html">📋 견적</a>
+        <a href="inventory.html">📦 재고</a>
+        <a href="order.html">📝 발주</a>
+        <a href="receiving.html" class="active">📥 입고</a>
+        <a href="shipment.html">🚚 출고</a>
+        <!-- <a href="purchase.html">🛒 구매</a> -->
+        <a href="as.html">🔧 AS</a>
+        <a href="materials.html">📁 자재정보</a>
+        <a href="project.html">📊 현장 통합 현황</a>
+    </nav>
+    
+    <main class="main">
+        <div class="search-box">
+            <div class="search-row">
+                <select class="filter-select"><option>유형 전체</option><option>구매 입고</option><option>현장 회수</option><option>AS 입고</option><option>기타 입고</option></select>
+                <select class="filter-select"><option>상태 전체</option><option>대기</option><option>검수중</option><option>완료</option></select>
+                <select class="filter-select"><option>창고 전체</option><option>본사 창고</option><option>강남 창고</option></select>
+                <div style="display:flex;gap:0.5rem;flex:1;min-width:200px">
+                    <input type="text" class="search-input" placeholder="입고번호/구매번호/자재명 검색..." style="flex:1">
+                    <button class="btn btn-primary" onclick="handleSearch()">검색</button>
+                </div>
+                <button class="btn btn-secondary" onclick="resetFilters()">초기화</button>
+            </div>
+        </div>
+        
+        <div class="summary-box" style="display:flex;justify-content:space-between;align-items:center">
+            <div style="display:flex;flex-wrap:wrap;gap:1.5rem">
+                <span class="summary-item">구매: <strong>120건</strong></span>
+                <span class="summary-item">현장 회수: <strong>53건</strong></span>
+                <span class="summary-item">AS: <strong>15건</strong></span>
+                <span class="summary-item">기타: <strong>8건</strong></span>
+            </div>
+            <button class="btn btn-primary" onclick="openAddModal()" style="white-space:nowrap">+ 신규 입고</button>
+        </div>
+        
+        <div class="table-container">
+            <table>
+                <thead><tr><th>입고 번호</th><th>유형</th><th>참조 번호</th><th>발주</th><th>공급사/현장</th><th>입고일</th><th>자재</th><th>창고</th><th>상태</th><th>작업</th></tr></thead>
+                <tbody>
+                    <tr onclick="showDetail('purchase')" style="cursor:pointer">
+                        <td><strong>IN-2024-050</strong></td>
+                        <td><span class="status-badge status-ok">구매</span></td>
+                        <td><a href="#" class="btn-link" onclick="event.stopPropagation()">PO-2024-001</a></td>
+                        <td><a href="#" class="btn-link" onclick="event.stopPropagation()">IT260115-01</a></td>
+                        <td>한화테크윈</td>
+                        <td>2024-02-03</td>
+                        <td>2종 60개</td>
+                        <td>본사</td>
+                        <td><span class="status-badge status-complete">완료</span></td>
+                        <td></td>
+                    </tr>
+                    <tr onclick="showDetail('return')" style="cursor:pointer">
+                        <td><strong>IN-2024-049</strong></td>
+                        <td><span class="status-badge status-approved">현장 회수</span></td>
+                        <td><a href="#" class="btn-link" onclick="event.stopPropagation()">OUT-2024-029</a></td>
+                        <td><a href="#" class="btn-link" onclick="event.stopPropagation()">IT260115-01</a></td>
+                        <td>강남 오피스텔</td>
+                        <td>2024-02-02</td>
+                        <td>5종 85개</td>
+                        <td>본사</td>
+                        <td><span class="status-badge status-complete">완료</span></td>
+                        <td></td>
+                    </tr>
+                    <tr onclick="showDetail('purchase')" style="cursor:pointer">
+                        <td><strong>IN-2024-048</strong></td>
+                        <td><span class="status-badge status-ok">구매</span></td>
+                        <td><a href="#" class="btn-link" onclick="event.stopPropagation()">PO-2024-002</a></td>
+                        <td><a href="#" class="btn-link" onclick="event.stopPropagation()">IT260118-01</a></td>
+                        <td>하이크비전</td>
+                        <td>2024-02-01</td>
+                        <td>3종 45개</td>
+                        <td>본사</td>
+                        <td><span class="status-badge status-pending">검수중</span></td>
+                        <td onclick="event.stopPropagation()">
+                            <button class="btn btn-primary btn-sm" onclick="openInspection()">검수</button>
+                        </td>
+                    </tr>
+                    <tr onclick="showDetail('as')" style="cursor:pointer">
+                        <td><strong>IN-2024-047</strong></td>
+                        <td><span class="status-badge status-warning">AS</span></td>
+                        <td><a href="#" class="btn-link" onclick="event.stopPropagation()">AS-2024-002</a></td>
+                        <td><a href="#" class="btn-link" onclick="event.stopPropagation()">IT260118-01</a></td>
+                        <td>판교 공장</td>
+                        <td>2024-01-30</td>
+                        <td>1종 1개</td>
+                        <td>AS창고</td>
+                        <td><span class="status-badge status-complete">완료</span></td>
+                        <td></td>
+                    </tr>
+                    <tr onclick="showDetail('return')" style="cursor:pointer">
+                        <td><strong>IN-2024-046</strong></td>
+                        <td><span class="status-badge status-approved">현장 회수</span></td>
+                        <td><a href="#" class="btn-link" onclick="event.stopPropagation()">OUT-2024-030</a></td>
+                        <td><a href="#" class="btn-link" onclick="event.stopPropagation()">IT260115-01</a></td>
+                        <td>강남 오피스텔</td>
+                        <td>2024-01-28</td>
+                        <td>1종 2개</td>
+                        <td>본사</td>
+                        <td><span class="status-badge status-complete">완료</span></td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="pagination">
+                <button class="page-btn">◀</button>
+                <button class="page-btn active">1</button>
+                <button class="page-btn">2</button>
+                <button class="page-btn">3</button>
+                <button class="page-btn">▶</button>
+            </div>
+        </div>
+    </main>
+    
+    <!-- 상세 모달 -->
+    <div class="modal" id="detailModal">
+        <div class="modal-content lg">
+            <div class="modal-header">
+                <h2 class="modal-title" id="detailTitle">📥 입고 상세 - IN-2024-050</h2>
+                <button class="close-btn" onclick="closeModal('detailModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="info-box" id="detailInfo">
+                    <!-- 동적으로 채워짐 -->
+                </div>
+                <div style="font-weight:600;margin-bottom:0.5rem;font-size:0.875rem">📦 입고 자재</div>
+                <table id="detailTable">
+                    <thead><tr><th>자재명</th><th>로트/시리얼</th><th>수량</th><th>검수 결과</th><th>입고 위치</th></tr></thead>
+                    <tbody id="detailMaterials"></tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('detailModal')">닫기</button>
+                <button class="btn btn-primary">입고증 출력</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 신규 입고 모달 -->
+    <div class="modal" id="addModal">
+        <div class="modal-content xl">
+            <div class="modal-header">
+                <h2 class="modal-title">신규 입고 등록</h2>
+                <button class="close-btn" onclick="closeModal('addModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">입고 유형 *</label>
+                    <div style="display:flex;gap:1rem;flex-wrap:wrap">
+                        <label style="display:flex;align-items:center;gap:0.375rem;cursor:pointer"><input type="radio" name="receiveType" value="purchase" checked onchange="changeReceiveType()"> 구매 입고</label>
+                        <label style="display:flex;align-items:center;gap:0.375rem;cursor:pointer"><input type="radio" name="receiveType" value="return" onchange="changeReceiveType()"> 현장 회수</label>
+                        <label style="display:flex;align-items:center;gap:0.375rem;cursor:pointer"><input type="radio" name="receiveType" value="etc" onchange="changeReceiveType()"> 기타 입고</label>
+                    </div>
+                </div>
+                <div class="form-row" id="companySiteGroup" style="display:none">
+                    <div class="form-group" style="flex:1">
+                        <label class="form-label">본사/현장 *</label>
+                        <div style="position:relative">
+                            <input type="text" class="form-input" id="companySiteSearch" placeholder="본사명 또는 현장명 검색..." autocomplete="off" oninput="handleCompanySiteSearch()" onfocus="handleCompanySiteSearch()" onkeydown="handleCompanySiteKeydown(event)" onblur="setTimeout(() => hideCompanySiteAutocomplete(), 200)">
+                            <div id="companySiteAutocomplete" class="autocomplete-dropdown" style="display:none"></div>
+                        </div>
+                        <input type="hidden" id="selectedCompany" value="">
+                        <input type="hidden" id="selectedSite" value="">
+                    </div>
+                    <div class="form-group" style="display:flex;align-items:flex-end">
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="loadReference()" id="loadBtn" style="white-space:nowrap;margin-bottom:0" disabled>불러오기</button>
+                    </div>
+                </div>
+                <div class="form-row" id="refSelectGroup" style="display:none">
+                    <div class="form-group">
+                        <label class="form-label" id="refLabel">구매 번호</label>
+                        <select class="form-select" id="refSelect">
+                            <option value="">선택</option>
+                            <option value="PO-2024-005">PO-2024-005 - 한화테크윈</option>
+                            <option value="PO-2024-006">PO-2024-006 - 하이크비전</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="info-box highlight" id="refInfo" style="display:none">
+                    <div id="refInfoContent"></div>
+                </div>
+                <div class="form-group" id="returnReasonGroup" style="display:none">
+                    <label class="form-label">회수 사유 *</label>
+                    <select class="form-select" id="returnReason" required>
+                        <option value="">선택</option>
+                        <option value="미사용">미사용 잔여</option>
+                        <option value="현장종료">현장 종료</option>
+                        <option value="설치취소">설치 취소</option>
+                        <option value="기타">기타</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">입고일 *</label>
+                        <input type="datetime-local" class="form-input" value="2024-02-03T14:00" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">입고 창고 *</label>
+                        <select class="form-select" id="warehouseSelect" required>
+                            <option value="">창고 선택</option>
+                            <option value="1">본사 창고</option>
+                            <option value="2">강남 창고</option>
+                            <option value="3">AS 창고</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">입고 자재 *</label>
+                    <div style="border:1px solid var(--gray-200);border-radius:6px;overflow:visible;position:relative">
+                        <div style="padding:0.75rem;background:var(--gray-50);display:flex;gap:0.5rem">
+                            <div style="position:relative;flex:1;z-index:10">
+                                <input type="text" id="materialSearch" class="form-input" placeholder="자재 코드, 자재명, 카테고리로 검색..." style="width:100%" autocomplete="off" oninput="handleMaterialSearch()" onkeydown="handleMaterialKeydown(event)" onfocus="handleMaterialFocus()" onblur="setTimeout(() => hideMaterialAutocomplete(), 200)">
+                                <div id="materialAutocomplete" class="autocomplete-dropdown" style="display:none;z-index:1001"></div>
+                            </div>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="addMaterial()">+ 추가</button>
+                        </div>
+                        <table style="margin:0" id="materialTable">
+                            <thead><tr><th>자재명 / 규격</th><th style="width:110px" class="as-receive-col">AS 입고 여부</th><th style="width:180px" class="as-receive-col">수량 (AS/일반)</th><th style="width:120px">시리얼</th><th style="width:50px">삭제</th></tr></thead>
+                            <tbody id="materialList"><tr><td colspan="5" style="text-align:center;color:var(--gray-500);padding:2rem">자재를 추가해주세요</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">비고</label>
+                    <textarea class="form-textarea" placeholder="입고 관련 특이사항"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('addModal')">취소</button>
+                <button class="btn btn-success" onclick="submitReceiving()">입고 등록</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 검수 모달 -->
+    <div class="modal" id="inspectionModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">입고 검수 - IN-2024-049</h2>
+                <button class="close-btn" onclick="closeModal('inspectionModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="info-box highlight">
+                    <div style="font-size:0.875rem">구매: <strong>PO-2024-002</strong> | 공급사: <strong>하이크비전</strong> | 입고일: <strong>2024-02-02</strong></div>
+                </div>
+                <div style="font-weight:600;margin-bottom:0.5rem;font-size:0.875rem">📦 검수 자재</div>
+                <table>
+                    <thead><tr><th>자재명</th><th>입고 수량</th><th style="width:100px">정상</th><th style="width:100px">불량</th><th style="width:100px">검수 결과</th></tr></thead>
+                    <tbody>
+                        <tr>
+                            <td>IP카메라 4MP</td>
+                            <td>30개</td>
+                            <td><input type="number" class="form-input" value="30" style="padding:0.25rem"></td>
+                            <td><input type="number" class="form-input" value="0" style="padding:0.25rem"></td>
+                            <td><select class="form-select" style="padding:0.25rem"><option>정상</option><option>일부불량</option><option>전량불량</option></select></td>
+                        </tr>
+                        <tr>
+                            <td>NVR 32채널</td>
+                            <td>10개</td>
+                            <td><input type="number" class="form-input" value="9" style="padding:0.25rem"></td>
+                            <td><input type="number" class="form-input" value="1" style="padding:0.25rem"></td>
+                            <td><select class="form-select" style="padding:0.25rem"><option>정상</option><option selected>일부불량</option><option>전량불량</option></select></td>
+                        </tr>
+                        <tr>
+                            <td>PoE 스위치</td>
+                            <td>5개</td>
+                            <td><input type="number" class="form-input" value="5" style="padding:0.25rem"></td>
+                            <td><input type="number" class="form-input" value="0" style="padding:0.25rem"></td>
+                            <td><select class="form-select" style="padding:0.25rem"><option>정상</option><option>일부불량</option><option>전량불량</option></select></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="form-group" style="margin-top:1rem">
+                    <label class="form-label">검수 의견</label>
+                    <textarea class="form-textarea" placeholder="검수 결과 및 특이사항">NVR 32채널 1대 외관 파손 - 공급사 반품 처리 예정</textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('inspectionModal')">취소</button>
+                <button class="btn btn-success" onclick="completeInspection()">검수 완료</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 시리얼 선택 모달 -->
+    <div class="modal" id="serialModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">시리얼 선택 - <span id="serialMaterialName">IP카메라 2MP</span></h2>
+                <button class="close-btn" onclick="closeModal('serialModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="info-box highlight" style="margin-bottom:1rem">
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                        <div>입고 수량: <strong id="serialQty">4</strong>개</div>
+                        <button class="btn btn-sm btn-secondary" onclick="selectAllSerials()">전체 선택</button>
+                    </div>
+                </div>
+                
+                <div style="max-height:300px;overflow-y:auto;border:1px solid var(--gray-200);border-radius:6px">
+                    <table style="margin:0">
+                        <thead style="position:sticky;top:0;background:#fff">
+                            <tr>
+                                <th style="width:40px"></th>
+                                <th>시리얼 번호</th>
+                                <th>위치</th>
+                                <th>상태</th>
+                            </tr>
+                        </thead>
+                        <tbody id="serialList">
+                            <tr>
+                                <td><input type="checkbox" class="serial-check" checked></td>
+                                <td><strong>CAM-2024-001</strong></td>
+                                <td>본사창고 A-01-01</td>
+                                <td><span class="status-badge status-ok">정상</span></td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" class="serial-check" checked></td>
+                                <td><strong>CAM-2024-002</strong></td>
+                                <td>본사창고 A-01-01</td>
+                                <td><span class="status-badge status-ok">정상</span></td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" class="serial-check" checked></td>
+                                <td><strong>CAM-2024-003</strong></td>
+                                <td>본사창고 A-01-02</td>
+                                <td><span class="status-badge status-ok">정상</span></td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" class="serial-check" checked></td>
+                                <td><strong>CAM-2024-004</strong></td>
+                                <td>본사창고 A-01-02</td>
+                                <td><span class="status-badge status-ok">정상</span></td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" class="serial-check"></td>
+                                <td><strong>CAM-2024-005</strong></td>
+                                <td>본사창고 A-01-03</td>
+                                <td><span class="status-badge status-ok">정상</span></td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" class="serial-check"></td>
+                                <td><strong>CAM-2024-006</strong></td>
+                                <td>강남창고 B-01-01</td>
+                                <td><span class="status-badge status-ok">정상</span></td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" class="serial-check"></td>
+                                <td><strong>CAM-2024-007</strong></td>
+                                <td>강남창고 B-01-01</td>
+                                <td><span class="status-badge status-ok">정상</span></td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" class="serial-check"></td>
+                                <td><strong>CAM-2024-008</strong></td>
+                                <td>강남창고 B-01-02</td>
+                                <td><span class="status-badge status-ok">정상</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="info-box" style="margin-top:1rem;display:flex;justify-content:space-between;align-items:center">
+                    <div>
+                        선택: <strong id="selectedCount">4</strong>개 / 입고수량: <strong id="requiredCount">4</strong>개
+                    </div>
+                    <div id="serialMatchStatus">
+                        <span style="color:var(--success);font-weight:600">✅ 일치</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('serialModal')">취소</button>
+                <button class="btn btn-primary" onclick="confirmSerialSelection()">선택 완료</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function showDetail(type) {
+            const modal = document.getElementById('detailModal');
+            const title = document.getElementById('detailTitle');
+            const info = document.getElementById('detailInfo');
+            const materials = document.getElementById('detailMaterials');
+            
+            if (type === 'purchase') {
+                title.textContent = '📥 구매 입고 상세 - IN-2024-050';
+                info.innerHTML = `
+                    <div class="info-row"><span class="info-label">입고 번호</span><strong>IN-2024-050</strong></div>
+                    <div class="info-row"><span class="info-label">입고 유형</span><span class="status-badge status-ok">구매 입고</span></div>
+                    <div class="info-row"><span class="info-label">구매 번호</span><a href="#" class="btn-link">PO-2024-001</a></div>
+                    <div class="info-row"><span class="info-label">발주</span><a href="#" class="btn-link">ORD-2024-001 - 강남 오피스텔 CCTV</a></div>
+                    <div class="info-row"><span class="info-label">공급사</span><span>한화테크윈</span></div>
+                    <div class="info-row"><span class="info-label">입고일</span><span>2024-02-03 14:00</span></div>
+                    <div class="info-row"><span class="info-label">입고 창고</span><span>본사 창고</span></div>
+                    <div class="info-row"><span class="info-label">담당자</span><span>김창고</span></div>
+                    <div class="info-row"><span class="info-label">상태</span><span class="status-badge status-complete">완료</span></div>
+                `;
+                materials.innerHTML = `
+                    <tr><td>IP카메라 2MP</td><td>LOT-2024-050</td><td>50개</td><td><span class="status-badge status-ok">정상</span></td><td>A-01-01</td></tr>
+                    <tr><td>NVR 16채널</td><td>LOT-2024-051</td><td>10개</td><td><span class="status-badge status-ok">정상</span></td><td>A-02-01</td></tr>
+                `;
+            } else if (type === 'as') {
+                title.textContent = '📥 AS 입고 상세 - IN-2024-049';
+                info.innerHTML = `
+                    <div class="info-row"><span class="info-label">입고 번호</span><strong>IN-2024-049</strong></div>
+                    <div class="info-row"><span class="info-label">입고 유형</span><span class="status-badge status-warning">AS 입고</span></div>
+                    <div class="info-row"><span class="info-label">AS 번호</span><a href="#" class="btn-link">AS-2024-001</a></div>
+                    <div class="info-row"><span class="info-label">발주</span><a href="#" class="btn-link">ORD-2024-001 - 강남 오피스텔 CCTV</a></div>
+                    <div class="info-row"><span class="info-label">회수 현장</span><span>강남 오피스텔</span></div>
+                    <div class="info-row"><span class="info-label">문제 유형</span><strong style="color:var(--danger)">초기 불량</strong></div>
+                    <div class="info-row"><span class="info-label">입고일</span><span>2024-02-02 09:00</span></div>
+                    <div class="info-row"><span class="info-label">입고 창고</span><span>AS 창고</span></div>
+                    <div class="info-row"><span class="info-label">상태</span><span class="status-badge status-pending">검수중</span></div>
+                `;
+                materials.innerHTML = `
+                    <tr><td>IP카메라 2MP</td><td>CAM-2024-015</td><td>1개</td><td><span class="status-badge status-warning">검수중</span></td><td>AS-ZONE</td></tr>
+                `;
+            } else if (type === 'return') {
+                title.textContent = '📥 현장 회수 입고 상세 - IN-2024-046';
+                info.innerHTML = `
+                    <div class="info-row"><span class="info-label">입고 번호</span><strong>IN-2024-046</strong></div>
+                    <div class="info-row"><span class="info-label">입고 유형</span><span class="status-badge status-approved">현장 회수</span></div>
+                    <div class="info-row"><span class="info-label">출고 번호</span><a href="#" class="btn-link">OUT-2024-030</a></div>
+                    <div class="info-row"><span class="info-label">발주</span><a href="#" class="btn-link">IT260115-01 - 강남 오피스텔 CCTV</a></div>
+                    <div class="info-row"><span class="info-label">회수 현장</span><span>강남 오피스텔</span></div>
+                    <div class="info-row"><span class="info-label">회수 사유</span><span>미사용 잔여</span></div>
+                    <div class="info-row"><span class="info-label">입고일</span><span>2024-01-28 15:00</span></div>
+                    <div class="info-row"><span class="info-label">입고 창고</span><span>본사 창고</span></div>
+                    <div class="info-row"><span class="info-label">상태</span><span class="status-badge status-complete">완료</span></div>
+                `;
+                materials.innerHTML = `
+                    <tr><td>IP카메라 2MP</td><td>LOT-2024-030</td><td>15개</td><td><span class="status-badge status-ok">정상</span></td><td>A-01-01</td></tr>
+                    <tr><td>NVR 16채널</td><td>LOT-2024-031</td><td>2개</td><td><span class="status-badge status-ok">정상</span></td><td>A-02-01</td></tr>
+                `;
+            }
+            modal.classList.add('active');
+        }
+        
+        function openAddModal() { document.getElementById('addModal').classList.add('active'); }
+        function openInspection() { document.getElementById('inspectionModal').classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        
+        // 본사별 현장 데이터
+        const SITES_BY_COMPANY = {
+            '강남건설': ['강남 오피스텔', '강남 상가'],
+            '삼성물산': ['판교 공장', '판교 연구소'],
+            '인천건설': ['인천 물류센터', '인천 공장']
+        };
+        
+        // 통합 검색을 위한 전체 본사/현장 목록
+        const ALL_COMPANY_SITES = [];
+        Object.keys(SITES_BY_COMPANY).forEach(company => {
+            const sites = SITES_BY_COMPANY[company];
+            sites.forEach(site => {
+                ALL_COMPANY_SITES.push({
+                    company: company,
+                    site: site,
+                    searchText: `${company} ${site}`.toLowerCase()
+                });
+            });
+        });
+        
+        // 본사/현장 통합 검색 기능
+        let companySiteAutocompleteIndex = -1;
+        let companySiteAutocompleteItems = [];
+        
+        function handleCompanySiteSearch() {
+            const keyword = document.getElementById('companySiteSearch').value.trim().toLowerCase();
+            const dropdown = document.getElementById('companySiteAutocomplete');
+            
+            if (!keyword) {
+                hideCompanySiteAutocomplete();
+                return;
+            }
+            
+            // 본사명, 현장명으로 검색
+            const filtered = ALL_COMPANY_SITES.filter(item => 
+                item.searchText.includes(keyword) ||
+                item.company.toLowerCase().includes(keyword) ||
+                item.site.toLowerCase().includes(keyword)
+            ).slice(0, 10);
+            
+            if (filtered.length === 0) {
+                dropdown.innerHTML = '<div class="autocomplete-item" style="color:var(--gray-500);cursor:default">검색 결과가 없습니다</div>';
+                dropdown.style.display = 'block';
+                return;
+            }
+            
+            companySiteAutocompleteItems = filtered;
+            companySiteAutocompleteIndex = -1;
+            
+            dropdown.innerHTML = filtered.map((item, idx) => `
+                <div class="autocomplete-item" data-index="${idx}" onclick="selectCompanySite(${idx})" onmouseover="highlightCompanySite(${idx})">
+                    <div class="autocomplete-item-name">${item.site}</div>
+                    <div class="autocomplete-item-info">${item.company}</div>
+                </div>
+            `).join('');
+            
+            dropdown.style.display = 'block';
+        }
+        
+        function handleCompanySiteKeydown(event) {
+            const dropdown = document.getElementById('companySiteAutocomplete');
+            if (dropdown.style.display === 'none' || companySiteAutocompleteItems.length === 0) {
+                return;
+            }
+            
+            if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                companySiteAutocompleteIndex = Math.min(companySiteAutocompleteIndex + 1, companySiteAutocompleteItems.length - 1);
+                highlightCompanySite(companySiteAutocompleteIndex);
+            } else if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                companySiteAutocompleteIndex = Math.max(companySiteAutocompleteIndex - 1, -1);
+                highlightCompanySite(companySiteAutocompleteIndex);
+            } else if (event.key === 'Enter') {
+                event.preventDefault();
+                if (companySiteAutocompleteIndex >= 0 && companySiteAutocompleteIndex < companySiteAutocompleteItems.length) {
+                    selectCompanySite(companySiteAutocompleteIndex);
+                }
+            } else if (event.key === 'Escape') {
+                hideCompanySiteAutocomplete();
+            }
+        }
+        
+        function highlightCompanySite(index) {
+            const items = document.getElementById('companySiteAutocomplete').querySelectorAll('.autocomplete-item');
+            items.forEach((item, i) => {
+                if (i === index) {
+                    item.classList.add('selected');
+                } else {
+                    item.classList.remove('selected');
+                }
+            });
+            companySiteAutocompleteIndex = index;
+        }
+        
+        function selectCompanySite(index) {
+            const item = companySiteAutocompleteItems[index];
+            if (!item) return;
+            
+            document.getElementById('companySiteSearch').value = `${item.company} - ${item.site}`;
+            document.getElementById('selectedCompany').value = item.company;
+            document.getElementById('selectedSite').value = item.site;
+            hideCompanySiteAutocomplete();
+            
+            // 본사/현장 선택 시 발주 목록 로드
+            loadOrderOptions();
+        }
+        
+        function hideCompanySiteAutocomplete() {
+            document.getElementById('companySiteAutocomplete').style.display = 'none';
+            companySiteAutocompleteIndex = -1;
+        }
+        
+        function changeReceiveType() {
+            const type = document.querySelector('input[name="receiveType"]:checked').value;
+            const refLabel = document.getElementById('refLabel');
+            const refSelect = document.getElementById('refSelect');
+            const refSelectGroup = document.getElementById('refSelectGroup');
+            const companySiteGroup = document.getElementById('companySiteGroup');
+            const warehouseSelect = document.getElementById('warehouseSelect');
+            const showAsReceiveCol = type !== 'purchase';
+            setAsReceiveColumnVisibility(showAsReceiveCol);
+            
+            // 기타 입고는 참조 문서 없음
+            if (type === 'etc') {
+                refSelectGroup.style.display = 'none';
+                companySiteGroup.style.display = 'none';
+                warehouseSelect.value = '1';
+                document.getElementById('returnReasonGroup').style.display = 'none';
+                document.getElementById('refInfo').style.display = 'none';
+                document.getElementById('materialList').innerHTML = `<tr><td colspan="${showAsReceiveCol ? 5 : 4}" style="text-align:center;color:var(--gray-500);padding:2rem">자재를 추가해주세요</td></tr>`;
+                return;
+            }
+            
+            refSelectGroup.style.display = 'block';
+            
+            if (type === 'purchase') {
+                companySiteGroup.style.display = 'none';
+                refLabel.innerHTML = '구매 번호';
+                refSelect.innerHTML = '<option value="">선택</option><option value="PO-2024-005">PO-2024-005 - 한화테크윈</option><option value="PO-2024-006">PO-2024-006 - 하이크비전</option>';
+                warehouseSelect.value = '1';
+                document.getElementById('returnReasonGroup').style.display = 'none';
+            } else if (type === 'return') {
+                companySiteGroup.style.display = 'grid';
+                refSelectGroup.style.display = 'none';
+                warehouseSelect.value = '1';
+                document.getElementById('returnReasonGroup').style.display = 'block';
+                // 본사/현장 초기화
+                document.getElementById('companySiteSearch').value = '';
+                document.getElementById('selectedCompany').value = '';
+                document.getElementById('selectedSite').value = '';
+                hideCompanySiteAutocomplete();
+                // 불러오기 버튼 비활성화
+                const loadBtn = document.getElementById('loadBtn');
+                if (loadBtn) loadBtn.disabled = true;
+            }
+            
+            document.getElementById('refInfo').style.display = 'none';
+            document.getElementById('materialList').innerHTML = `<tr><td colspan="${showAsReceiveCol ? 5 : 4}" style="text-align:center;color:var(--gray-500);padding:2rem">자재를 추가해주세요</td></tr>`;
+        }
+
+        function setAsReceiveColumnVisibility(show) {
+            const table = document.getElementById('materialTable');
+            if (!table) return;
+            table.classList.toggle('hide-as-receive', !show);
+            const emptyTd = document.querySelector('#materialList td[colspan]');
+            if (emptyTd) {
+                emptyTd.setAttribute('colspan', show ? '5' : '4');
+            }
+        }
+        
+        // 본사/현장별 발주 데이터 (목업)
+        const ORDERS_BY_COMPANY_SITE = {
+            '강남건설_강남 오피스텔': [
+                { value: 'IT260115-01', text: 'IT260115-01 - 강남 오피스텔 CCTV' },
+                { value: 'IT260120-01', text: 'IT260120-01 - 강남 오피스텔 추가 설치' }
+            ],
+            '강남건설_강남 상가': [
+                { value: 'IT260125-01', text: 'IT260125-01 - 강남 상가 CCTV' }
+            ],
+            '삼성물산_판교 공장': [
+                { value: 'IT260118-01', text: 'IT260118-01 - 판교 공장 센서' }
+            ],
+            '삼성물산_판교 연구소': [
+                { value: 'IT260130-01', text: 'IT260130-01 - 판교 연구소 설치' }
+            ],
+            '인천건설_인천 물류센터': [
+                { value: 'IT260140-01', text: 'IT260140-01 - 인천 물류센터 통합' }
+            ],
+            '인천건설_인천 공장': [
+                { value: 'IT260145-01', text: 'IT260145-01 - 인천 공장 센서' }
+            ]
+        };
+        
+        // 발주별 자재 데이터 (목업)
+        const ORDER_MATERIALS = {
+            'IT260115-01': [
+                { name: 'IP카메라 2MP', spec: '2MP, IP67', quantity: 50, lot: 'LOT-2024-052', location: 'A-01-01' },
+                { name: 'NVR 16채널', spec: '16CH, H.265', quantity: 10, lot: 'LOT-2024-053', location: 'A-02-01' },
+                { name: 'UTP 케이블 CAT6', spec: '305m/박스', quantity: 30, lot: 'LOT-2024-054', location: 'A-03-01' }
+            ],
+            'IT260118-01': [
+                { name: 'IP카메라 4MP', spec: '4MP, 실내용', quantity: 20, lot: 'LOT-2024-055', location: 'A-01-02' },
+                { name: 'PoE 스위치 24포트', spec: '24포트, 250W', quantity: 5, lot: 'LOT-2024-056', location: 'A-02-02' }
+            ],
+            'IT260120-01': [
+                { name: 'IP카메라 2MP', spec: '2MP, IP67', quantity: 30, lot: 'LOT-2024-060', location: 'A-01-03' }
+            ],
+            'IT260125-01': [
+                { name: 'IP카메라 4MP', spec: '4MP, 실내용', quantity: 15, lot: 'LOT-2024-061', location: 'A-01-04' },
+                { name: 'NVR 32채널', spec: '32CH, H.265', quantity: 5, lot: 'LOT-2024-062', location: 'A-02-04' }
+            ],
+            'IT260130-01': [
+                { name: '온도 센서', spec: '온도 측정, -40~85℃', quantity: 10, lot: 'LOT-2024-063', location: 'B-01-01' }
+            ],
+            'IT260140-01': [
+                { name: 'IP카메라 2MP', spec: '2MP, IP67', quantity: 40, lot: 'LOT-2024-064', location: 'A-01-05' },
+                { name: 'NVR 16채널', spec: '16CH, H.265', quantity: 8, lot: 'LOT-2024-065', location: 'A-02-05' }
+            ],
+            'IT260145-01': [
+                { name: '습도 센서', spec: '습도 측정, 0~100%RH', quantity: 12, lot: 'LOT-2024-066', location: 'B-01-02' }
+            ]
+        };
+        
+        function loadOrderOptions() {
+            const company = document.getElementById('selectedCompany').value;
+            const site = document.getElementById('selectedSite').value;
+            const loadBtn = document.getElementById('loadBtn');
+            
+            if (!company || !site) {
+                if (loadBtn) loadBtn.disabled = true;
+                return;
+            }
+            
+            // 본사/현장이 선택되면 불러오기 버튼 활성화
+            if (loadBtn) loadBtn.disabled = false;
+        }
+        
+        function loadReference() {
+            const type = document.querySelector('input[name="receiveType"]:checked').value;
+            const refInfo = document.getElementById('refInfo');
+            const refContent = document.getElementById('refInfoContent');
+            const tbody = document.getElementById('materialList');
+            
+            // 기존 로직 (구매번호 등)
+            if (type === 'purchase') {
+                if (!document.getElementById('refSelect').value) {
+                    refInfo.style.display = 'none';
+                    return;
+                }
+                
+                refInfo.style.display = 'block';
+                
+                if (type === 'purchase') {
+                    refContent.innerHTML = '<div style="font-size:0.875rem">공급사: <strong>한화테크윈</strong> | 구매일: <strong>2024-01-25</strong> | 금액: <strong style="color:var(--primary)">32,450,000원</strong></div>';
+                    const rowId1 = 'row_' + Date.now() + '_1';
+                    const rowId2 = 'row_' + Date.now() + '_2';
+                    // IP카메라 2MP와 NVR 16채널은 시리얼 자재
+                    const serialHtml1 = `<div class="serial-container" data-row-id="${rowId1}">
+                        <div class="serial-list" data-row-id="${rowId1}">
+                            <div class="serial-item" style="display:flex;gap:0.25rem;margin-bottom:0.25rem;align-items:center">
+                                <input type="text" class="form-input serial-input" placeholder="시리얼 번호" style="padding:0.25rem;flex:1" data-row-id="${rowId1}">
+                                <button type="button" class="btn btn-sm" style="background:var(--danger);color:#fff;padding:0.25rem 0.5rem;font-size:0.75rem" onclick="removeSerialInput(this, '${rowId1}')" style="display:none">삭제</button>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm" style="background:var(--primary);color:#fff;padding:0.25rem 0.5rem;font-size:0.75rem;width:100%;margin-top:0.25rem" onclick="addSerialInput('${rowId1}')">+ 시리얼 추가</button>
+                    </div>`;
+                    const serialHtml2 = `<div class="serial-container" data-row-id="${rowId2}">
+                        <div class="serial-list" data-row-id="${rowId2}">
+                            <div class="serial-item" style="display:flex;gap:0.25rem;margin-bottom:0.25rem;align-items:center">
+                                <input type="text" class="form-input serial-input" placeholder="시리얼 번호" style="padding:0.25rem;flex:1" data-row-id="${rowId2}">
+                                <button type="button" class="btn btn-sm" style="background:var(--danger);color:#fff;padding:0.25rem 0.5rem;font-size:0.75rem" onclick="removeSerialInput(this, '${rowId2}')" style="display:none">삭제</button>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm" style="background:var(--primary);color:#fff;padding:0.25rem 0.5rem;font-size:0.75rem;width:100%;margin-top:0.25rem" onclick="addSerialInput('${rowId2}')">+ 시리얼 추가</button>
+                    </div>`;
+                    tbody.innerHTML = `
+                        <tr data-row-id="${rowId1}" data-serial-tracking="true">
+                            <td>
+                                <div style="font-weight:500">IP카메라 2MP</div>
+                                <div style="font-size:0.8125rem;color:var(--gray-500);margin-top:0.25rem">2MP, IP67</div>
+                            </td>
+                            <td style="text-align:center" class="as-receive-col">
+                                <label style="display:inline-flex;align-items:center;gap:0.25rem;cursor:pointer;font-size:0.8125rem">
+                                    <input type="checkbox" class="as-receive-check" onchange="toggleAsQtyInput(this, '${rowId1}')">
+                                    AS
+                                </label>
+                            </td>
+                            <td class="as-receive-col">
+                                <div style="display:flex;gap:0.5rem;align-items:center">
+                                    <div style="flex:1">
+                                        <input type="number" class="form-input as-qty-input" value="0" min="0" style="padding:0.25rem;width:100%" onchange="updateQtyTotal('${rowId1}');updateSerialInputs('${rowId1}')" disabled>
+                                    </div>
+                                    <div style="flex:1">
+                                        <input type="number" class="form-input normal-qty-input" value="50" min="0" style="padding:0.25rem;width:100%" onchange="updateQtyTotal('${rowId1}');updateSerialInputs('${rowId1}')">
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="min-width:200px">${serialHtml1}</td>
+                            <td><button class="btn btn-sm" style="background:var(--danger);color:#fff;white-space:nowrap" onclick="this.closest('tr').remove()">삭제</button></td>
+                        </tr>
+                        <tr data-row-id="${rowId2}" data-serial-tracking="true">
+                            <td>
+                                <div style="font-weight:500">NVR 16채널</div>
+                                <div style="font-size:0.8125rem;color:var(--gray-500);margin-top:0.25rem">16CH, H.265</div>
+                            </td>
+                            <td style="text-align:center" class="as-receive-col">
+                                <label style="display:inline-flex;align-items:center;gap:0.25rem;cursor:pointer;font-size:0.8125rem">
+                                    <input type="checkbox" class="as-receive-check" onchange="toggleAsQtyInput(this, '${rowId2}')">
+                                    AS
+                                </label>
+                            </td>
+                            <td class="as-receive-col">
+                                <div style="display:flex;gap:0.5rem;align-items:center">
+                                    <div style="flex:1">
+                                        <input type="number" class="form-input as-qty-input" value="0" min="0" style="padding:0.25rem;width:100%" onchange="updateQtyTotal('${rowId2}');updateSerialInputs('${rowId2}')" disabled>
+                                    </div>
+                                    <div style="flex:1">
+                                        <input type="number" class="form-input normal-qty-input" value="10" min="0" style="padding:0.25rem;width:100%" onchange="updateQtyTotal('${rowId2}');updateSerialInputs('${rowId2}')">
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="min-width:200px">${serialHtml2}</td>
+                            <td><button class="btn btn-sm" style="background:var(--danger);color:#fff;white-space:nowrap" onclick="this.closest('tr').remove()">삭제</button></td>
+                        </tr>
+                    `;
+                }
+            } else if (type === 'return') {
+                // 현장 회수는 본사/현장 선택 시 해당 현장의 발주 자재 불러오기
+                const company = document.getElementById('selectedCompany').value;
+                const site = document.getElementById('selectedSite').value;
+                
+                if (!company || !site) {
+                    alert('본사/현장을 선택해주세요.');
+                    return;
+                }
+                
+                // 해당 현장의 첫 번째 발주 찾기
+                const key = `${company}_${site}`;
+                const orders = ORDERS_BY_COMPANY_SITE[key] || [];
+                
+                if (orders.length === 0) {
+                    alert('해당 현장의 발주가 없습니다.');
+                    return;
+                }
+                
+                // 첫 번째 발주의 자재 불러오기
+                const orderNo = orders[0].value;
+                if (ORDER_MATERIALS[orderNo]) {
+                    const materials = ORDER_MATERIALS[orderNo];
+                    tbody.innerHTML = '';
+                    materials.forEach((material, index) => {
+                        const spec = material.spec || '-';
+                        const rowId = 'row_' + Date.now() + '_' + index;
+                        // MATERIALS 배열에서 자재 찾아서 시리얼 자재 여부 확인
+                        const masterMaterial = MATERIALS.find(m => m.name === material.name || m.code === material.code);
+                        const isSerialTracking = masterMaterial ? (masterMaterial.serialTracking === true) : false;
+                        // 현장 회수인 경우 시리얼 자재는 모달로 선택
+                        const serialHtml = isSerialTracking 
+                            ? `<div class="serial-container" data-row-id="${rowId}" data-material-code="${masterMaterial ? masterMaterial.code : ''}" data-material-name="${material.name}">
+                                <div class="selected-serial-list" data-row-id="${rowId}" style="min-height:60px;border:1px solid var(--gray-200);border-radius:4px;padding:0.5rem;margin-bottom:0.5rem;font-size:0.8125rem;color:var(--gray-500)">
+                                    선택된 시리얼이 없습니다.
+                                </div>
+                                <button type="button" class="btn btn-sm" style="background:var(--primary);color:#fff;padding:0.25rem 0.5rem;font-size:0.75rem;width:100%" onclick="openSerialModalForReturn('${rowId}', '${masterMaterial ? masterMaterial.code : ''}', '${material.name}', ${material.quantity})">+ 시리얼 선택</button>
+                            </div>`
+                            : `<input type="text" class="form-input" value="${material.lot || ''}" placeholder="LOT/시리얼" style="padding:0.25rem">`;
+                        
+                        tbody.insertAdjacentHTML('beforeend', 
+                            `<tr data-row-id="${rowId}" data-serial-tracking="${isSerialTracking}">
+                                <td>
+                                    <div style="font-weight:500">${material.name}</div>
+                                    <div style="font-size:0.8125rem;color:var(--gray-500);margin-top:0.25rem">${spec}</div>
+                                </td>
+                                <td style="text-align:center" class="as-receive-col">
+                                    <label style="display:inline-flex;align-items:center;gap:0.25rem;cursor:pointer;font-size:0.8125rem">
+                                        <input type="checkbox" class="as-receive-check" onchange="toggleAsQtyInput(this, '${rowId}')">
+                                        AS
+                                    </label>
+                                </td>
+                                <td class="as-receive-col">
+                                    <div style="display:flex;gap:0.5rem;align-items:center">
+                                        <div style="flex:1">
+                                            <input type="number" class="form-input as-qty-input" value="0" min="0" style="padding:0.25rem;width:100%" onchange="updateQtyTotal('${rowId}');updateSerialInputs('${rowId}')" disabled>
+                                        </div>
+                                        <div style="flex:1">
+                                            <input type="number" class="form-input normal-qty-input" value="${material.quantity}" min="0" style="padding:0.25rem;width:100%" onchange="updateQtyTotal('${rowId}');updateSerialInputs('${rowId}')">
+                                        </div>
+                                    </div>
+                                </td>
+                                <td style="min-width:200px">${serialHtml}</td>
+                                <td><button class="btn btn-sm" style="background:var(--danger);color:#fff;white-space:nowrap" onclick="this.closest('tr').remove()">삭제</button></td>
+                            </tr>`
+                        );
+                    });
+                } else {
+                    alert('해당 발주에 등록된 자재가 없습니다.');
+                }
+            }
+        }
+        
+        // 마스터 자재 데이터
+        const MATERIALS = [
+            { code: 'CAM-001', name: 'IP카메라 2MP', spec: '2MP, IP67', unit: '개', category: 'CCTV', useYn: 'Y', serialTracking: true },
+            { code: 'CAM-002', name: 'IP카메라 4MP', spec: '4MP, 실내용', unit: '개', category: 'CCTV', useYn: 'Y', serialTracking: true },
+            { code: 'NVR-016', name: 'NVR 16채널', spec: '16CH, H.265', unit: '개', category: 'CCTV', useYn: 'Y', serialTracking: true },
+            { code: 'NET-024', name: 'PoE 스위치 24포트', spec: '24포트, 250W', unit: '개', category: '네트워크', useYn: 'Y', serialTracking: false },
+            { code: 'CBL-C6', name: 'UTP 케이블 CAT6', spec: '305m/박스', unit: '박스', category: '네트워크', useYn: 'Y', serialTracking: false },
+            { code: 'ACC-001', name: '브라켓', spec: '범용형, 스틸', unit: '개', category: '부자재', useYn: 'Y', serialTracking: false },
+            { code: 'ACC-002', name: '케이블 타이', spec: '200mm, 흰색', unit: '개', category: '부자재', useYn: 'Y', serialTracking: false },
+            { code: 'HDD-4TB', name: 'HDD 4TB', spec: '4TB, 7200RPM', unit: '개', category: 'CCTV', useYn: 'Y', serialTracking: true },
+            { code: 'OLD-001', name: '구형 카메라 브라켓', spec: '단종', unit: '개', category: '부자재', useYn: 'N', serialTracking: false }
+        ];
+        
+        // 자재 자동완성 기능
+        let materialAutocompleteIndex = -1;
+        let materialAutocompleteItems = [];
+        
+        function handleMaterialSearch() {
+            const keyword = document.getElementById('materialSearch').value.trim().toLowerCase();
+            const dropdown = document.getElementById('materialAutocomplete');
+            
+            if (!keyword) {
+                hideMaterialAutocomplete();
+                return;
+            }
+            
+            // 자재 코드, 자재명, 카테고리로 검색
+            const filtered = MATERIALS.filter(m => 
+                m.useYn === 'Y' && (
+                    m.code.toLowerCase().includes(keyword) ||
+                    m.name.toLowerCase().includes(keyword) ||
+                    m.category.toLowerCase().includes(keyword)
+                )
+            );
+            
+            if (filtered.length === 0) {
+                dropdown.innerHTML = '<div class="autocomplete-item" style="color:var(--gray-500);cursor:default">검색 결과가 없습니다</div>';
+                dropdown.style.display = 'block';
+                return;
+            }
+            
+            materialAutocompleteItems = filtered;
+            materialAutocompleteIndex = -1;
+            
+            dropdown.innerHTML = filtered.map((m, idx) => `
+                <div class="autocomplete-item" data-index="${idx}" onclick="selectMaterial(${idx})" onmouseover="highlightMaterial(${idx})">
+                    <div class="autocomplete-item-code">${m.code}</div>
+                    <div class="autocomplete-item-name">${m.name}</div>
+                    <div class="autocomplete-item-info">${m.spec} | ${m.category} | ${m.unit}</div>
+                </div>
+            `).join('');
+            
+            dropdown.style.display = 'block';
+        }
+        
+        function handleMaterialKeydown(event) {
+            const dropdown = document.getElementById('materialAutocomplete');
+            if (dropdown.style.display === 'none' || materialAutocompleteItems.length === 0) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    const keyword = document.getElementById('materialSearch').value.trim();
+                    if (keyword) {
+                        // 검색어로 직접 추가 (기존 방식 유지)
+                        addMaterialByName(keyword);
+                    }
+                }
+                return;
+            }
+            
+            if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                materialAutocompleteIndex = Math.min(materialAutocompleteIndex + 1, materialAutocompleteItems.length - 1);
+                highlightMaterial(materialAutocompleteIndex);
+            } else if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                materialAutocompleteIndex = Math.max(materialAutocompleteIndex - 1, -1);
+                highlightMaterial(materialAutocompleteIndex);
+            } else if (event.key === 'Enter') {
+                event.preventDefault();
+                if (materialAutocompleteIndex >= 0 && materialAutocompleteIndex < materialAutocompleteItems.length) {
+                    selectMaterial(materialAutocompleteIndex);
+                }
+            } else if (event.key === 'Escape') {
+                hideMaterialAutocomplete();
+            }
+        }
+        
+        function handleMaterialFocus() {
+            const keyword = document.getElementById('materialSearch').value.trim();
+            if (keyword) {
+                handleMaterialSearch();
+            }
+        }
+        
+        function highlightMaterial(index) {
+            const items = document.getElementById('materialAutocomplete').querySelectorAll('.autocomplete-item');
+            items.forEach((item, i) => {
+                if (i === index) {
+                    item.classList.add('selected');
+                } else {
+                    item.classList.remove('selected');
+                }
+            });
+            materialAutocompleteIndex = index;
+        }
+        
+        function selectMaterial(index) {
+            const material = materialAutocompleteItems[index];
+            if (!material) return;
+            
+            addMaterialFromData(material);
+            hideMaterialAutocomplete();
+        }
+        
+        function hideMaterialAutocomplete() {
+            document.getElementById('materialAutocomplete').style.display = 'none';
+            materialAutocompleteIndex = -1;
+        }
+        
+        function addMaterialFromData(material) {
+            const tbody = document.getElementById('materialList');
+            if (tbody.querySelector('td[colspan]')) tbody.innerHTML = '';
+            
+            // 중복 체크
+            const existingRows = tbody.querySelectorAll('tr');
+            for (let row of existingRows) {
+                const nameCell = row.querySelector('td:first-child');
+                if (nameCell) {
+                    const nameDiv = nameCell.querySelector('div[style*="font-weight"]');
+                    if (nameDiv && nameDiv.textContent.trim() === material.name) {
+                        alert('이미 추가된 자재입니다.');
+                        return;
+                    }
+                }
+            }
+            
+            const spec = material.spec || '-';
+            const rowId = 'row_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            const isSerialTracking = material.serialTracking === true;
+            const serialHtml = isSerialTracking 
+                ? `<div class="serial-container" data-row-id="${rowId}">
+                    <div class="serial-list" data-row-id="${rowId}">
+                        <div class="serial-item" style="display:flex;gap:0.25rem;margin-bottom:0.25rem;align-items:center">
+                            <input type="text" class="form-input serial-input" placeholder="시리얼 번호" style="padding:0.25rem;flex:1" data-row-id="${rowId}">
+                            <button type="button" class="btn btn-sm" style="background:var(--danger);color:#fff;padding:0.25rem 0.5rem;font-size:0.75rem" onclick="removeSerialInput(this, '${rowId}')" style="display:none">삭제</button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-sm" style="background:var(--primary);color:#fff;padding:0.25rem 0.5rem;font-size:0.75rem;width:100%;margin-top:0.25rem" onclick="addSerialInput('${rowId}')">+ 시리얼 추가</button>
+                </div>`
+                : `<input type="text" class="form-input" placeholder="LOT/시리얼" style="padding:0.25rem">`;
+            
+            tbody.insertAdjacentHTML('beforeend', 
+                `<tr data-row-id="${rowId}" data-serial-tracking="${isSerialTracking}">
+                    <td>
+                        <div style="font-weight:500">${material.name}</div>
+                        <div style="font-size:0.8125rem;color:var(--gray-500);margin-top:0.25rem">${spec}</div>
+                    </td>
+                    <td style="text-align:center" class="as-receive-col">
+                        <label style="display:inline-flex;align-items:center;gap:0.25rem;cursor:pointer;font-size:0.8125rem">
+                            <input type="checkbox" class="as-receive-check" onchange="toggleAsQtyInput(this, '${rowId}')">
+                            AS
+                        </label>
+                    </td>
+                    <td class="as-receive-col">
+                        <div style="display:flex;gap:0.5rem;align-items:center">
+                            <div style="flex:1">
+                                <input type="number" class="form-input as-qty-input" value="0" min="0" style="padding:0.25rem;width:100%" onchange="updateQtyTotal('${rowId}');updateSerialInputs('${rowId}')" disabled>
+                            </div>
+                            <div style="flex:1">
+                                <input type="number" class="form-input normal-qty-input" value="1" min="0" style="padding:0.25rem;width:100%" onchange="updateQtyTotal('${rowId}');updateSerialInputs('${rowId}')">
+                            </div>
+                        </div>
+                    </td>
+                    <td style="min-width:200px">${serialHtml}</td>
+                    <td><button class="btn btn-sm" style="background:var(--danger);color:#fff;white-space:nowrap" onclick="this.closest('tr').remove()">삭제</button></td>
+                </tr>`
+            );
+            document.getElementById('materialSearch').value = '';
+        }
+        
+        function addMaterialByName(name) {
+            if (!name || !name.trim()) return;
+            const tbody = document.getElementById('materialList');
+            if (tbody.querySelector('td[colspan]')) tbody.innerHTML = '';
+            
+            // MATERIALS 배열에서 자재 찾기
+            const material = MATERIALS.find(m => m.name.toLowerCase().includes(name.toLowerCase()));
+            const spec = material ? material.spec : '-';
+            const isSerialTracking = material ? (material.serialTracking === true) : false;
+            const rowId = 'row_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            const serialHtml = isSerialTracking 
+                ? `<div class="serial-container" data-row-id="${rowId}">
+                    <div class="serial-list" data-row-id="${rowId}">
+                        <div class="serial-item" style="display:flex;gap:0.25rem;margin-bottom:0.25rem;align-items:center">
+                            <input type="text" class="form-input serial-input" placeholder="시리얼 번호" style="padding:0.25rem;flex:1" data-row-id="${rowId}">
+                            <button type="button" class="btn btn-sm" style="background:var(--danger);color:#fff;padding:0.25rem 0.5rem;font-size:0.75rem" onclick="removeSerialInput(this, '${rowId}')" style="display:none">삭제</button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-sm" style="background:var(--primary);color:#fff;padding:0.25rem 0.5rem;font-size:0.75rem;width:100%;margin-top:0.25rem" onclick="addSerialInput('${rowId}')">+ 시리얼 추가</button>
+                </div>`
+                : `<input type="text" class="form-input" placeholder="LOT/시리얼" style="padding:0.25rem">`;
+            
+            tbody.insertAdjacentHTML('beforeend', 
+                `<tr data-row-id="${rowId}" data-serial-tracking="${isSerialTracking}">
+                    <td>
+                        <div style="font-weight:500">${name}</div>
+                        <div style="font-size:0.8125rem;color:var(--gray-500);margin-top:0.25rem">${spec}</div>
+                    </td>
+                    <td style="text-align:center" class="as-receive-col">
+                        <label style="display:inline-flex;align-items:center;gap:0.25rem;cursor:pointer;font-size:0.8125rem">
+                            <input type="checkbox" class="as-receive-check" onchange="toggleAsQtyInput(this, '${rowId}')">
+                            AS
+                        </label>
+                    </td>
+                    <td class="as-receive-col">
+                        <div style="display:flex;gap:0.5rem;align-items:center">
+                            <div style="flex:1">
+                                <input type="number" class="form-input as-qty-input" value="0" min="0" style="padding:0.25rem;width:100%" onchange="updateQtyTotal('${rowId}');updateSerialInputs('${rowId}')" disabled>
+                            </div>
+                            <div style="flex:1">
+                                <input type="number" class="form-input normal-qty-input" value="1" min="0" style="padding:0.25rem;width:100%" onchange="updateQtyTotal('${rowId}');updateSerialInputs('${rowId}')">
+                            </div>
+                        </div>
+                    </td>
+                    <td style="min-width:200px">${serialHtml}</td>
+                    <td><button class="btn btn-sm" style="background:var(--danger);color:#fff;white-space:nowrap" onclick="this.closest('tr').remove()">삭제</button></td>
+                </tr>`
+            );
+            document.getElementById('materialSearch').value = '';
+        }
+        
+        function addMaterial() {
+            const search = document.getElementById('materialSearch').value.trim();
+            if (!search) {
+                alert('자재를 검색해주세요');
+                return;
+            }
+            // 검색어로 직접 추가 (기존 방식 유지)
+            addMaterialByName(search);
+        }
+        
+        function toggleAsQtyInput(checkbox, rowId) {
+            const row = document.querySelector(`tr[data-row-id="${rowId}"]`);
+            if (!row) return;
+            
+            const asQtyInput = row.querySelector('.as-qty-input');
+            if (!asQtyInput) return;
+            
+            if (checkbox.checked) {
+                asQtyInput.disabled = false;
+                asQtyInput.value = asQtyInput.value || '0';
+            } else {
+                asQtyInput.disabled = true;
+                asQtyInput.value = '0';
+            }
+            updateQtyTotal(rowId);
+        }
+        
+        function updateQtyTotal(rowId) {
+            const row = document.querySelector(`tr[data-row-id="${rowId}"]`);
+            if (!row) return;
+            
+            const asQtyInput = row.querySelector('.as-qty-input');
+            const normalQtyInput = row.querySelector('.normal-qty-input');
+            const totalSpan = row.querySelector(`.qty-total[data-row-id="${rowId}"]`);
+            
+            if (!asQtyInput || !normalQtyInput || !totalSpan) return;
+            
+            const asQty = parseInt(asQtyInput.value) || 0;
+            const normalQty = parseInt(normalQtyInput.value) || 0;
+            const total = asQty + normalQty;
+            
+            totalSpan.textContent = total;
+        }
+        
+        function addSerialInput(rowId) {
+            const row = document.querySelector(`tr[data-row-id="${rowId}"]`);
+            if (!row) return;
+            
+            const serialList = row.querySelector(`.serial-list[data-row-id="${rowId}"]`);
+            if (!serialList) return;
+            
+            const serialItem = document.createElement('div');
+            serialItem.className = 'serial-item';
+            serialItem.style.cssText = 'display:flex;gap:0.25rem;margin-bottom:0.25rem;align-items:center';
+            serialItem.innerHTML = `
+                <input type="text" class="form-input serial-input" placeholder="시리얼 번호" style="padding:0.25rem;flex:1" data-row-id="${rowId}">
+                <button type="button" class="btn btn-sm" style="background:var(--danger);color:#fff;padding:0.25rem 0.5rem;font-size:0.75rem" onclick="removeSerialInput(this, '${rowId}')">삭제</button>
+            `;
+            serialList.appendChild(serialItem);
+            
+            // 첫 번째 항목이 아닌 경우 삭제 버튼 표시
+            updateSerialDeleteButtons(rowId);
+        }
+        
+        function removeSerialInput(button, rowId) {
+            const serialItem = button.closest('.serial-item');
+            if (serialItem) {
+                serialItem.remove();
+                updateSerialDeleteButtons(rowId);
+            }
+        }
+        
+        function updateSerialDeleteButtons(rowId) {
+            const row = document.querySelector(`tr[data-row-id="${rowId}"]`);
+            if (!row) return;
+            
+            const serialItems = row.querySelectorAll('.serial-item');
+            serialItems.forEach((item, index) => {
+                const deleteBtn = item.querySelector('button');
+                if (deleteBtn) {
+                    // 첫 번째 항목이 아니면 삭제 버튼 표시
+                    deleteBtn.style.display = serialItems.length > 1 ? 'block' : 'none';
+                }
+            });
+        }
+        
+        function updateSerialInputs(rowId) {
+            const row = document.querySelector(`tr[data-row-id="${rowId}"]`);
+            if (!row) return;
+            
+            const isSerialTracking = row.getAttribute('data-serial-tracking') === 'true';
+            if (!isSerialTracking) return;
+            
+            const asQtyInput = row.querySelector('.as-qty-input');
+            const normalQtyInput = row.querySelector('.normal-qty-input');
+            const serialList = row.querySelector(`.serial-list[data-row-id="${rowId}"]`);
+            
+            if (!asQtyInput || !normalQtyInput || !serialList) return;
+            
+            const asQty = parseInt(asQtyInput.value) || 0;
+            const normalQty = parseInt(normalQtyInput.value) || 0;
+            const totalQty = asQty + normalQty;
+            
+            const currentSerialCount = serialList.querySelectorAll('.serial-item').length;
+            
+            // 수량보다 시리얼 입력 필드가 적으면 추가
+            if (currentSerialCount < totalQty) {
+                const addCount = totalQty - currentSerialCount;
+                for (let i = 0; i < addCount; i++) {
+                    addSerialInput(rowId);
+                }
+            }
+            // 수량보다 시리얼 입력 필드가 많으면 제거 (마지막부터)
+            else if (currentSerialCount > totalQty) {
+                const removeCount = currentSerialCount - totalQty;
+                const serialItems = serialList.querySelectorAll('.serial-item');
+                for (let i = 0; i < removeCount && serialItems.length > 1; i++) {
+                    const lastItem = serialItems[serialItems.length - 1 - i];
+                    if (lastItem) {
+                        lastItem.remove();
+                    }
+                }
+                updateSerialDeleteButtons(rowId);
+            }
+        }
+        
+        function submitReceiving() {
+            if (document.getElementById('materialList').querySelector('td[colspan]')) return alert('자재를 추가해주세요');
+            const type = document.querySelector('input[name="receiveType"]:checked').value;
+            
+            if (type === 'return') {
+                if (!document.getElementById('selectedCompany').value || !document.getElementById('selectedSite').value) return alert('본사/현장을 선택해주세요');
+                if (!document.getElementById('returnReason').value) return alert('회수 사유를 선택해주세요');
+                alert('✅ 현장 회수 입고가 등록되었습니다!\n입고 번호: IN-2024-051');
+            } else {
+                // 구매 입고, 기타 입고는 발주 선택사항
+                const typeText = type === 'purchase' ? '구매' : '기타';
+                alert(`✅ ${typeText} 입고가 등록되었습니다!\n입고 번호: IN-2024-051`);
+            }
+            
+            closeModal('addModal');
+        }
+        
+        function completeInspection() {
+            alert('✅ 검수가 완료되었습니다!\n- 정상 입고: 44개\n- 불량 반품: 1개');
+            closeModal('inspectionModal');
+        }
+        
+        // 초기 상태(구매 입고)에서 AS 입고 여부 컬럼 숨김 적용
+        setAsReceiveColumnVisibility(false);
+        
+        // 시리얼 선택 모달 관련 변수
+        let currentSerialRowId = null;
+        let currentSerialMaterialCode = null;
+        let currentSerialMaterialName = null;
+        let requiredSerialQty = 0;
+        
+        // 현장 회수용 시리얼 선택 모달 열기
+        function openSerialModalForReturn(rowId, materialCode, materialName, qty) {
+            currentSerialRowId = rowId;
+            currentSerialMaterialCode = materialCode;
+            currentSerialMaterialName = materialName;
+            requiredSerialQty = qty;
+            
+            document.getElementById('serialMaterialName').textContent = materialName;
+            document.getElementById('serialQty').textContent = qty;
+            document.getElementById('requiredCount').textContent = qty;
+            
+            updateSerialCount();
+            document.getElementById('serialModal').classList.add('active');
+        }
+        
+        // 전체 시리얼 선택
+        function selectAllSerials() {
+            const checkboxes = document.querySelectorAll('#serialModal .serial-check');
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+            
+            checkboxes.forEach((cb, index) => {
+                cb.checked = !allChecked && index < requiredSerialQty;
+            });
+            
+            updateSerialCount();
+        }
+        
+        // 선택된 시리얼 개수 업데이트
+        function updateSerialCount() {
+            const checked = document.querySelectorAll('#serialModal .serial-check:checked').length;
+            document.getElementById('selectedCount').textContent = checked;
+            
+            const statusEl = document.getElementById('serialMatchStatus');
+            if (checked === requiredSerialQty) {
+                statusEl.innerHTML = '<span style="color:var(--success);font-weight:600">✅ 일치</span>';
+            } else if (checked < requiredSerialQty) {
+                statusEl.innerHTML = `<span style="color:var(--danger);font-weight:600">❌ ${requiredSerialQty - checked}개 부족</span>`;
+            } else {
+                statusEl.innerHTML = `<span style="color:var(--warning);font-weight:600">⚠️ ${checked - requiredSerialQty}개 초과</span>`;
+            }
+        }
+        
+        // 시리얼 체크박스 변경 이벤트
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('serial-check') && e.target.closest('#serialModal')) {
+                updateSerialCount();
+            }
+        });
+        
+        // 시리얼 선택 확인
+        function confirmSerialSelection() {
+            if (!currentSerialRowId) return;
+            
+            const checked = document.querySelectorAll('#serialModal .serial-check:checked').length;
+            
+            // 수량이 일치하지 않아도 경고만 표시하고 진행
+            if (checked !== requiredSerialQty) {
+                if (!confirm(`입고 수량(${requiredSerialQty}개)과 선택한 시리얼 수(${checked}개)가 일치하지 않습니다.\n그래도 계속하시겠습니까?`)) {
+                    return;
+                }
+            }
+            
+            // 선택된 시리얼 번호 수집
+            const selectedSerials = [];
+            document.querySelectorAll('#serialModal .serial-check:checked').forEach(checkbox => {
+                const row = checkbox.closest('tr');
+                const serialNo = row.querySelector('td:nth-child(2) strong').textContent;
+                selectedSerials.push(serialNo);
+            });
+            
+            // 선택된 시리얼을 행에 표시
+            const row = document.querySelector(`tr[data-row-id="${currentSerialRowId}"]`);
+            if (row) {
+                const selectedSerialList = row.querySelector(`.selected-serial-list[data-row-id="${currentSerialRowId}"]`);
+                if (selectedSerialList) {
+                    if (selectedSerials.length > 0) {
+                        selectedSerialList.innerHTML = selectedSerials.map(serial => 
+                            `<div style="display:flex;justify-content:space-between;align-items:center;padding:0.25rem;background:var(--gray-50);border-radius:4px;margin-bottom:0.25rem">
+                                <span><strong>${serial}</strong></span>
+                                <button type="button" class="btn btn-sm" style="background:var(--danger);color:#fff;padding:0.125rem 0.375rem;font-size:0.75rem" onclick="removeSelectedSerial('${currentSerialRowId}', '${serial}')">삭제</button>
+                            </div>`
+                        ).join('');
+                    } else {
+                        selectedSerialList.innerHTML = '선택된 시리얼이 없습니다.';
+                    }
+                }
+            }
+            
+            alert('✅ 시리얼이 선택되었습니다.');
+            closeModal('serialModal');
+            
+            // 변수 초기화
+            currentSerialRowId = null;
+            currentSerialMaterialCode = null;
+            currentSerialMaterialName = null;
+            requiredSerialQty = 0;
+        }
+        
+        // 선택된 시리얼 삭제
+        function removeSelectedSerial(rowId, serialNo) {
+            const row = document.querySelector(`tr[data-row-id="${rowId}"]`);
+            if (!row) return;
+            
+            const selectedSerialList = row.querySelector(`.selected-serial-list[data-row-id="${rowId}"]`);
+            if (!selectedSerialList) return;
+            
+            // 시리얼 번호가 포함된 div 제거
+            const serialDivs = selectedSerialList.querySelectorAll('div');
+            serialDivs.forEach(div => {
+                if (div.textContent.includes(serialNo)) {
+                    div.remove();
+                }
+            });
+            
+            // 시리얼이 없으면 기본 메시지 표시
+            if (selectedSerialList.querySelectorAll('div').length === 0) {
+                selectedSerialList.innerHTML = '선택된 시리얼이 없습니다.';
+            }
+        }
+        
+        document.querySelectorAll('.modal').forEach(m => m.onclick = e => { if(e.target.classList.contains('modal')) e.target.classList.remove('active'); });
+    </script>
+</body>
+</html>

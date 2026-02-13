@@ -1,0 +1,1647 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>출고 관리 - 건설 자재 ERP</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .contract-select-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1.2fr 1.2fr 1fr;
+            gap: 1rem;
+            align-items: start;
+        }
+        .autocomplete-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border: 1px solid var(--gray-300);
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .autocomplete-item {
+            padding: 0.75rem;
+            cursor: pointer;
+            border-bottom: 1px solid var(--gray-100);
+            transition: background-color 0.2s;
+        }
+        .autocomplete-item:hover,
+        .autocomplete-item.selected {
+            background-color: var(--gray-50);
+        }
+        .autocomplete-item:last-child {
+            border-bottom: none;
+        }
+        .autocomplete-item-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        .autocomplete-item-info {
+            font-size: 0.8125rem;
+            color: var(--gray-600);
+        }
+        @media (max-width: 1200px) {
+            .contract-select-grid {
+                grid-template-columns: 1fr 2fr;
+            }
+            .contract-select-grid > div:nth-child(n+3) {
+                grid-column: span 2;
+            }
+        }
+        @media (max-width: 768px) {
+            .contract-select-grid {
+                grid-template-columns: 1fr;
+            }
+            .contract-select-grid > div:nth-child(n+3) {
+                grid-column: span 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <a href="dashboard.html">📊 대시보드</a>
+        <a href="contract.html">📋 견적</a>
+        <a href="inventory.html">📦 재고</a>
+        <a href="order.html">📝 발주</a>
+        <a href="receiving.html">📥 입고</a>
+        <a href="shipment.html" class="active">🚚 출고</a>
+        <!-- <a href="purchase.html">🛒 구매</a> -->
+        <a href="as.html">🔧 AS</a>
+        <a href="materials.html">📁 자재정보</a>
+        <a href="project.html">📊 현장 통합 현황</a>
+    </nav>
+    
+    <main class="main">
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('list')">출고 목록</button>
+            <button class="tab" onclick="switchTab('register')">출고 등록</button>
+        </div>
+        
+        <!-- 출고 목록 탭 -->
+        <div id="listTab" class="tab-content">
+            <div class="search-box">
+                <div class="search-row">
+                    <select class="filter-select">
+                        <option>상태 전체</option>
+                        <option>완료</option>
+                        <option>진행중</option>
+                    </select>
+                    <select class="filter-select">
+                        <option>현장 전체</option>
+                        <option>강남 오피스텔</option>
+                        <option>판교 공장</option>
+                        <option>인천 물류센터</option>
+                    </select>
+                    <select class="filter-select">
+                        <option>기간 전체</option>
+                        <option>오늘</option>
+                        <option>이번 주</option>
+                        <option>이번 달</option>
+                    </select>
+                    <div style="display:flex;gap:0.5rem;flex:1;min-width:200px">
+                        <input type="text" class="search-input" placeholder="출고번호/발주번호/자재명 검색..." style="flex:1">
+                        <button class="btn btn-primary" onclick="handleSearch()">검색</button>
+                    </div>
+                    <label style="display:flex;align-items:center;gap:0.375rem;font-size:0.8125rem;white-space:nowrap">
+                        <input type="checkbox" id="preShipmentOnly" onchange="filterPreShipment()"> 선출고만 보기
+                    </label>
+                    <button class="btn btn-secondary" onclick="resetFilters()">초기화</button>
+                </div>
+            </div>
+            
+            <div class="summary-box" style="display:flex;justify-content:space-between;align-items:center">
+                <div style="display:flex;flex-wrap:wrap;gap:1.5rem">
+                    <span class="summary-item">전체: <strong>85건</strong></span>
+                    <span class="summary-item">완료: <strong>72건</strong></span>
+                    <span class="summary-item">진행중: <strong>13건</strong></span>
+                    <span class="summary-item">초과출고: <strong>3건</strong></span>
+                </div>
+                <button class="btn btn-primary" onclick="switchTab('register')" style="white-space:nowrap">+ 신규 출고</button>
+            </div>
+            
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>출고 번호</th>
+                            <th>발주</th>
+                            <th>현장</th>
+                            <th>자재</th>
+                            <th>출고일</th>
+                            <th>담당자</th>
+                            <th>작업</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr onclick="showDetail('OUT-2024-050')" style="cursor:pointer">
+                            <td><strong>OUT-2024-050</strong></td>
+                            <td><a href="#" class="btn-link" onclick="event.stopPropagation()">IT260115-01</a></td>
+                            <td>강남 오피스텔</td>
+                            <td>3종 54개</td>
+                            <td>2024-02-03</td>
+                            <td>이출고</td>
+                            <td onclick="event.stopPropagation()">
+                                <button class="btn btn-primary btn-sm" onclick="openShipmentConfirmModal('OUT-2024-050')">출고확인</button>
+                                <button class="btn btn-secondary btn-sm" onclick="printShipmentDocument('OUT-2024-050')">출고증 출력</button>
+                            </td>
+                        </tr>
+                        <tr onclick="showDetail('OUT-2024-049')" style="cursor:pointer">
+                            <td><strong>OUT-2024-049</strong></td>
+                            <td><span class="status-badge status-warning">선출고</span></td>
+                            <td>판교 공장</td>
+                            <td>5종 120개</td>
+                            <td>2024-02-02</td>
+                            <td>이출고</td>
+                            <td onclick="event.stopPropagation()">
+                                <button class="btn btn-primary btn-sm" onclick="openShipmentConfirmModal('OUT-2024-049')">출고확인</button>
+                                <button class="btn btn-secondary btn-sm" onclick="printShipmentDocument('OUT-2024-049')">출고증 출력</button>
+                            </td>
+                        </tr>
+                        <tr onclick="showDetail('OUT-2024-048')" style="cursor:pointer" style="background:#FFF8E1">
+                            <td><strong>OUT-2024-048</strong></td>
+                            <td><a href="#" class="btn-link" onclick="event.stopPropagation()">IT260115-01</a></td>
+                            <td>강남 오피스텔</td>
+                            <td>1종 5개</td>
+                            <td>2024-02-01</td>
+                            <td>이출고</td>
+                            <td onclick="event.stopPropagation()">
+                                <button class="btn btn-primary btn-sm" onclick="openShipmentConfirmModal('OUT-2024-048')">출고확인</button>
+                                <button class="btn btn-secondary btn-sm" onclick="printShipmentDocument('OUT-2024-048')">출고증 출력</button>
+                            </td>
+                        </tr>
+                        <tr onclick="showDetail('OUT-2024-047')" style="cursor:pointer">
+                            <td><strong>OUT-2024-047</strong></td>
+                            <td><a href="#" class="btn-link" onclick="event.stopPropagation()">IT260120-01</a></td>
+                            <td>인천 물류센터</td>
+                            <td>8종 200개</td>
+                            <td>2024-01-30</td>
+                            <td>김출고</td>
+                            <td onclick="event.stopPropagation()">
+                                <button class="btn btn-primary btn-sm" onclick="openShipmentConfirmModal('OUT-2024-047')">출고확인</button>
+                                <button class="btn btn-secondary btn-sm" onclick="printShipmentDocument('OUT-2024-047')">출고증 출력</button>
+                            </td>
+                        </tr>
+                        <tr onclick="showDetail('OUT-2024-046')" style="cursor:pointer">
+                            <td><strong>OUT-2024-046</strong></td>
+                            <td><a href="#" class="btn-link" onclick="event.stopPropagation()">IT260115-01</a></td>
+                            <td>강남 오피스텔</td>
+                            <td>2종 30개</td>
+                            <td>2024-01-28</td>
+                            <td>이출고</td>
+                            <td onclick="event.stopPropagation()">
+                                <button class="btn btn-primary btn-sm" onclick="openShipmentConfirmModal('OUT-2024-046')">출고확인</button>
+                                <button class="btn btn-secondary btn-sm" onclick="printShipmentDocument('OUT-2024-046')">출고증 출력</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="pagination">
+                    <button class="page-btn">◀</button>
+                    <button class="page-btn active">1</button>
+                    <button class="page-btn">2</button>
+                    <button class="page-btn">3</button>
+                    <button class="page-btn">▶</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 출고 등록 탭 -->
+        <div id="registerTab" class="tab-content" style="display:none">
+            <div class="card">
+                <div class="card-header" style="padding:0.5rem 1rem"><span class="card-title" style="font-size:0.9375rem">📝 출고 기본정보</span></div>
+                <div class="card-body" style="padding:0.75rem 1rem">
+                    <!-- 한 줄 배치: 검색(2) + 현장/발주 선택 + 최근 발주 건(1) -->
+                    <div class="contract-select-grid" style="display:grid;grid-template-columns:1.5fr 1.2fr 1.2fr 1fr;gap:1rem;align-items:start">
+                        <!-- 좌측: 통합 검색 -->
+                        <div>
+                            <label class="form-label" style="margin-bottom:0.375rem">🔍 검색</label>
+                            <div style="position:relative">
+                                <input type="text" class="form-input" id="shipOrderSearch" placeholder="본사, 현장 또는 발주번호 검색..." oninput="handleOrderSearch()" onfocus="handleOrderSearch()" onkeydown="handleOrderSearchKeydown(event)" onblur="setTimeout(() => hideOrderSearchResults(), 200)">
+                                <div id="orderSearchResults" class="autocomplete-dropdown" style="display:none"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- 중앙: 현장 선택 -->
+                        <div class="form-group" style="margin-bottom:0">
+                            <label class="form-label">현장 선택 *</label>
+                            <select class="form-select" id="shipSiteSelect" onchange="loadShipmentSite()">
+                                <option value="">현장 선택</option>
+                                <option value="강남건설_강남 오피스텔">강남 오피스텔 (강남건설)</option>
+                                <option value="삼성물산_판교 공장">판교 공장 (삼성물산)</option>
+                                <option value="인천건설_인천 물류센터">인천 물류센터 (인천건설)</option>
+                            </select>
+                        </div>
+                        
+                        <!-- 중앙: 발주 선택 -->
+                        <div class="form-group" style="margin-bottom:0">
+                            <label class="form-label">발주 선택 *</label>
+                            <select class="form-select" id="shipOrderSelect" onchange="loadShipmentOrder()" disabled>
+                                <option value="">현장을 먼저 선택해주세요</option>
+                            </select>
+                        </div>
+                        
+                        <!-- 우측: 최근 발주 건 -->
+                        <div>
+                            <label class="form-label" style="margin-bottom:0.375rem">📋 최근 발주 건 (2주 이내)</label>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="openRecentOrdersModal()" style="width:100%;font-size:0.8125rem;padding:0.5rem 0.75rem;white-space:nowrap;text-align:center">
+                                최근 발주 건 선택
+                            </button>
+                        </div>
+                    </div>
+                    <div class="info-box highlight" id="orderInfo" style="display:none;margin-top:0.5rem;padding:0.5rem 0.75rem;font-size:0.8125rem">
+                        <div style="font-weight:600;margin-bottom:0.5rem">📋 발주 정보</div>
+                        <div style="font-size:0.875rem;margin-bottom:0.75rem" id="orderInfoDetails">
+                            <!-- 발주 정보가 여기에 동적으로 표시됩니다 -->
+                        </div>
+                        <div style="font-size:0.8125rem;color:var(--gray-500)" id="orderProgressDetails">
+                            <!-- 발주 진행률 정보가 여기에 동적으로 표시됩니다 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card" style="margin-top:1rem">
+                <div class="card-header"><span class="card-title">📝 출고 정보</span></div>
+                <div class="card-body">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">출고 번호</label>
+                            <input type="text" class="form-input" value="OUT-2024-051 (자동 생성)" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">출고 일시 *</label>
+                            <input type="datetime-local" class="form-input" id="shipmentDate" value="2024-02-03T14:00">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">비고</label>
+                        <input type="text" class="form-input" id="shipmentNote" placeholder="출고 관련 특이사항">
+                    </div>
+                    <div class="form-group" id="preShipmentReasonGroup" style="display:none">
+                        <label class="form-label">선출고 사유 *</label>
+                        <input type="text" class="form-input" id="preShipmentReason" placeholder="선출고 사유를 입력해주세요">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card" id="asMaterialContainer" style="margin-top:1rem;display:none">
+                <div class="card-header">
+                    <span class="card-title">🔧 AS 출고 자재 선택 (AS건이 있는 경우만 노출)</span>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="addSelectedAsMaterials()">출고 목록에 추가</button>
+                </div>
+                <div class="card-body">
+                    <div style="font-size:0.8125rem;color:var(--gray-600);margin-bottom:0.75rem" id="asMaterialCaption">
+                        해당 현장의 AS 자재를 선택해 출고 자재에 추가할 수 있습니다.
+                    </div>
+                    <div class="table-container" style="box-shadow:none;margin:0">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width:40px"></th>
+                                    <th>자재 코드</th>
+                                    <th>자재명</th>
+                                    <th>규격</th>
+                                    <th style="width:90px">AS 입고 수량</th>
+                                    <th style="width:120px">출고 수량</th>
+                                    <th style="width:120px">교체출고 여부</th>
+                                     <th style="width:90px">품질</th>
+                                    <th style="width:90px">시리얼</th>
+                                </tr>
+                            </thead>
+                            <tbody id="asMaterialList">
+                                <tr>
+                                     <td colspan="9" style="text-align:center;color:var(--gray-500);padding:1.5rem">
+                                        현장을 선택하면 AS 자재가 표시됩니다.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card" style="margin-top:1rem">
+                <div class="card-header">
+                    <span class="card-title">📦 출고 자재 선택</span>
+                </div>
+                <div class="card-body">
+                    <div style="display:flex;gap:0.5rem;margin-bottom:1rem">
+                        <div style="flex:1;position:relative">
+                            <input type="text" class="form-input" id="materialSearch" placeholder="자재 코드, 자재명, 카테고리로 검색..." style="width:100%" autocomplete="off" oninput="handleMaterialSearch()" onkeydown="handleMaterialKeydown(event)" onfocus="handleMaterialFocus()" onblur="setTimeout(() => hideMaterialAutocomplete(), 200)">
+                            <div id="materialAutocomplete" class="autocomplete-dropdown" style="display:none"></div>
+                        </div>
+                        <button class="btn btn-secondary btn-sm" onclick="addMaterial()">+ 자재 추가</button>
+                    </div>
+                    <div class="table-container" style="box-shadow:none">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>자재 코드</th>
+                                    <th>자재명</th>
+                                    <th>규격</th>
+                                    <th>발주/출고</th>
+                                    <th style="width:120px">출고 수량</th>
+                                    <th style="width:90px">품질</th>
+                                    <th style="width:90px">시리얼 여부</th>
+                                    <th style="width:100px">시리얼</th>
+                                    <th style="width:50px">삭제</th>
+                                </tr>
+                            </thead>
+                            <tbody id="materialList">
+                                <tr>
+                                    <td colspan="9" style="text-align:center;color:var(--gray-500);padding:1.5rem">
+                                        발주를 선택하면 출고 자재가 자동으로 불러와집니다.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="display:flex;gap:0.75rem;justify-content:flex-end;margin-top:1.25rem">
+                <button class="btn btn-secondary" onclick="switchTab('list')">취소</button>
+                <button class="btn btn-primary" onclick="confirmShipment()">출고 등록</button>
+            </div>
+        </div>
+    </main>
+    
+    <!-- 출고 상세 모달 -->
+    <div class="modal" id="detailModal">
+        <div class="modal-content lg">
+            <div class="modal-header">
+                <h2 class="modal-title">🚚 출고 상세 - <span id="detailShipmentNo">OUT-2024-050</span></h2>
+                <button class="close-btn" onclick="closeModal('detailModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="info-box">
+                    <div class="info-row"><span class="info-label">출고 번호</span><strong id="detailNo">OUT-2024-050</strong></div>
+                    <div class="info-row"><span class="info-label">발주</span><a href="#" class="btn-link" id="detailOrder">IT260115-01 - 강남 오피스텔 CCTV 설치</a></div>
+                    <div class="info-row"><span class="info-label">현장</span><span id="detailSite">강남 오피스텔</span></div>
+                    <div class="info-row"><span class="info-label">출고일</span><span id="detailDate">2024-02-03 14:00</span></div>
+                    <div class="info-row"><span class="info-label">담당자</span><span id="detailUser">이출고</span></div>
+                    <div class="info-row"><span class="info-label">상태</span><span class="status-badge status-complete" id="detailStatus">완료</span></div>
+                </div>
+                
+                <div id="overOrderReasonBox" style="display:none">
+                    <div class="info-box" style="background:#FFF8E1;border:1px solid var(--warning)">
+                        <div style="font-weight:600;color:var(--warning);margin-bottom:0.25rem">⚠️ 초과 출고</div>
+                        <div style="font-size:0.875rem" id="detailOverReason">현장 추가 요청으로 인한 긴급 출고</div>
+                    </div>
+                </div>
+                
+                <div style="font-weight:600;margin:1rem 0 0.5rem;font-size:0.875rem">📦 출고 자재</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>자재 코드</th>
+                            <th>자재명</th>
+                            <th>수량</th>
+                            <th>소유구분</th>
+                            <th>품질</th>
+                            <th>시리얼</th>
+                        </tr>
+                    </thead>
+                    <tbody id="detailMaterials">
+                        <tr>
+                            <td><strong>CAM-001</strong></td>
+                            <td>IP카메라 2MP</td>
+                            <td>30개</td>
+                            <td>소유</td>
+                            <td>신품</td>
+                            <td><a href="#" class="btn-link" onclick="showSerialList()">30개 보기</a></td>
+                        </tr>
+                        <tr>
+                            <td><strong>NVR-001</strong></td>
+                            <td>NVR 16채널</td>
+                            <td>5개</td>
+                            <td>소유</td>
+                            <td>신품</td>
+                            <td><a href="#" class="btn-link" onclick="showSerialList()">5개 보기</a></td>
+                        </tr>
+                        <tr>
+                            <td><strong>CBL-001</strong></td>
+                            <td>UTP 케이블</td>
+                            <td>10박스</td>
+                            <td>소유</td>
+                            <td>신품</td>
+                            <td>-</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('detailModal')">닫기</button>
+                <button class="btn btn-primary">출고증 출력</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 출고 확인 모달 -->
+    <div class="modal" id="confirmModal">
+        <div class="modal-content lg">
+            <div class="modal-header">
+                <h2 class="modal-title">✅ 출고 확인 - <span id="confirmShipmentNo">OUT-2024-050</span></h2>
+                <button class="close-btn" onclick="closeModal('confirmModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="info-box">
+                    <div class="info-row"><span class="info-label">출고 번호</span><strong id="confirmDetailNo">OUT-2024-050</strong></div>
+                    <div class="info-row"><span class="info-label">발주</span><a href="#" class="btn-link" id="confirmDetailOrder">IT260115-01 - 강남 오피스텔 CCTV 설치</a></div>
+                    <div class="info-row"><span class="info-label">현장</span><span id="confirmDetailSite">강남 오피스텔</span></div>
+                    <div class="info-row"><span class="info-label">출고일</span><span id="confirmDetailDate">2024-02-03 14:00</span></div>
+                    <div class="info-row"><span class="info-label">담당자</span><span id="confirmDetailUser">이출고</span></div>
+                </div>
+
+                <div style="font-weight:600;margin:1rem 0 0.5rem;font-size:0.875rem">📦 출고 자재</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>자재 코드</th>
+                            <th>자재명</th>
+                            <th>수량</th>
+                            <th>품질</th>
+                            <th>시리얼</th>
+                        </tr>
+                    </thead>
+                    <tbody id="confirmDetailMaterials">
+                        <tr>
+                            <td><strong>CAM-001</strong></td>
+                            <td>IP카메라 2MP</td>
+                            <td>30개</td>
+                            <td>신품</td>
+                            <td><a href="#" class="btn-link" onclick="showSerialList();return false;">30개 보기</a></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div style="margin-top:1.5rem">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem">
+                        <label class="form-label" style="margin-bottom:0">출고 확인 서명</label>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="clearSignature()">지우기</button>
+                    </div>
+                    <div style="border:1px solid var(--gray-300);border-radius:8px;padding:0.5rem;background:#fafafa">
+                        <canvas id="signaturePad" width="600" height="160" style="width:100%;height:160px;display:block;background:#fff;border-radius:4px;cursor:crosshair"></canvas>
+                        <div style="margin-top:0.25rem;font-size:0.75rem;color:var(--gray-500)">마우스 또는 터치로 서명해 주세요.</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('confirmModal')">취소</button>
+                <button class="btn btn-primary" onclick="submitShipmentConfirm()">출고확인 완료</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 시리얼 선택 모달 -->
+    <div class="modal" id="serialModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">시리얼 선택 - <span id="serialMaterialName">IP카메라 2MP</span></h2>
+                <button class="close-btn" onclick="closeModal('serialModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="info-box highlight" style="margin-bottom:1rem">
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                        <div>출고 수량: <strong id="serialQty">4</strong>개</div>
+                        <button class="btn btn-sm btn-secondary" onclick="selectAllSerials()">전체 선택</button>
+                    </div>
+                </div>
+                
+                <div style="max-height:300px;overflow-y:auto;border:1px solid var(--gray-200);border-radius:6px">
+                    <table style="margin:0">
+                        <thead style="position:sticky;top:0;background:#fff">
+                            <tr>
+                                <th style="width:40px"></th>
+                                <th>시리얼 번호</th>
+                                <th>위치</th>
+                                <th>상태</th>
+                            </tr>
+                        </thead>
+                        <tbody id="serialList">
+                            <tr>
+                                <td><input type="checkbox" class="serial-check" checked></td>
+                                <td><strong>CAM-2024-001</strong></td>
+                                <td>본사창고 A-01-01</td>
+                                <td><span class="status-badge status-ok">정상</span></td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" class="serial-check" checked></td>
+                                <td><strong>CAM-2024-002</strong></td>
+                                <td>본사창고 A-01-01</td>
+                                <td><span class="status-badge status-ok">정상</span></td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" class="serial-check" checked></td>
+                                <td><strong>CAM-2024-003</strong></td>
+                                <td>본사창고 A-01-02</td>
+                                <td><span class="status-badge status-ok">정상</span></td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" class="serial-check" checked></td>
+                                <td><strong>CAM-2024-004</strong></td>
+                                <td>본사창고 A-01-02</td>
+                                <td><span class="status-badge status-ok">정상</span></td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" class="serial-check"></td>
+                                <td><strong>CAM-2024-005</strong></td>
+                                <td>본사창고 A-01-03</td>
+                                <td><span class="status-badge status-ok">정상</span></td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" class="serial-check"></td>
+                                <td><strong>CAM-2024-006</strong></td>
+                                <td>강남창고 B-01-01</td>
+                                <td><span class="status-badge status-ok">정상</span></td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" class="serial-check"></td>
+                                <td><strong>CAM-2024-007</strong></td>
+                                <td>강남창고 B-01-01</td>
+                                <td><span class="status-badge status-ok">정상</span></td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" class="serial-check"></td>
+                                <td><strong>CAM-2024-008</strong></td>
+                                <td>강남창고 B-01-02</td>
+                                <td><span class="status-badge status-ok">정상</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="info-box" style="margin-top:1rem;display:flex;justify-content:space-between;align-items:center">
+                    <div>
+                        선택: <strong id="selectedCount">4</strong>개 / 출고수량: <strong id="requiredCount">4</strong>개
+                    </div>
+                    <div id="serialMatchStatus">
+                        <span style="color:var(--success);font-weight:600">✅ 일치</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('serialModal')">취소</button>
+                <button class="btn btn-primary" onclick="confirmSerialSelection()">선택 완료</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 최근 발주 건 선택 모달 -->
+    <div class="modal" id="recentOrdersModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">📋 최근 발주 건 선택</h2>
+                <button class="close-btn" onclick="closeModal('recentOrdersModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="display:flex;flex-direction:column;gap:0.5rem">
+                    <button type="button" class="btn btn-secondary" onclick="selectRecentOrderFromModal('IT260115-01')" style="font-size:0.875rem;padding:0.75rem;text-align:left;justify-content:flex-start">
+                        <div style="font-weight:600;margin-bottom:0.25rem">IT260115-01 - 강남 오피스텔 CCTV 설치</div>
+                        <div style="font-size:0.8125rem;color:var(--gray-600)">강남건설 > 강남 오피스텔</div>
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="selectRecentOrderFromModal('IT260118-01')" style="font-size:0.875rem;padding:0.75rem;text-align:left;justify-content:flex-start">
+                        <div style="font-weight:600;margin-bottom:0.25rem">IT260118-01 - 판교 공장 센서 설치</div>
+                        <div style="font-size:0.8125rem;color:var(--gray-600)">삼성물산 > 판교 공장</div>
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="selectRecentOrderFromModal('IT260120-01')" style="font-size:0.875rem;padding:0.75rem;text-align:left;justify-content:flex-start">
+                        <div style="font-weight:600;margin-bottom:0.25rem">IT260120-01 - 인천 물류센터 통합 설치</div>
+                        <div style="font-size:0.8125rem;color:var(--gray-600)">인천건설 > 인천 물류센터</div>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('recentOrdersModal')">닫기</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 시리얼 목록 보기 모달 (상세에서 사용) -->
+    <div class="modal" id="serialListModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">출고 시리얼 목록</h2>
+                <button class="close-btn" onclick="closeModal('serialListModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>시리얼 번호</th>
+                            <th>자재명</th>
+                            <th>출고 위치</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><strong>CAM-2024-015</strong></td><td>IP카메라 2MP</td><td>본사창고 A-01-01</td></tr>
+                        <tr><td><strong>CAM-2024-016</strong></td><td>IP카메라 2MP</td><td>본사창고 A-01-01</td></tr>
+                        <tr><td><strong>CAM-2024-017</strong></td><td>IP카메라 2MP</td><td>본사창고 A-01-02</td></tr>
+                        <tr><td><strong>CAM-2024-018</strong></td><td>IP카메라 2MP</td><td>본사창고 A-01-02</td></tr>
+                        <tr><td><strong>CAM-2024-019</strong></td><td>IP카메라 2MP</td><td>본사창고 A-01-03</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('serialListModal')">닫기</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentSerialMaterial = null;
+        let requiredQty = 0;
+        let orderSearchSelectedIndex = -1;
+        
+        // 발주 데이터 구조
+        const ORDERS_DATA = {
+            '강남건설_강남 오피스텔': {
+                company: '강남건설',
+                site: '강남 오피스텔',
+                orders: [
+                    { 
+                        value: 'IT260115-01', 
+                        text: 'IT260115-01 - 강남 오피스텔 CCTV 설치',
+                        contract: 'CT-2024-001',
+                        progress: 80,
+                        materials: [
+                            { name: 'IP카메라 2MP', ordered: 120, shipped: 116, remaining: 4, unit: '개' },
+                            { name: 'NVR 16채널', ordered: 10, shipped: 10, remaining: 0, unit: '개' },
+                            { name: 'UTP 케이블', ordered: 50, shipped: 30, remaining: 20, unit: '박스' }
+                        ]
+                    }
+                ]
+            },
+            '삼성물산_판교 공장': {
+                company: '삼성물산',
+                site: '판교 공장',
+                orders: [
+                    { 
+                        value: 'IT260118-01', 
+                        text: 'IT260118-01 - 판교 공장 센서 설치',
+                        contract: 'CT-2024-002',
+                        progress: 60,
+                        materials: [
+                            { name: '온도 센서', ordered: 20, shipped: 12, remaining: 8, unit: '개' }
+                        ]
+                    }
+                ]
+            },
+            '인천건설_인천 물류센터': {
+                company: '인천건설',
+                site: '인천 물류센터',
+                orders: [
+                    { 
+                        value: 'IT260120-01', 
+                        text: 'IT260120-01 - 인천 물류센터 통합 설치',
+                        contract: 'CT-2024-003',
+                        progress: 40,
+                        materials: [
+                            { name: 'IP카메라 2MP', ordered: 80, shipped: 32, remaining: 48, unit: '개' },
+                            { name: 'NVR 32채널', ordered: 5, shipped: 2, remaining: 3, unit: '개' }
+                        ]
+                    }
+                ]
+            }
+        };
+        
+        const ALL_ORDERS = [];
+        Object.keys(ORDERS_DATA).forEach(key => {
+            const data = ORDERS_DATA[key];
+            data.orders.forEach(order => {
+                ALL_ORDERS.push({
+                    ...order,
+                    key: key,
+                    searchText: `${data.company} ${data.site} ${order.text}`.toLowerCase()
+                });
+            });
+        });
+
+        // 현장별 AS 자재(목업)
+        const AS_MATERIALS_BY_SITE = {
+            '강남건설_강남 오피스텔': [
+                { code: 'CAM-AS-001', name: 'IP카메라 2MP (AS)', spec: '2MP, IP67', requestQty: 3, unit: '개', serial: true },
+                { code: 'NVR-AS-016', name: 'NVR 16채널 (AS)', spec: '16CH, H.265', requestQty: 1, unit: '개', serial: true }
+            ],
+            '삼성물산_판교 공장': [
+                { code: 'SEN-AS-001', name: '온도 센서 (AS)', spec: '산업용, -40~85C', requestQty: 5, unit: '개', serial: false }
+            ],
+            '인천건설_인천 물류센터': []
+        };
+
+        // 출고 자재 검색용 마스터 자재 (자재 마스터와 동일 데이터)
+        const SHIPMENT_MATERIALS = [
+            { code: 'CAM-001', name: 'IP카메라 2MP 실외형', spec: '2MP, 1920x1080, IR 30m, IP67', unit: '개', category: 'CCTV', serialTracking: true },
+            { code: 'CAM-002', name: 'IP카메라 4MP 실내용', spec: '4MP, 2560x1440, WDR, 실내용 돔', unit: '개', category: 'CCTV', serialTracking: true },
+            { code: 'CAM-003', name: 'IP카메라 5MP 실외형', spec: '5MP, 2592x1944, IR 40m, IP67', unit: '개', category: 'CCTV', serialTracking: true },
+            { code: 'NVR-016', name: 'NVR 16채널', spec: '16CH, H.265, 2Bay', unit: '개', category: '녹화기', serialTracking: true },
+            { code: 'NVR-032', name: 'NVR 32채널', spec: '32CH, H.265, 4Bay', unit: '개', category: '녹화기', serialTracking: true },
+            { code: 'MON-032', name: '32인치 모니터', spec: '32\", FHD, 벽걸이/스탠드 겸용', unit: '개', category: '모니터', serialTracking: false },
+            { code: 'SW-024P', name: 'PoE 스위치 24포트', spec: '24포트 PoE, 250W, 기가비트', unit: '개', category: '네트워크', serialTracking: false },
+            { code: 'SW-008P', name: 'PoE 스위치 8포트', spec: '8포트 PoE, 120W, 기가비트', unit: '개', category: '네트워크', serialTracking: false },
+            { code: 'CBL-C6-305', name: 'UTP 케이블 CAT6', spec: 'CAT6, 305m/Box, LSZH', unit: '박스', category: '케이블', serialTracking: false },
+            { code: 'CBL-C5E-305', name: 'UTP 케이블 CAT5E', spec: 'CAT5E, 305m/Box, PVC', unit: '박스', category: '케이블', serialTracking: false },
+            { code: 'BRKT-CAM-UNV', name: '카메라 벽부 브라켓', spec: '알루미늄, 범용형', unit: '개', category: '부자재', serialTracking: false },
+            { code: 'BRKT-POLE', name: '카메라 폴 브라켓', spec: '폴 마운트, 스테인리스 밴드 포함', unit: '개', category: '부자재', serialTracking: false },
+            { code: 'TIE-200W', name: '케이블 타이 200mm', spec: '200mm, 백색, 100EA/PK', unit: '팩', category: '부자재', serialTracking: false },
+            { code: 'TIE-300B', name: '케이블 타이 300mm', spec: '300mm, 흑색, 100EA/PK', unit: '팩', category: '부자재', serialTracking: false },
+            { code: 'JBOX-150', name: '방수 점검함 150x150', spec: '150x150x70, IP66', unit: '개', category: '부자재', serialTracking: false },
+            { code: 'CON-UTP', name: 'UTP RJ45 커넥터', spec: 'CAT6, 100EA/PK', unit: '팩', category: '커넥터', serialTracking: false },
+            { code: 'PS-48V-2A', name: '48V 2A 어댑터', spec: '48V DC, 2A, 플러그형', unit: '개', category: '전원', serialTracking: false },
+            { code: 'HDD-4TB', name: 'HDD 4TB', spec: '4TB, 3.5\", 7200RPM', unit: '개', category: '저장장치', serialTracking: true },
+            { code: 'SEN-TEMP', name: '온도 센서', spec: ' -40~85℃, MODBUS RTU', unit: '개', category: '센서', serialTracking: true },
+            { code: 'SEN-HUMI', name: '온습도 센서', spec: '0~100%RH, -20~60℃, RS-485', unit: '개', category: '센서', serialTracking: true }
+        ];
+
+        let materialAutocompleteIndex = -1;
+        let materialAutocompleteItems = [];
+        
+        function loadShipmentSite() {
+            const siteKey = document.getElementById('shipSiteSelect').value;
+            const orderSelect = document.getElementById('shipOrderSelect');
+            const orderInfo = document.getElementById('orderInfo');
+            
+            // 발주 선택 드롭다운 초기화
+            orderSelect.innerHTML = '<option value="">발주 선택</option>';
+            orderSelect.disabled = !siteKey;
+            
+            if (!siteKey) {
+                orderInfo.style.display = 'none';
+                return;
+            }
+            
+            const siteData = ORDERS_DATA[siteKey];
+            // 선출고는 현장 선택 후 항상 선택 가능
+            orderSelect.insertAdjacentHTML('beforeend', '<option value="PRE_SHIPMENT">선출고</option>');
+            if (!siteData || !siteData.orders || siteData.orders.length === 0) {
+                orderInfo.style.display = 'none';
+            } else {
+                siteData.orders.forEach(order => {
+                    const option = document.createElement('option');
+                    option.value = order.value;
+                    option.textContent = order.text;
+                    orderSelect.appendChild(option);
+                });
+            }
+            
+            // 기존 발주 정보 숨기기
+            orderInfo.style.display = 'none';
+            orderSelect.value = '';
+            renderAsMaterialList();
+        }
+        
+        function loadShipmentOrder() {
+            const siteKey = document.getElementById('shipSiteSelect').value;
+            const orderId = document.getElementById('shipOrderSelect').value;
+            const orderInfo = document.getElementById('orderInfo');
+            const orderInfoDetails = document.getElementById('orderInfoDetails');
+            const orderProgressDetails = document.getElementById('orderProgressDetails');
+            const preShipmentReasonGroup = document.getElementById('preShipmentReasonGroup');
+            const materialTbody = document.getElementById('materialList');
+            
+            if (!orderId || !siteKey) {
+                orderInfo.style.display = 'none';
+                if (preShipmentReasonGroup) preShipmentReasonGroup.style.display = 'none';
+                if (materialTbody) {
+                    materialTbody.innerHTML = `
+                        <tr>
+                            <td colspan="9" style="text-align:center;color:var(--gray-500);padding:1.5rem">
+                                발주를 선택하면 출고 자재가 자동으로 불러와집니다.
+                            </td>
+                        </tr>`;
+                }
+                return;
+            }
+            
+            const siteData = ORDERS_DATA[siteKey];
+            if (!siteData) {
+                orderInfo.style.display = 'none';
+                if (preShipmentReasonGroup) preShipmentReasonGroup.style.display = 'none';
+                if (materialTbody) {
+                    materialTbody.innerHTML = `
+                        <tr>
+                            <td colspan="9" style="text-align:center;color:var(--gray-500);padding:1.5rem">
+                                출고 자재를 불러올 수 없습니다.
+                            </td>
+                        </tr>`;
+                }
+                return;
+            }
+
+            if (orderId === 'PRE_SHIPMENT') {
+                orderInfoDetails.innerHTML = `견적: <strong>-</strong> | 현장: <strong>${siteData.site}</strong> | 발주처: <strong>${siteData.company}</strong> | 진행률: <strong style="color:var(--gray-500)">-</strong>`;
+                orderProgressDetails.innerHTML = '<div>• 선출고 건입니다. 출고 자재를 직접 입력해주세요.</div>';
+                orderInfo.style.display = 'block';
+                if (preShipmentReasonGroup) preShipmentReasonGroup.style.display = 'block';
+                if (materialTbody) {
+                    materialTbody.innerHTML = `
+                        <tr>
+                            <td colspan="9" style="text-align:center;color:var(--gray-500);padding:1.5rem">
+                                선출고 건입니다. 우측 검색을 통해 출고 자재를 직접 추가해주세요.
+                            </td>
+                        </tr>`;
+                }
+                return;
+            }
+            const order = siteData.orders.find(o => o.value === orderId);
+            
+            if (order) {
+                // 발주 정보 업데이트
+                orderInfoDetails.innerHTML = `견적: <strong>${order.contract}</strong> | 현장: <strong>${siteData.site}</strong> | 발주처: <strong>${siteData.company}</strong> | 진행률: <strong style="color:var(--primary)">${order.progress}%</strong>`;
+                
+                // 발주 진행률 정보 업데이트
+                let progressHtml = '';
+                order.materials.forEach(material => {
+                    if (material.remaining > 0) {
+                        progressHtml += `<div>• ${material.name}: ${material.ordered}${material.unit} 중 ${material.shipped}${material.unit} 출고 (<strong style="color:var(--danger)">남은 ${material.remaining}${material.unit}</strong>)</div>`;
+                    } else {
+                        progressHtml += `<div>• ${material.name}: ${material.ordered}${material.unit} 중 ${material.shipped}${material.unit} 출고 (완료)</div>`;
+                    }
+                });
+                orderProgressDetails.innerHTML = progressHtml;
+                orderInfo.style.display = 'block';
+                if (preShipmentReasonGroup) preShipmentReasonGroup.style.display = 'none';
+                
+                // 발주 자재를 출고 자재 목록으로 자동 로드
+                if (materialTbody) {
+                    materialTbody.innerHTML = '';
+                    order.materials.forEach(material => {
+                        const master = SHIPMENT_MATERIALS.find(m => m.name === material.name) || {};
+                        const code = master.code || '-';
+                        const spec = master.spec || '-';
+                        const unit = master.unit || material.unit || '';
+                        const shipped = typeof material.shipped === 'number'
+                            ? material.shipped
+                            : (material.ordered - (material.remaining || 0));
+                        const remaining = material.remaining != null ? material.remaining : 0;
+                        const defaultQty = remaining > 0 ? remaining : 1;
+                        const serialTracking = !!master.serialTracking;
+                        const materialId = `ORD-${order.value}-${code}`;
+                        
+                        materialTbody.insertAdjacentHTML('beforeend', `
+                            <tr data-material="${materialId}">
+                                <td><strong>${code}</strong></td>
+                                <td>${material.name}</td>
+                                <td style="font-size:0.8125rem;color:var(--gray-500)">${spec}</td>
+                                <td>${material.ordered} / ${shipped}</td>
+                                <td>
+                                    <div style="display:flex;align-items:center;gap:0.25rem">
+                                        <input type="number" class="form-input" value="${defaultQty}" min="1" style="padding:0.25rem;width:60px" onchange="checkOverOrder(this, ${remaining}, '${unit}')">
+                                        <span style="font-size:0.8125rem;color:var(--gray-500)">${unit}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <select class="form-select" style="padding:0.25rem;font-size:0.8125rem">
+                                        <option>신품</option>
+                                        <option>중고</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="checkbox" ${serialTracking ? '' : ''} onchange="toggleSerialButton(this)">
+                                </td>
+                                <td>
+                                    ${serialTracking
+                                        ? `<button class="btn btn-sm btn-secondary serial-select-btn" onclick="openSerialModal('${code}', '${material.name}', ${defaultQty})" disabled>선택</button>`
+                                        : '<span style="color:var(--gray-500);font-size:0.75rem">-</span>'}
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm" style="background:var(--danger);color:#fff" onclick="removeMaterialRow(this)">삭제</button>
+                                </td>
+                            </tr>
+                        `);
+                    });
+                }
+            } else {
+                orderInfo.style.display = 'none';
+                if (materialTbody) {
+                    materialTbody.innerHTML = `
+                        <tr>
+                            <td colspan="9" style="text-align:center;color:var(--gray-500);padding:1.5rem">
+                                출고 자재를 불러올 수 없습니다.
+                            </td>
+                        </tr>`;
+                }
+            }
+        }
+        
+        function selectRecentOrder(orderId) {
+            let foundOrder = null;
+            let foundKey = null;
+            
+            Object.keys(ORDERS_DATA).forEach(key => {
+                const siteData = ORDERS_DATA[key];
+                const order = siteData.orders.find(o => o.value === orderId);
+                if (order) {
+                    foundOrder = order;
+                    foundKey = key;
+                }
+            });
+            
+            if (!foundOrder || !foundKey) return;
+            
+            // 드롭다운에 자동 선택
+            document.getElementById('shipSiteSelect').value = foundKey;
+            loadShipmentSite();
+            
+            setTimeout(() => {
+                document.getElementById('shipOrderSelect').value = orderId;
+                loadShipmentOrder();
+            }, 50);
+        }
+        
+        // 통합 검색 기능
+        function handleOrderSearch() {
+            const query = document.getElementById('shipOrderSearch').value.toLowerCase().trim();
+            const resultsDiv = document.getElementById('orderSearchResults');
+            
+            if (!query) {
+                resultsDiv.style.display = 'none';
+                orderSearchSelectedIndex = -1;
+                return;
+            }
+            
+            const results = ALL_ORDERS.filter(order => 
+                order.searchText.includes(query)
+            ).slice(0, 10); // 최대 10개만 표시
+            
+            if (results.length === 0) {
+                resultsDiv.innerHTML = '<div class="autocomplete-item" style="color:var(--gray-500);text-align:center;padding:1rem">검색 결과가 없습니다</div>';
+                resultsDiv.style.display = 'block';
+                return;
+            }
+            
+            // 검색 결과 표시
+            resultsDiv.innerHTML = '';
+            results.forEach((order, index) => {
+                const siteData = ORDERS_DATA[order.key];
+                const item = document.createElement('div');
+                item.className = 'autocomplete-item';
+                item.dataset.index = index;
+                item.onclick = () => selectOrderFromSearch(order.key, order.value);
+                item.onmouseover = () => highlightOrderSearchItem(index);
+                
+                item.innerHTML = `
+                    <div class="autocomplete-item-name">${order.text}</div>
+                    <div class="autocomplete-item-info">${siteData.company} > ${siteData.site}</div>
+                `;
+                resultsDiv.appendChild(item);
+            });
+            
+            resultsDiv.style.display = 'block';
+            orderSearchSelectedIndex = -1;
+        }
+        
+        function handleOrderSearchKeydown(event) {
+            const resultsDiv = document.getElementById('orderSearchResults');
+            const items = resultsDiv.querySelectorAll('.autocomplete-item');
+            
+            if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                orderSearchSelectedIndex = Math.min(orderSearchSelectedIndex + 1, items.length - 1);
+                highlightOrderSearchItem(orderSearchSelectedIndex);
+            } else if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                orderSearchSelectedIndex = Math.max(orderSearchSelectedIndex - 1, -1);
+                highlightOrderSearchItem(orderSearchSelectedIndex);
+            } else if (event.key === 'Enter') {
+                event.preventDefault();
+                if (orderSearchSelectedIndex >= 0 && items[orderSearchSelectedIndex]) {
+                    items[orderSearchSelectedIndex].click();
+                }
+            } else if (event.key === 'Escape') {
+                hideOrderSearchResults();
+            }
+        }
+        
+        function highlightOrderSearchItem(index) {
+            const items = document.querySelectorAll('#orderSearchResults .autocomplete-item');
+            items.forEach((item, i) => {
+                if (i === index) {
+                    item.classList.add('selected');
+                } else {
+                    item.classList.remove('selected');
+                }
+            });
+            orderSearchSelectedIndex = index;
+        }
+        
+        function selectOrderFromSearch(siteKey, orderId) {
+            document.getElementById('shipSiteSelect').value = siteKey;
+            loadShipmentSite();
+            
+            setTimeout(() => {
+                document.getElementById('shipOrderSelect').value = orderId;
+                loadShipmentOrder();
+            }, 50);
+            
+            // 검색창 초기화
+            document.getElementById('shipOrderSearch').value = '';
+            hideOrderSearchResults();
+        }
+        
+        function hideOrderSearchResults() {
+            document.getElementById('orderSearchResults').style.display = 'none';
+            orderSearchSelectedIndex = -1;
+        }
+
+        function renderAsMaterialList() {
+            const siteKey = document.getElementById('shipSiteSelect').value;
+            const container = document.getElementById('asMaterialContainer');
+            const tbody = document.getElementById('asMaterialList');
+            const caption = document.getElementById('asMaterialCaption');
+
+            if (!siteKey) {
+                container.style.display = 'none';
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--gray-500);padding:1.5rem">현장을 선택하면 AS 자재가 표시됩니다.</td></tr>';
+                return;
+            }
+
+            container.style.display = 'block';
+            const list = AS_MATERIALS_BY_SITE[siteKey] || [];
+            if (!list.length) {
+                caption.textContent = '해당 현장에 출고 가능한 AS 자재가 없습니다.';
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--gray-500);padding:1.5rem">표시할 AS 자재가 없습니다.</td></tr>';
+                return;
+            }
+
+            caption.textContent = '해당 현장의 AS 자재를 선택해 출고 자재에 추가할 수 있습니다.';
+            tbody.innerHTML = '';
+            list.forEach(material => {
+                tbody.insertAdjacentHTML('beforeend', `
+                    <tr data-as-code="${material.code}">
+                        <td style="text-align:center"><input type="checkbox" class="as-material-check"></td>
+                        <td><strong>${material.code}</strong></td>
+                        <td>${material.name}</td>
+                        <td style="font-size:0.8125rem;color:var(--gray-500)">${material.spec}</td>
+                        <td>${material.requestQty}</td>
+                        <td>
+                            <div style="display:flex;align-items:center;gap:0.25rem">
+                                <input type="number" class="form-input as-shipment-qty" value="${material.requestQty}" min="1" max="${material.requestQty}" style="padding:0.25rem;width:70px">
+                                <span style="font-size:0.8125rem;color:var(--gray-500)">${material.unit}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <select class="form-select as-shipment-type" style="padding:0.25rem;font-size:0.8125rem">
+                                <option value="재출고" selected>재출고</option>
+                                <option value="교체출고">교체출고</option>
+                            </select>
+                        </td>
+                        <td>
+                            <select class="form-select as-material-quality" style="padding:0.25rem;font-size:0.8125rem">
+                                <option value="중고" selected>중고</option>
+                                <option value="신품">신품</option>
+                            </select>
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-secondary" style="padding:0.25rem 0.5rem" ${material.serial ? '' : 'disabled'}>선택</button>
+                        </td>
+                    </tr>
+                `);
+            });
+        }
+
+        function addSelectedAsMaterials() {
+            const siteKey = document.getElementById('shipSiteSelect').value;
+            if (!siteKey) return alert('현장을 먼저 선택해주세요.');
+
+            const list = AS_MATERIALS_BY_SITE[siteKey] || [];
+            const rows = Array.from(document.querySelectorAll('#asMaterialList tr[data-as-code]'));
+            const selected = rows.filter(row => {
+                const cb = row.querySelector('.as-material-check');
+                return cb && cb.checked;
+            });
+
+            if (!selected.length) {
+                alert('추가할 AS 자재를 선택해주세요.');
+                return;
+            }
+
+            const tbody = document.getElementById('materialList');
+            let addedCount = 0;
+
+            selected.forEach(row => {
+                const code = row.dataset.asCode;
+                const material = list.find(m => m.code === code);
+                if (!material) return;
+                const qtyInput = row.querySelector('.as-shipment-qty');
+                const shipQty = qtyInput ? parseInt(qtyInput.value, 10) : NaN;
+                if (!shipQty || shipQty < 1 || shipQty > material.requestQty) return;
+                const shipmentTypeSelect = row.querySelector('.as-shipment-type');
+                const shipmentType = shipmentTypeSelect ? shipmentTypeSelect.value : '재출고';
+                const qualitySelect = row.querySelector('.as-material-quality');
+                const selectedQuality = qualitySelect ? qualitySelect.value : '중고';
+
+                const exists = Array.from(tbody.querySelectorAll('tr[data-material]')).some(tr => {
+                    const codeCell = tr.querySelector('td:first-child strong');
+                    return codeCell && codeCell.textContent.trim() === material.code;
+                });
+                if (exists) return;
+
+                const materialId = 'AS-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+                tbody.insertAdjacentHTML('beforeend', `
+                    <tr data-material="${materialId}">
+                        <td><strong>${material.code}</strong></td>
+                        <td>${material.name}</td>
+                        <td style="font-size:0.8125rem;color:var(--gray-500)">${material.spec}</td>
+                        <td>AS(${shipmentType}) / 0</td>
+                        <td>
+                            <div style="display:flex;align-items:center;gap:0.25rem">
+                                <input type="number" class="form-input" value="${shipQty}" min="1" max="${material.requestQty}" style="padding:0.25rem;width:60px" onchange="checkOverOrder(this, ${material.requestQty}, '${material.unit}')">
+                                <span style="font-size:0.8125rem;color:var(--gray-500)">${material.unit}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <select class="form-select" style="padding:0.25rem;font-size:0.8125rem">
+                                <option ${selectedQuality === '중고' ? 'selected' : ''}>중고</option>
+                                <option ${selectedQuality === '신품' ? 'selected' : ''}>신품</option>
+                            </select>
+                        </td>
+                        <td>
+                            <input type="checkbox" onchange="toggleSerialButton(this)">
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-secondary serial-select-btn" onclick="openSerialModal('${material.code}', '${material.name}', ${shipQty})" disabled>선택</button>
+                        </td>
+                        <td><button class="btn btn-sm" style="background:var(--danger);color:#fff" onclick="removeMaterialRow(this)">삭제</button></td>
+                    </tr>
+                `);
+                addedCount += 1;
+            });
+
+            selected.forEach(row => {
+                const cb = row.querySelector('.as-material-check');
+                if (cb) cb.checked = false;
+            });
+
+            if (addedCount === 0) {
+                alert('선택한 AS 자재가 이미 출고 목록에 있습니다.');
+            } else {
+                alert(`AS 자재 ${addedCount}건이 출고 목록에 추가되었습니다.`);
+            }
+        }
+        
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+            
+            if (tabName === 'list') {
+                document.querySelector('.tab:nth-child(1)').classList.add('active');
+                document.getElementById('listTab').style.display = 'block';
+            } else {
+                document.querySelector('.tab:nth-child(2)').classList.add('active');
+                document.getElementById('registerTab').style.display = 'block';
+            }
+        }
+        
+        // loadOrderInfo는 loadShipmentOrder로 대체됨
+        
+        function openRecentOrdersModal() {
+            document.getElementById('recentOrdersModal').classList.add('active');
+        }
+        
+        function selectRecentOrderFromModal(orderId) {
+            selectRecentOrder(orderId);
+            closeModal('recentOrdersModal');
+        }
+        
+        function handleMaterialSearch() {
+            const keyword = document.getElementById('materialSearch').value.trim().toLowerCase();
+            const dropdown = document.getElementById('materialAutocomplete');
+
+            if (!keyword) {
+                hideMaterialAutocomplete();
+                return;
+            }
+
+            const filtered = SHIPMENT_MATERIALS.filter(m =>
+                m.code.toLowerCase().includes(keyword) ||
+                m.name.toLowerCase().includes(keyword) ||
+                m.category.toLowerCase().includes(keyword)
+            );
+
+            if (filtered.length === 0) {
+                dropdown.innerHTML = '<div class="autocomplete-item" style="color:var(--gray-500);cursor:default">검색 결과가 없습니다</div>';
+                dropdown.style.display = 'block';
+                return;
+            }
+
+            materialAutocompleteItems = filtered;
+            materialAutocompleteIndex = -1;
+
+            dropdown.innerHTML = filtered.map((m, idx) => `
+                <div class="autocomplete-item" data-index="${idx}" onclick="selectMaterial(${idx})" onmouseover="highlightMaterial(${idx})">
+                    <div class="autocomplete-item-name">${m.name}</div>
+                    <div class="autocomplete-item-info">${m.code} | ${m.spec} | ${m.category}</div>
+                </div>
+            `).join('');
+            dropdown.style.display = 'block';
+        }
+
+        function handleMaterialKeydown(event) {
+            const dropdown = document.getElementById('materialAutocomplete');
+            if (dropdown.style.display === 'none' || materialAutocompleteItems.length === 0) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    const keyword = document.getElementById('materialSearch').value.trim();
+                    if (keyword) addMaterialByName(keyword);
+                }
+                return;
+            }
+
+            if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                materialAutocompleteIndex = Math.min(materialAutocompleteIndex + 1, materialAutocompleteItems.length - 1);
+                highlightMaterial(materialAutocompleteIndex);
+            } else if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                materialAutocompleteIndex = Math.max(materialAutocompleteIndex - 1, -1);
+                highlightMaterial(materialAutocompleteIndex);
+            } else if (event.key === 'Enter') {
+                event.preventDefault();
+                if (materialAutocompleteIndex >= 0) selectMaterial(materialAutocompleteIndex);
+            } else if (event.key === 'Escape') {
+                hideMaterialAutocomplete();
+            }
+        }
+
+        function handleMaterialFocus() {
+            const keyword = document.getElementById('materialSearch').value.trim();
+            if (keyword) handleMaterialSearch();
+        }
+
+        function highlightMaterial(index) {
+            const items = document.querySelectorAll('#materialAutocomplete .autocomplete-item');
+            items.forEach((item, i) => item.classList.toggle('selected', i === index));
+            materialAutocompleteIndex = index;
+        }
+
+        function selectMaterial(index) {
+            const material = materialAutocompleteItems[index];
+            if (!material) return;
+            addMaterialFromData(material);
+            hideMaterialAutocomplete();
+        }
+
+        function hideMaterialAutocomplete() {
+            const dropdown = document.getElementById('materialAutocomplete');
+            if (dropdown) dropdown.style.display = 'none';
+            materialAutocompleteIndex = -1;
+        }
+
+        function addMaterialFromData(material) {
+            const tbody = document.getElementById('materialList');
+            const exists = Array.from(tbody.querySelectorAll('tr[data-material]')).some(tr => {
+                const codeCell = tr.querySelector('td:first-child strong');
+                return codeCell && codeCell.textContent.trim() === material.code;
+            });
+            if (exists) return alert('이미 추가된 자재입니다.');
+
+            const materialId = 'MAT-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+            tbody.insertAdjacentHTML('beforeend', `
+                <tr data-material="${materialId}">
+                    <td><strong>${material.code}</strong></td>
+                    <td>${material.name}</td>
+                    <td style="font-size:0.8125rem;color:var(--gray-500)">${material.spec}</td>
+                    <td>- / -</td>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:0.25rem">
+                            <input type="number" class="form-input" value="1" min="1" style="padding:0.25rem;width:60px" onchange="checkOverOrder(this, 0, '${material.unit}')">
+                            <span style="font-size:0.8125rem;color:var(--gray-500)">${material.unit}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <select class="form-select" style="padding:0.25rem;font-size:0.8125rem">
+                            <option>신품</option>
+                            <option>중고</option>
+                        </select>
+                    </td>
+                    <td><input type="checkbox" onchange="toggleSerialButton(this)"></td>
+                    <td><button class="btn btn-sm btn-secondary serial-select-btn" onclick="openSerialModal('${material.code}', '${material.name}', 1)" disabled>선택</button></td>
+                    <td><button class="btn btn-sm" style="background:var(--danger);color:#fff" onclick="removeMaterialRow(this)">삭제</button></td>
+                </tr>
+            `);
+            document.getElementById('materialSearch').value = '';
+        }
+
+        function addMaterialByName(name) {
+            const keyword = (name || '').trim().toLowerCase();
+            if (!keyword) return;
+            const found = SHIPMENT_MATERIALS.find(m =>
+                m.name.toLowerCase().includes(keyword) ||
+                m.code.toLowerCase().includes(keyword)
+            );
+            if (found) {
+                addMaterialFromData(found);
+            } else {
+                addMaterialFromData({
+                    code: name.trim(),
+                    name: name.trim(),
+                    spec: '-',
+                    unit: '개',
+                    serialTracking: false
+                });
+            }
+        }
+
+        function addMaterial() {
+            const search = document.getElementById('materialSearch').value.trim();
+            if (!search) return alert('자재를 검색해주세요');
+            addMaterialByName(search);
+            hideMaterialAutocomplete();
+        }
+
+        function toggleSerialButton(checkbox) {
+            const row = checkbox.closest('tr');
+            if (!row) return;
+            const button = row.querySelector('.serial-select-btn');
+            if (!button) return;
+            button.disabled = !checkbox.checked;
+        }
+        
+        function removeMaterialRow(btn) {
+            const row = btn.closest('tr');
+            const materialId = row.dataset.material;
+            // 초과 사유 행도 함께 삭제
+            const reasonRow = document.querySelector(`tr.over-reason-row[data-for="${materialId}"]`);
+            if (reasonRow) reasonRow.remove();
+            row.remove();
+        }
+        
+        function checkOverOrder(input, remaining, unit) {
+            const qty = parseInt(input.value) || 0;
+            const row = input.closest('tr');
+            const materialId = row.dataset.material;
+            
+            // 기존 초과 사유 행 찾기
+            let reasonRow = document.querySelector(`tr.over-reason-row[data-for="${materialId}"]`);
+            
+            if (qty > remaining && remaining > 0) {
+                const overQty = qty - remaining;
+                if (!reasonRow) {
+                    // 초과 사유 행 추가
+                    row.insertAdjacentHTML('afterend', `
+                        <tr class="over-reason-row" data-for="${materialId}" style="background:#FFF8E1">
+                            <td colspan="9" style="padding:0.5rem 1rem">
+                                <div style="display:flex;align-items:center;gap:1rem">
+                                    <span style="color:var(--warning);font-weight:600;white-space:nowrap">⚠️ ${overQty}${unit} 초과</span>
+                                    <input type="text" class="form-input over-reason-input" placeholder="초과 출고 사유 입력 *" style="flex:1;padding:0.375rem">
+                                </div>
+                            </td>
+                        </tr>
+                    `);
+                } else {
+                    // 초과 수량 업데이트
+                    reasonRow.querySelector('span').innerHTML = `⚠️ ${overQty}${unit} 초과`;
+                }
+            } else {
+                // 초과 아니면 사유 행 제거
+                if (reasonRow) reasonRow.remove();
+            }
+        }
+        
+        function openSerialModal(materialCode, materialName, qty) {
+            currentSerialMaterial = materialCode;
+            requiredQty = qty;
+            
+            document.getElementById('serialMaterialName').textContent = materialName;
+            document.getElementById('serialQty').textContent = qty;
+            document.getElementById('requiredCount').textContent = qty;
+            
+            updateSerialCount();
+            document.getElementById('serialModal').classList.add('active');
+        }
+        
+        function selectAllSerials() {
+            const checkboxes = document.querySelectorAll('.serial-check');
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+            
+            checkboxes.forEach((cb, index) => {
+                cb.checked = !allChecked && index < requiredQty;
+            });
+            
+            updateSerialCount();
+        }
+        
+        function updateSerialCount() {
+            const checked = document.querySelectorAll('.serial-check:checked').length;
+            document.getElementById('selectedCount').textContent = checked;
+            
+            const statusEl = document.getElementById('serialMatchStatus');
+            if (checked === requiredQty) {
+                statusEl.innerHTML = '<span style="color:var(--success);font-weight:600">✅ 일치</span>';
+            } else if (checked < requiredQty) {
+                statusEl.innerHTML = `<span style="color:var(--danger);font-weight:600">❌ ${requiredQty - checked}개 부족</span>`;
+            } else {
+                statusEl.innerHTML = `<span style="color:var(--warning);font-weight:600">⚠️ ${checked - requiredQty}개 초과</span>`;
+            }
+        }
+        
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('serial-check')) {
+                updateSerialCount();
+            }
+        });
+        
+        function confirmSerialSelection() {
+            const checked = document.querySelectorAll('.serial-check:checked').length;
+            
+            if (checked !== requiredQty) {
+                alert(`출고 수량(${requiredQty}개)과 선택한 시리얼 수(${checked}개)가 일치하지 않습니다.`);
+                return;
+            }
+            
+            alert('✅ 시리얼이 선택되었습니다.');
+            closeModal('serialModal');
+        }
+        
+        function showDetail(shipmentNo) {
+            document.getElementById('detailShipmentNo').textContent = shipmentNo;
+            document.getElementById('detailNo').textContent = shipmentNo;
+            
+            // 초과 출고 건인 경우
+            if (shipmentNo === 'OUT-2024-048') {
+                document.getElementById('overOrderReasonBox').style.display = 'block';
+                document.getElementById('detailStatus').className = 'status-badge status-warning';
+                document.getElementById('detailStatus').textContent = '초과';
+            } else {
+                document.getElementById('overOrderReasonBox').style.display = 'none';
+                document.getElementById('detailStatus').className = 'status-badge status-complete';
+                document.getElementById('detailStatus').textContent = '완료';
+            }
+            
+            document.getElementById('detailModal').classList.add('active');
+        }
+        
+        function printShipmentDocument(shipmentNo) {
+            // 출고증 출력 기능
+            alert(`출고증 출력: ${shipmentNo}\n\n출고증 파일을 열거나 다운로드하는 기능이 여기에 구현됩니다.`);
+            // 예시: window.open(`/shipments/${shipmentNo}.pdf`, '_blank');
+        }
+        
+        function openShipmentConfirmModal(shipmentNo) {
+            // 간단히 선택된 출고 번호만 전달하여 출고 확인 모달을 오픈
+            document.getElementById('confirmShipmentNo').textContent = shipmentNo;
+            document.getElementById('confirmDetailNo').textContent = shipmentNo;
+            // TODO: 실제 구현 시 shipmentNo 기반으로 상세 데이터 바인딩
+            document.getElementById('confirmModal').classList.add('active');
+            initSignaturePad();
+        }
+        
+        let signaturePad, signaturePadCtx, isDrawing = false;
+        
+        function initSignaturePad() {
+            const canvas = document.getElementById('signaturePad');
+            if (!canvas) return;
+            signaturePad = canvas;
+            signaturePadCtx = canvas.getContext('2d');
+            signaturePadCtx.strokeStyle = '#111827';
+            signaturePadCtx.lineWidth = 2;
+            signaturePadCtx.lineCap = 'round';
+            signaturePadCtx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const getPos = (e) => {
+                const rect = canvas.getBoundingClientRect();
+                if (e.touches && e.touches[0]) {
+                    return {
+                        x: e.touches[0].clientX - rect.left,
+                        y: e.touches[0].clientY - rect.top
+                    };
+                }
+                return {
+                    x: e.clientX - rect.left,
+                    y: e.clientY - rect.top
+                };
+            };
+            
+            const startDraw = (e) => {
+                isDrawing = true;
+                const pos = getPos(e);
+                signaturePadCtx.beginPath();
+                signaturePadCtx.moveTo(pos.x, pos.y);
+                e.preventDefault();
+            };
+            
+            const draw = (e) => {
+                if (!isDrawing) return;
+                const pos = getPos(e);
+                signaturePadCtx.lineTo(pos.x, pos.y);
+                signaturePadCtx.stroke();
+                e.preventDefault();
+            };
+            
+            const endDraw = (e) => {
+                if (!isDrawing) return;
+                isDrawing = false;
+                e.preventDefault();
+            };
+            
+            // 마우스 이벤트
+            canvas.onmousedown = startDraw;
+            canvas.onmousemove = draw;
+            canvas.onmouseup = endDraw;
+            canvas.onmouseleave = endDraw;
+            
+            // 터치 이벤트
+            canvas.ontouchstart = startDraw;
+            canvas.ontouchmove = draw;
+            canvas.ontouchend = endDraw;
+        }
+        
+        function clearSignature() {
+            if (!signaturePad || !signaturePadCtx) return;
+            signaturePadCtx.clearRect(0, 0, signaturePad.width, signaturePad.height);
+        }
+        
+        function submitShipmentConfirm() {
+            alert('✅ 출고가 확인되었습니다.\n(서명 데이터는 서버로 전송되는 것으로 가정합니다.)');
+            closeModal('confirmModal');
+        }
+        
+        function showSerialList() {
+            document.getElementById('serialListModal').classList.add('active');
+        }
+        
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+        
+        function confirmShipment() {
+            const order = document.getElementById('shipOrderSelect').value;
+            const preShipmentReasonGroup = document.getElementById('preShipmentReasonGroup');
+            const preShipmentReasonInput = document.getElementById('preShipmentReason');
+            
+            if (!order) {
+                alert('발주를 선택해주세요');
+                return;
+            }
+            
+            // 선출고인 경우 선출고 사유 필수 입력
+            if (order === 'PRE_SHIPMENT') {
+                if (!preShipmentReasonInput || !preShipmentReasonInput.value.trim()) {
+                    alert('선출고 사유를 입력해주세요');
+                    if (preShipmentReasonInput) preShipmentReasonInput.focus();
+                    return;
+                }
+            }
+            
+            // 개별 초과 사유 확인
+            const reasonInputs = document.querySelectorAll('.over-reason-input');
+            for (const input of reasonInputs) {
+                if (!input.value.trim()) {
+                    alert('모든 초과 출고 항목의 사유를 입력해주세요');
+                    input.focus();
+                    return;
+                }
+            }
+            
+            if (confirm('출고를 처리하시겠습니까?\n\n발주: IT260115-01\n현장: 강남 오피스텔')) {
+                alert('✅ 출고가 완료되었습니다!\n출고 번호: OUT-2024-051');
+                switchTab('list');
+            }
+        }
+        
+        function filterPreShipment() {
+            const checkbox = document.getElementById('preShipmentOnly');
+            const rows = document.querySelectorAll('#listTab tbody tr');
+            
+            rows.forEach(row => {
+                const shipmentCell = row.querySelector('td:nth-child(2)');
+                if (shipmentCell) {
+                    const isPreShipment = shipmentCell.textContent.includes('선출고');
+                    if (checkbox.checked) {
+                        row.style.display = isPreShipment ? '' : 'none';
+                    } else {
+                        row.style.display = '';
+                    }
+                }
+            });
+        }
+        
+        function handleSearch() {
+            // 검색 기능 구현
+        }
+        
+        function resetFilters() {
+            // 필터 초기화
+            document.getElementById('preShipmentOnly').checked = false;
+            filterPreShipment();
+        }
+        
+        // 모달 외부 클릭 시 닫기
+        document.querySelectorAll('.modal').forEach(m => {
+            m.onclick = e => {
+                if (e.target.classList.contains('modal')) {
+                    e.target.classList.remove('active');
+                }
+            };
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>현장 통합 현황 - 건설 자재 ERP</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <nav class="nav">
+        <a href="dashboard.html">📊 대시보드</a>
+        <a href="contract.html">📋 견적</a>
+        <a href="inventory.html">📦 재고</a>
+        <a href="order.html">📝 발주</a>
+        <a href="receiving.html">📥 입고</a>
+        <a href="shipment.html">🚚 출고</a>
+        <!-- <a href="purchase.html">🛒 구매</a> -->
+        <a href="as.html">🔧 AS</a>
+        <a href="materials.html">📁 자재정보</a>
+        <a href="project.html" class="active">📊 현장 통합 현황</a>
+    </nav>
+
+    <main class="main">
+        <div class="page-header">
+        </div>
+
+        <div class="search-box">
+            <div class="search-row">
+                <select class="form-select" style="max-width:400px" onchange="loadSiteData()">
+                    <option value="">현장 선택</option>
+                    <option value="SITE-001" selected>강남 오피스텔 (IT260115-01)</option>
+                    <option value="SITE-002">판교 공장 (IT260118-01)</option>
+                    <option value="SITE-003">인천 물류센터 (IT260120-01)</option>
+                </select>
+                <input type="text" class="search-input" placeholder="🔍 통합검색...">
+            </div>
+        </div>
+
+        <!-- 상세 정보 탭 -->
+        <div class="card">
+            <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+                <div class="tabs" style="margin:0;border:none">
+                    <button class="tab active" data-tab="overview" onclick="switchTab('overview')">개요</button>
+                    <button class="tab" data-tab="contract" onclick="switchTab('contract')">계약 이행 현황</button>
+                    <button class="tab" data-tab="materialStatus" onclick="switchTab('materialStatus')">발주 자재 현황</button>
+                    <button class="tab" data-tab="history" onclick="switchTab('history')">프로젝트 이력</button>
+                    <button class="tab" data-tab="summary" onclick="switchTab('summary')">정산요약</button>
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="openQuoteModal()">📄 견적서 확인</button>
+            </div>
+
+            <!-- 개요 탭 -->
+            <div id="overviewTab" class="tab-content active">
+                <div class="card-body">
+                    <div style="margin-bottom:0.5rem;font-weight:600;font-size:1rem;color:var(--gray-700)">현장 통합 현황</div>
+                    <!-- 문제 요약 (옵션 C) -->
+                    <div class="info-box" id="overviewProblemSummary" style="margin-bottom:1rem;background:#fff3cd;border-color:var(--warning)">
+                        <div style="font-weight:600;color:var(--warning)">⚠️ 문제 1건</div>
+                        <div style="font-size:0.875rem">초과 출고 1건 (통신전용 방수함체 +2) · <a href="#" class="btn-link" onclick="switchTab('materialStatus');return false">발주 자재 현황에서 보기</a></div>
+                    </div>
+                    <!-- KPI 4개: 이행률, 출고, 미출고, 초과 -->
+                    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem">
+                        <div class="card" style="background:#e3f2fd;border-color:#1976d2">
+                            <div class="card-body" style="text-align:center;position:relative">
+                                <div style="font-size:0.875rem;color:var(--gray-600);margin-bottom:0.5rem">계약이행률</div>
+                                <div style="font-size:2rem;font-weight:700;color:#1976d2">100%</div>
+                            </div>
+                        </div>
+                        <div class="card" style="background:#e8f5e9;border-color:#388e3c">
+                            <div class="card-body" style="text-align:center">
+                                <div style="font-size:0.875rem;color:var(--gray-600);margin-bottom:0.5rem">출고</div>
+                                <div style="font-size:2rem;font-weight:700;color:#388e3c">228</div>
+                            </div>
+                        </div>
+                        <div class="card" style="background:#fff3cd;border-color:#ffc107">
+                            <div class="card-body" style="text-align:center;position:relative">
+                                <div style="font-size:0.875rem;color:var(--gray-600);margin-bottom:0.5rem">미출고</div>
+                                <div style="font-size:2rem;font-weight:700;color:#f57c00">0</div>
+                            </div>
+                        </div>
+                        <div class="card" style="background:#fff3cd;border-color:#ffc107;border-width:2px;box-shadow:0 0 0 2px rgba(245,124,0,0.3)">
+                            <div class="card-body" style="text-align:center;position:relative">
+                                <span style="position:absolute;top:0.5rem;right:0.5rem;background:var(--danger);color:#fff;font-size:0.625rem;padding:0.15rem 0.35rem;border-radius:4px">주의</span>
+                                <div style="font-size:0.875rem;color:var(--gray-600);margin-bottom:0.5rem">초과</div>
+                                <div style="font-size:2rem;font-weight:700;color:#f57c00">+2</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 발주 자재 현황 탭 -->
+            <div id="materialStatusTab" class="tab-content" style="display:none">
+                <div class="card-body">
+                    <div style="margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center">
+                        <div style="font-weight:600">발주 기준 자재 현황</div>
+                        <div style="display:flex;gap:0.5rem">
+                            <button class="btn btn-primary btn-sm">전체</button>
+                            <button class="btn btn-secondary btn-sm">초과만</button>
+                            <button class="btn btn-secondary btn-sm">문제만</button>
+                            <button class="btn btn-secondary btn-sm">엑셀</button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>코드</th>
+                                    <th>자재명</th>
+                                    <th>단위</th>
+                                    <th>발주</th>
+                                    <th>출고</th>
+                                    <th>미출고</th>
+                                    <th>초과</th>
+                                    <th>운용</th>
+                                    <th>회수</th>
+                                    <th>분실</th>
+                                    <th>출고상태</th>
+                                    <th>준비율</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>M-AC-001</td>
+                                    <td>열화상 카메라</td>
+                                    <td>ea</td>
+                                    <td>10</td>
+                                    <td>10</td>
+                                    <td>0</td>
+                                    <td>0</td>
+                                    <td>9</td>
+                                    <td>1</td>
+                                    <td>0</td>
+                                    <td><span class="status-badge status-complete">완료</span></td>
+                                    <td>100%</td>
+                                </tr>
+                                <tr>
+                                    <td>M-AC-004</td>
+                                    <td>통신전용 방수함체</td>
+                                    <td>ea</td>
+                                    <td>3</td>
+                                    <td>5</td>
+                                    <td>0</td>
+                                    <td style="color:var(--danger);font-weight:600">+2</td>
+                                    <td>5</td>
+                                    <td>0</td>
+                                    <td>0</td>
+                                    <td><span class="status-badge status-warning">초과</span></td>
+                                    <td>166%</td>
+                                </tr>
+                                <tr>
+                                    <td>M-AC-007</td>
+                                    <td>7인치 디스플레이</td>
+                                    <td>ea</td>
+                                    <td>2</td>
+                                    <td>2</td>
+                                    <td>0</td>
+                                    <td>0</td>
+                                    <td>1</td>
+                                    <td>1</td>
+                                    <td>0</td>
+                                    <td><span class="status-badge status-complete">완료</span></td>
+                                    <td>100%</td>
+                                </tr>
+                                <tr>
+                                    <td>M-AC-011</td>
+                                    <td>슬라이딩 게이트</td>
+                                    <td>ea</td>
+                                    <td>3</td>
+                                    <td>2</td>
+                                    <td>1</td>
+                                    <td>0</td>
+                                    <td>2</td>
+                                    <td>0</td>
+                                    <td>0</td>
+                                    <td><span class="status-badge status-warning">미완료</span></td>
+                                    <td>67%</td>
+                                </tr>
+                                <tr>
+                                    <td>M-AC-002</td>
+                                    <td>UTP 케이블</td>
+                                    <td>m</td>
+                                    <td>100</td>
+                                    <td>100</td>
+                                    <td>0</td>
+                                    <td>0</td>
+                                    <td>90</td>
+                                    <td>5</td>
+                                    <td>5</td>
+                                    <td><span class="status-badge status-complete">완료</span></td>
+                                    <td>100%</td>
+                                </tr>
+                                <tr>
+                                    <td>M-AC-003</td>
+                                    <td>전원 케이블</td>
+                                    <td>m</td>
+                                    <td>80</td>
+                                    <td>80</td>
+                                    <td>0</td>
+                                    <td>0</td>
+                                    <td>75</td>
+                                    <td>3</td>
+                                    <td>2</td>
+                                    <td><span class="status-badge status-complete">완료</span></td>
+                                    <td>100%</td>
+                                </tr>
+                                <tr>
+                                    <td>M-AC-005</td>
+                                    <td>브라켓 L형</td>
+                                    <td>ea</td>
+                                    <td>10</td>
+                                    <td>10</td>
+                                    <td>0</td>
+                                    <td>0</td>
+                                    <td>10</td>
+                                    <td>0</td>
+                                    <td>0</td>
+                                    <td><span class="status-badge status-complete">완료</span></td>
+                                    <td>100%</td>
+                                </tr>
+                                <tr>
+                                    <td>M-AC-006</td>
+                                    <td>NVR 8채널</td>
+                                    <td>ea</td>
+                                    <td>1</td>
+                                    <td>1</td>
+                                    <td>0</td>
+                                    <td>0</td>
+                                    <td>1</td>
+                                    <td>0</td>
+                                    <td>0</td>
+                                    <td><span class="status-badge status-complete">완료</span></td>
+                                    <td>100%</td>
+                                </tr>
+                            </tbody>
+                            <tfoot style="background:#e1e1e1;font-weight:600">
+                                <tr>
+                                    <td colspan="3" style="text-align:center">합계</td>
+                                    <td>226</td>
+                                    <td>227</td>
+                                    <td>1</td>
+                                    <td style="color:var(--danger)">+2</td>
+                                    <td>213</td>
+                                    <td>12</td>
+                                    <td>3</td>
+                                    <td>-</td>
+                                    <td>100%</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 계약 이행 현황 탭 -->
+            <div id="contractTab" class="tab-content" style="display:none">
+                <div class="card-body">
+                    <div style="margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center">
+                        <div style="font-weight:600">계약 이행 현황 (견적서 기준)</div>
+                        <button class="btn btn-secondary btn-sm">이행 현황 리포트</button>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem">
+                        <div class="card" style="background:#e3f2fd;border-color:#1976d2">
+                            <div class="card-body" style="text-align:center">
+                                <div style="font-size:0.875rem;color:var(--gray-600);margin-bottom:0.5rem">계약 항목</div>
+                                <div style="font-size:1.5rem;font-weight:700;color:#1976d2">4개</div>
+                            </div>
+                        </div>
+                        <div class="card" style="background:#e8f5e9;border-color:#388e3c">
+                            <div class="card-body" style="text-align:center">
+                                <div style="font-size:0.875rem;color:var(--gray-600);margin-bottom:0.5rem">이행 완료</div>
+                                <div style="font-size:1.5rem;font-weight:700;color:#388e3c">4개</div>
+                            </div>
+                        </div>
+                        <div class="card" style="background:#fff3cd;border-color:#ffc107">
+                            <div class="card-body" style="text-align:center">
+                                <div style="font-size:0.875rem;color:var(--gray-600);margin-bottom:0.5rem">초과 납품</div>
+                                <div style="font-size:1.5rem;font-weight:700;color:#f57c00">1개</div>
+                            </div>
+                        </div>
+                        <div class="card" style="background:#e8f5e9;border-color:#388e3c">
+                            <div class="card-body" style="text-align:center">
+                                <div style="font-size:0.875rem;color:var(--gray-600);margin-bottom:0.5rem">전체 이행률</div>
+                                <div style="font-size:1.5rem;font-weight:700;color:#388e3c">100%</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>견적 항목</th>
+                                    <th>품질구분</th>
+                                    <th>계약 수량</th>
+                                    <th>출고 수량</th>
+                                    <th>미출고</th>
+                                    <th>초과</th>
+                                    <th>이행률</th>
+                                    <th>상태</th>
+                                    <th>비고</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>열화상 카메라 시스템</td>
+                                    <td>고급형</td>
+                                    <td>10식</td>
+                                    <td>10</td>
+                                    <td>0</td>
+                                    <td>0</td>
+                                    <td>100%</td>
+                                    <td><span class="status-badge status-complete">완료</span></td>
+                                    <td>-</td>
+                                </tr>
+                                <tr>
+                                    <td>출입통제 시스템</td>
+                                    <td>표준형</td>
+                                    <td>3식</td>
+                                    <td>5</td>
+                                    <td>0</td>
+                                    <td style="color:var(--warning);font-weight:600">+2</td>
+                                    <td>166%</td>
+                                    <td><span class="status-badge status-warning">초과</span></td>
+                                    <td>현장 추가 요청</td>
+                                </tr>
+                                <tr>
+                                    <td>디스플레이 장비</td>
+                                    <td>표준형</td>
+                                    <td>2식</td>
+                                    <td>2</td>
+                                    <td>0</td>
+                                    <td>0</td>
+                                    <td>100%</td>
+                                    <td><span class="status-badge status-complete">완료</span></td>
+                                    <td>-</td>
+                                </tr>
+                                <tr>
+                                    <td>네트워크 구축</td>
+                                    <td>표준형</td>
+                                    <td>1식</td>
+                                    <td>1</td>
+                                    <td>0</td>
+                                    <td>0</td>
+                                    <td>100%</td>
+                                    <td><span class="status-badge status-complete">완료</span></td>
+                                    <td>-</td>
+                                </tr>
+                            </tbody>
+                            <tfoot style="background:#e1e1e1;font-weight:600">
+                                <tr>
+                                    <td colspan="2" style="text-align:center">합계</td>
+                                    <td>16식</td>
+                                    <td>18</td>
+                                    <td>0</td>
+                                    <td style="color:var(--warning)">+2</td>
+                                    <td>112%</td>
+                                    <td colspan="2">-</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <div class="info-box" style="margin-top:1rem;background:#e3f2fd;border-color:#1976d2">
+                        <div style="font-weight:600;margin-bottom:0.5rem;color:#1976d2">✓ 계약 이행 요약</div>
+                        <div style="font-size:0.875rem">
+                            <div>• 전체 계약 항목 4개 중 4개 이행 완료 (이행률 100%)</div>
+                            <div>• 출입통제 시스템 2식 초과 납품 (현장 추가 요청으로 인한 정상 처리)</div>
+                            <div>• 모든 계약 항목이 정상적으로 납품 완료되었습니다</div>
+                            <div style="margin-top:0.5rem;color:var(--gray-600)">※ 초과 납품 항목은 고객사 승인 완료</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 프로젝트 이력 탭 (발주변경 + 입출고 통합) -->
+            <div id="historyTab" class="tab-content" style="display:none">
+                <div class="card-body">
+                    <div style="margin-bottom:1rem;display:flex;gap:0.5rem">
+                        <button class="btn btn-primary btn-sm" onclick="filterHistory('all')">전체</button>
+                        <button class="btn btn-secondary btn-sm" onclick="filterHistory('change')">발주변경</button>
+                        <button class="btn btn-secondary btn-sm" onclick="filterHistory('shipment')">출고</button>
+                        <button class="btn btn-secondary btn-sm" onclick="filterHistory('return')">회수</button>
+                        <button class="btn btn-secondary btn-sm" onclick="filterHistory('damage')">파손/분실</button>
+                    </div>
+                    <div class="timeline" id="historyTimeline">
+                        <div class="timeline-item">
+                            <div class="timeline-time">2024-02-04 10:00</div>
+                            <div class="timeline-content">
+                                <strong>⚠️ 파손</strong> - 박현장<br>
+                                <span style="color:var(--gray-500)">전원 케이블 2m</span>
+                                <div
+                                    style="margin-top:0.5rem;padding:0.5rem;background:#ffebee;border-radius:4px;font-size:0.875rem">
+                                    <div style="color:var(--danger)">강남현장에서 설치 중 파손</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-time">2024-02-03 16:00</div>
+                            <div class="timeline-content">
+                                <strong>❌ 분실</strong> - 박현장<br>
+                                <span style="color:var(--gray-500)">UTP 케이블 5m</span>
+                                <div
+                                    style="margin-top:0.5rem;padding:0.5rem;background:#ffebee;border-radius:4px;font-size:0.875rem">
+                                    <div style="color:var(--danger)">강남현장에서 분실</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-time">2024-02-02 11:00</div>
+                            <div class="timeline-content">
+                                <strong>📥 회수</strong> - 김창고<br>
+                                <span style="color:var(--gray-500)">7인치 디스플레이 1개</span>
+                                <div
+                                    style="margin-top:0.5rem;padding:0.5rem;background:var(--gray-50);border-radius:4px;font-size:0.875rem">
+                                    <div>강남현장 → 본사창고 (미사용 잔여)</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-time">2024-02-01 15:00</div>
+                            <div class="timeline-content">
+                                <strong>📥 회수</strong> - 김창고<br>
+                                <span style="color:var(--gray-500)">열화상 카메라 1개</span>
+                                <div
+                                    style="margin-top:0.5rem;padding:0.5rem;background:var(--gray-50);border-radius:4px;font-size:0.875rem">
+                                    <div>강남현장 → 본사창고 (미사용 잔여)</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-time">2024-01-25 14:30</div>
+                            <div class="timeline-content">
+                                <strong>📝 발주 변경</strong> - 김창고<br>
+                                <span style="color:var(--gray-500)">통신전용 방수함체 수량 조정</span>
+                                <div
+                                    style="margin-top:0.5rem;padding:0.5rem;background:#fff3cd;border-radius:4px;font-size:0.875rem">
+                                    <div style="color:var(--danger)">변경 전: 3개</div>
+                                    <div style="color:var(--success)">변경 후: 5개</div>
+                                    <div style="margin-top:0.25rem;color:var(--gray-600)">사유: 현장 추가 요청으로 인한 수량 증가</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-time">2024-01-25 10:00</div>
+                            <div class="timeline-content">
+                                <strong>📤 출고</strong> - 이출고<br>
+                                <span style="color:var(--gray-500)">통신전용 방수함체 2개 (추가 출고)</span>
+                                <div
+                                    style="margin-top:0.5rem;padding:0.5rem;background:var(--gray-50);border-radius:4px;font-size:0.875rem">
+                                    <div>본사창고 → 강남현장</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-time">2024-01-22 14:00</div>
+                            <div class="timeline-content">
+                                <strong>📤 출고</strong> - 이출고<br>
+                                <span style="color:var(--gray-500)">통신전용 방수함체 3개</span>
+                                <div
+                                    style="margin-top:0.5rem;padding:0.5rem;background:var(--gray-50);border-radius:4px;font-size:0.875rem">
+                                    <div>본사창고 → 강남현장</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-time">2024-01-20 10:00</div>
+                            <div class="timeline-content">
+                                <strong>📝 발주 변경</strong> - 이영업<br>
+                                <span style="color:var(--gray-500)">브라켓 L형 추가</span>
+                                <div
+                                    style="margin-top:0.5rem;padding:0.5rem;background:#fff3cd;border-radius:4px;font-size:0.875rem">
+                                    <div style="color:var(--success)">신규 추가: 브라켓 L형 10개</div>
+                                    <div style="margin-top:0.25rem;color:var(--gray-600)">사유: 설치 구조 변경으로 인한 추가 자재 필요
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-time">2024-01-20 09:00</div>
+                            <div class="timeline-content">
+                                <strong>📤 출고</strong> - 이출고<br>
+                                <span style="color:var(--gray-500)">열화상 카메라 10개 (최초 출고)</span>
+                                <div
+                                    style="margin-top:0.5rem;padding:0.5rem;background:var(--gray-50);border-radius:4px;font-size:0.875rem">
+                                    <div>본사창고 → 강남현장</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-time">2024-01-15 09:00</div>
+                            <div class="timeline-content">
+                                <strong>📝 최초 발주</strong> - 이영업<br>
+                                <span style="color:var(--gray-500)">IT260115-01 발주 생성</span>
+                                <div
+                                    style="margin-top:0.5rem;padding:0.5rem;background:#e3f2fd;border-radius:4px;font-size:0.875rem;color:#1976d2">
+                                    <div style="font-weight:600">프로젝트 시작</div>
+                                    <div style="margin-top:0.25rem">강남 오피스텔 CCTV 설치 프로젝트</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 정산요약 탭 -->
+            <div id="summaryTab" class="tab-content" style="display:none">
+                <div class="card-body">
+                    <div style="margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center">
+                        <div style="font-weight:600">프로젝트 정산 요약</div>
+                        <button class="btn btn-secondary btn-sm">정산 리포트 출력</button>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:1rem;margin-bottom:1.5rem">
+                        <div class="card" style="background:#e3f2fd;border-color:#1976d2">
+                            <div class="card-body" style="text-align:center">
+                                <div style="font-size:0.875rem;color:var(--gray-600);margin-bottom:0.5rem">BOM 소요</div>
+                                <div style="font-size:1.5rem;font-weight:700;color:#1976d2">226</div>
+                            </div>
+                        </div>
+                        <div class="card" style="background:#e8f5e9;border-color:#388e3c">
+                            <div class="card-body" style="text-align:center">
+                                <div style="font-size:0.875rem;color:var(--gray-600);margin-bottom:0.5rem">출고</div>
+                                <div style="font-size:1.5rem;font-weight:700;color:#388e3c">228</div>
+                            </div>
+                        </div>
+                        <div class="card" style="background:#f3e5f5;border-color:#7b1fa2">
+                            <div class="card-body" style="text-align:center">
+                                <div style="font-size:0.875rem;color:var(--gray-600);margin-bottom:0.5rem">회수</div>
+                                <div style="font-size:1.5rem;font-weight:700;color:#7b1fa2">12</div>
+                            </div>
+                        </div>
+                        <div class="card" style="background:#e0f2f1;border-color:#00796b">
+                            <div class="card-body" style="text-align:center">
+                                <div style="font-size:0.875rem;color:var(--gray-600);margin-bottom:0.5rem">운용중</div>
+                                <div style="font-size:1.5rem;font-weight:700;color:#00796b">213</div>
+                            </div>
+                        </div>
+                        <div class="card" style="background:#ffebee;border-color:#c62828">
+                            <div class="card-body" style="text-align:center">
+                                <div style="font-size:0.875rem;color:var(--gray-600);margin-bottom:0.5rem">손망실</div>
+                                <div style="font-size:1.5rem;font-weight:700;color:#c62828">3</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>자재명</th>
+                                    <th>단위</th>
+                                    <th>BOM 소요</th>
+                                    <th>출고</th>
+                                    <th>회수</th>
+                                    <th>운용중</th>
+                                    <th>손망실</th>
+                                    <th>실사용률</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>열화상 카메라</td>
+                                    <td>ea</td>
+                                    <td>10</td>
+                                    <td>10</td>
+                                    <td>1</td>
+                                    <td>9</td>
+                                    <td>0</td>
+                                    <td>90%</td>
+                                </tr>
+                                <tr>
+                                    <td>통신전용 방수함체</td>
+                                    <td>ea</td>
+                                    <td>3</td>
+                                    <td>5</td>
+                                    <td>0</td>
+                                    <td>5</td>
+                                    <td>0</td>
+                                    <td style="color:var(--danger);font-weight:600">166%</td>
+                                </tr>
+                                <tr>
+                                    <td>7인치 디스플레이</td>
+                                    <td>ea</td>
+                                    <td>2</td>
+                                    <td>2</td>
+                                    <td>1</td>
+                                    <td>1</td>
+                                    <td>0</td>
+                                    <td>50%</td>
+                                </tr>
+                                <tr>
+                                    <td>슬라이딩 게이트</td>
+                                    <td>ea</td>
+                                    <td>3</td>
+                                    <td>2</td>
+                                    <td>0</td>
+                                    <td>2</td>
+                                    <td>0</td>
+                                    <td>66%</td>
+                                </tr>
+                                <tr>
+                                    <td>UTP 케이블</td>
+                                    <td>m</td>
+                                    <td>100</td>
+                                    <td>100</td>
+                                    <td>5</td>
+                                    <td>90</td>
+                                    <td>5</td>
+                                    <td>95%</td>
+                                </tr>
+                                <tr>
+                                    <td>전원 케이블</td>
+                                    <td>m</td>
+                                    <td>80</td>
+                                    <td>80</td>
+                                    <td>3</td>
+                                    <td>75</td>
+                                    <td>2</td>
+                                    <td>96%</td>
+                                </tr>
+                                <tr>
+                                    <td>브라켓 L형</td>
+                                    <td>ea</td>
+                                    <td>10</td>
+                                    <td>10</td>
+                                    <td>0</td>
+                                    <td>10</td>
+                                    <td>0</td>
+                                    <td>100%</td>
+                                </tr>
+                                <tr>
+                                    <td>NVR 8채널</td>
+                                    <td>ea</td>
+                                    <td>1</td>
+                                    <td>1</td>
+                                    <td>0</td>
+                                    <td>1</td>
+                                    <td>0</td>
+                                    <td>100%</td>
+                                </tr>
+                            </tbody>
+                            <tfoot style="background:#e1e1e1;font-weight:600">
+                                <tr>
+                                    <td colspan="2">합계</td>
+                                    <td>226</td>
+                                    <td>228</td>
+                                    <td>12</td>
+                                    <td>213</td>
+                                    <td>3</td>
+                                    <td>94%</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <div class="info-box" style="margin-top:1rem;background:#fff3cd;border-color:#ffc107">
+                        <div style="font-weight:600;margin-bottom:0.5rem">정산 요약</div>
+                        <div style="font-size:0.875rem">
+                            <div>• 총 출고 수량: 228개 (BOM 대비 +2개 초과)</div>
+                            <div>• 회수 수량: 12개 (미사용 잔여)</div>
+                            <div>• 현장 운용중: 213개</div>
+                            <div>• 손망실: 3개 (분실 5m, 파손 2m 포함)</div>
+                            <div style="margin-top:0.5rem;color:var(--warning-dark)">※ 통신전용 방수함체 초과 출고(+2개)로 인한 추가 비용 발생
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 견적서 확인 모달 (업로드된 견적서 이미지) -->
+        <div id="quoteModal" class="modal" onclick="if(event.target===this) closeQuoteModal()">
+            <div class="modal-content lg" style="max-width:900px" onclick="event.stopPropagation()">
+                <div class="modal-header">
+                    <span class="modal-title">📄 견적서 확인</span>
+                    <button type="button" class="close-btn" onclick="closeQuoteModal()" aria-label="닫기">&times;</button>
+                </div>
+                <div class="modal-body" style="text-align:center;padding:1.5rem">
+                    <p style="font-size:0.875rem;color:var(--gray-600);margin-bottom:1rem">해당 현장에 등록된 견적서 이미지입니다.</p>
+                    <div id="quoteImageContainer" style="background:var(--gray-100);border:1px dashed var(--gray-300);border-radius:8px;min-height:400px;display:flex;align-items:center;justify-content:center;overflow:auto">
+                        <!-- 실제 연동 시 견적서 업로드 이미지가 표시됩니다 -->
+                        <img id="quoteImage" src="" alt="견적서" style="max-width:100%;height:auto;display:none">
+                        <div id="quoteImagePlaceholder" style="color:var(--gray-500);padding:2rem">견적서 이미지 (업로드된 파일)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function openQuoteModal() {
+            document.getElementById('quoteModal').classList.add('active');
+            // 실제 연동 시: 선택된 현장의 견적서 이미지 URL을 넣어 표시
+            // var img = document.getElementById('quoteImage');
+            // img.src = '/api/quote/image?site=...'; img.style.display = 'block'; document.getElementById('quoteImagePlaceholder').style.display = 'none';
+        }
+        function closeQuoteModal() {
+            document.getElementById('quoteModal').classList.remove('active');
+        }
+
+        function loadSiteData() {
+            alert('현장 데이터 로딩 (구현 예정)');
+        }
+
+        function switchTab(tabName) {
+            // 탭 버튼 활성화
+            document.querySelectorAll('.card-header .tab').forEach(tab => tab.classList.remove('active'));
+            var tabBtn = document.querySelector('.card-header .tab[data-tab="' + tabName + '"]');
+            if (tabBtn) tabBtn.classList.add('active');
+
+            // 탭 컨텐츠 표시
+            document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
+            if (tabName === 'overview') {
+                document.getElementById('overviewTab').style.display = 'block';
+            } else if (tabName === 'materialStatus') {
+                document.getElementById('materialStatusTab').style.display = 'block';
+            } else if (tabName === 'contract') {
+                document.getElementById('contractTab').style.display = 'block';
+            } else if (tabName === 'history') {
+                document.getElementById('historyTab').style.display = 'block';
+            } else if (tabName === 'summary') {
+                document.getElementById('summaryTab').style.display = 'block';
+            }
+        }
+    </script>
+</body>
+
+</html>

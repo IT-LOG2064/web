@@ -8,47 +8,47 @@
 </head>
 <body>
     <nav class="nav">
-        <a href="dashboard.html" class="active">📊 대시보드</a>
-        <a href="contract.html">📋 견적</a>
-        <a href="inventory.html">📦 재고</a>
-        <a href="order.html">📝 발주</a>
-        <a href="receiving.html">📥 입고</a>
-        <a href="shipment.html">🚚 출고</a>
-        <!-- <a href="purchase.html">🛒 구매</a> -->
-        <a href="as.html">🔧 AS</a>
-        <a href="materials.html">📁 자재정보</a>
-        <a href="project.html">📊 현장 통합 현황</a>
+        <a href="dashboard.html" class="active">대시보드</a>
+        <a href="contract.html">견적</a>
+        <a href="inventory.html">재고</a>
+        <a href="order.html">발주</a>
+        <a href="receiving.html">입고</a>
+        <a href="shipment.html">출고</a>
+        <!-- <a href="purchase.html">구매</a> -->
+        <a href="as.html">AS</a>
+        <a href="materials.html">자재정보</a>
+        <a href="project.html">현장 통합 현황</a>
     </nav>
     
     <main class="main">
         <div class="kpi-grid">
             <div class="kpi-card" onclick="location.href='inventory.html'">
-                <div class="kpi-label">📦 총 재고</div>
+                <div class="kpi-label">총 재고</div>
                 <div class="kpi-value">1,234</div>
                 <div class="kpi-change">↑ 5.2% 전월대비</div>
             </div>
             <div class="kpi-card" onclick="location.href='contract.html'">
-                <div class="kpi-label">🏗️ 진행 현장</div>
+                <div class="kpi-label">진행 현장</div>
                 <div class="kpi-value">15</div>
                 <div class="kpi-change">↑ 2개 신규</div>
             </div>
             <div class="kpi-card danger" onclick="location.href='inventory.html'">
-                <div class="kpi-label">⚠️ 안전재고 미달</div>
+                <div class="kpi-label">안전재고 미달</div>
                 <div class="kpi-value">8</div>
                 <div class="kpi-change down">주의 필요</div>
             </div>
             <div class="kpi-card" onclick="location.href='contract.html'">
-                <div class="kpi-label">📋 진행 견적</div>
+                <div class="kpi-label">진행 견적</div>
                 <div class="kpi-value">23</div>
                 <div class="kpi-change">완료율 68%</div>
             </div>
             <div class="kpi-card warning" onclick="location.href='as.html'">
-                <div class="kpi-label">🔧 처리중 AS</div>
+                <div class="kpi-label">처리중 AS</div>
                 <div class="kpi-value">12</div>
                 <div class="kpi-change">평균 2.3일</div>
             </div>
             <div class="kpi-card warning" onclick="location.href='purchase.html'">
-                <div class="kpi-label">📦 미입고 구매</div>
+                <div class="kpi-label">미입고 구매</div>
                 <div class="kpi-value">5</div>
                 <div class="kpi-change down">지연 2건</div>
             </div>
@@ -57,7 +57,7 @@
         <div class="widget-grid">
             <div class="widget" style="grid-column: span 2;">
                 <div class="widget-header">
-                    <span class="widget-title">📊 월별 출고 현황</span>
+                    <span class="widget-title">월별 출고 현황</span>
                     <select class="filter-select" style="padding: 0.25rem 0.5rem;">
                         <option>최근 6개월</option>
                         <option>최근 3개월</option>
@@ -82,19 +82,19 @@
                 </div>
                 <div class="widget-body">
                     <div class="notification warning">
-                        <div class="notification-text">⚠️ IP카메라 안전재고 미달 (현재: 8개)</div>
+                        <div class="notification-text">IP카메라 안전재고 미달 (현재: 8개)</div>
                         <div class="notification-time">2시간 전</div>
                     </div>
                     <div class="notification">
-                        <div class="notification-text">📦 PO-2024-015 입고 완료</div>
+                        <div class="notification-text">PO-2024-015 입고 완료</div>
                         <div class="notification-time">10분 전</div>
                     </div>
                     <div class="notification">
-                        <div class="notification-text">🔧 AS-2024-023 처리 완료</div>
+                        <div class="notification-text">AS-2024-023 처리 완료</div>
                         <div class="notification-time">1시간 전</div>
                     </div>
                     <div class="notification">
-                        <div class="notification-text">📋 CT-2024-008 견적 체결</div>
+                        <div class="notification-text">CT-2024-008 견적 체결</div>
                         <div class="notification-time">2시간 전</div>
                     </div>
                 </div>
@@ -102,7 +102,7 @@
             
             <div class="widget">
                 <div class="widget-header">
-                    <span class="widget-title">🏗️ 현장별 진행 현황</span>
+                    <span class="widget-title">현장별 진행 현황</span>
                     <a href="contract.html" class="widget-link">전체 보기 →</a>
                 </div>
                 <div class="widget-body">

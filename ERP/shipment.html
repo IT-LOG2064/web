@@ -67,16 +67,16 @@
 </head>
 <body>
     <nav class="nav">
-        <a href="dashboard.html">📊 대시보드</a>
-        <a href="contract.html">📋 견적</a>
-        <a href="inventory.html">📦 재고</a>
-        <a href="order.html">📝 발주</a>
-        <a href="receiving.html">📥 입고</a>
-        <a href="shipment.html" class="active">🚚 출고</a>
-        <!-- <a href="purchase.html">🛒 구매</a> -->
-        <a href="as.html">🔧 AS</a>
-        <a href="materials.html">📁 자재정보</a>
-        <a href="project.html">📊 현장 통합 현황</a>
+        <a href="dashboard.html">대시보드</a>
+        <a href="contract.html">견적</a>
+        <a href="inventory.html">재고</a>
+        <a href="order.html">발주</a>
+        <a href="receiving.html">입고</a>
+        <a href="shipment.html" class="active">출고</a>
+        <!-- <a href="purchase.html">구매</a> -->
+        <a href="as.html">AS</a>
+        <a href="materials.html">자재정보</a>
+        <a href="project.html">현장 통합 현황</a>
     </nav>
     
     <main class="main">
@@ -89,11 +89,6 @@
         <div id="listTab" class="tab-content">
             <div class="search-box">
                 <div class="search-row">
-                    <select class="filter-select">
-                        <option>상태 전체</option>
-                        <option>완료</option>
-                        <option>진행중</option>
-                    </select>
                     <select class="filter-select">
                         <option>현장 전체</option>
                         <option>강남 오피스텔</option>
@@ -122,7 +117,6 @@
                     <span class="summary-item">전체: <strong>85건</strong></span>
                     <span class="summary-item">완료: <strong>72건</strong></span>
                     <span class="summary-item">진행중: <strong>13건</strong></span>
-                    <span class="summary-item">초과출고: <strong>3건</strong></span>
                 </div>
                 <button class="btn btn-primary" onclick="switchTab('register')" style="white-space:nowrap">+ 신규 출고</button>
             </div>
@@ -165,7 +159,7 @@
                                 <button class="btn btn-secondary btn-sm" onclick="printShipmentDocument('OUT-2024-049')">출고증 출력</button>
                             </td>
                         </tr>
-                        <tr onclick="showDetail('OUT-2024-048')" style="cursor:pointer" style="background:#FFF8E1">
+                        <tr onclick="showDetail('OUT-2024-048')" style="cursor:pointer">
                             <td><strong>OUT-2024-048</strong></td>
                             <td><a href="#" class="btn-link" onclick="event.stopPropagation()">IT260115-01</a></td>
                             <td>강남 오피스텔</td>
@@ -216,13 +210,13 @@
         <!-- 출고 등록 탭 -->
         <div id="registerTab" class="tab-content" style="display:none">
             <div class="card">
-                <div class="card-header" style="padding:0.5rem 1rem"><span class="card-title" style="font-size:0.9375rem">📝 출고 기본정보</span></div>
+                <div class="card-header" style="padding:0.5rem 1rem"><span class="card-title" style="font-size:0.9375rem">출고 기본정보</span></div>
                 <div class="card-body" style="padding:0.75rem 1rem">
                     <!-- 한 줄 배치: 검색(2) + 현장/발주 선택 + 최근 발주 건(1) -->
                     <div class="contract-select-grid" style="display:grid;grid-template-columns:1.5fr 1.2fr 1.2fr 1fr;gap:1rem;align-items:start">
                         <!-- 좌측: 통합 검색 -->
                         <div>
-                            <label class="form-label" style="margin-bottom:0.375rem">🔍 검색</label>
+                            <label class="form-label" style="margin-bottom:0.375rem">검색</label>
                             <div style="position:relative">
                                 <input type="text" class="form-input" id="shipOrderSearch" placeholder="본사, 현장 또는 발주번호 검색..." oninput="handleOrderSearch()" onfocus="handleOrderSearch()" onkeydown="handleOrderSearchKeydown(event)" onblur="setTimeout(() => hideOrderSearchResults(), 200)">
                                 <div id="orderSearchResults" class="autocomplete-dropdown" style="display:none"></div>
@@ -242,7 +236,7 @@
                         
                         <!-- 중앙: 발주 선택 -->
                         <div class="form-group" style="margin-bottom:0">
-                            <label class="form-label">발주 선택 *</label>
+                            <label class="form-label">발주 선택 (선출고 가능)</label>
                             <select class="form-select" id="shipOrderSelect" onchange="loadShipmentOrder()" disabled>
                                 <option value="">현장을 먼저 선택해주세요</option>
                             </select>
@@ -250,14 +244,14 @@
                         
                         <!-- 우측: 최근 발주 건 -->
                         <div>
-                            <label class="form-label" style="margin-bottom:0.375rem">📋 최근 발주 건 (2주 이내)</label>
+                            <label class="form-label" style="margin-bottom:0.375rem">최근 발주 건 (2주 이내)</label>
                             <button type="button" class="btn btn-secondary btn-sm" onclick="openRecentOrdersModal()" style="width:100%;font-size:0.8125rem;padding:0.5rem 0.75rem;white-space:nowrap;text-align:center">
                                 최근 발주 건 선택
                             </button>
                         </div>
                     </div>
                     <div class="info-box highlight" id="orderInfo" style="display:none;margin-top:0.5rem;padding:0.5rem 0.75rem;font-size:0.8125rem">
-                        <div style="font-weight:600;margin-bottom:0.5rem">📋 발주 정보</div>
+                        <div style="font-weight:600;margin-bottom:0.5rem">발주 정보</div>
                         <div style="font-size:0.875rem;margin-bottom:0.75rem" id="orderInfoDetails">
                             <!-- 발주 정보가 여기에 동적으로 표시됩니다 -->
                         </div>
@@ -269,7 +263,7 @@
             </div>
             
             <div class="card" style="margin-top:1rem">
-                <div class="card-header"><span class="card-title">📝 출고 정보</span></div>
+                <div class="card-header"><span class="card-title">출고 정보</span></div>
                 <div class="card-body">
                     <div class="form-row">
                         <div class="form-group">
@@ -294,7 +288,7 @@
             
             <div class="card" id="asMaterialContainer" style="margin-top:1rem;display:none">
                 <div class="card-header">
-                    <span class="card-title">🔧 AS 출고 자재 선택 (AS건이 있는 경우만 노출)</span>
+                    <span class="card-title">AS 출고 자재 선택 (AS건이 있는 경우만 노출)</span>
                     <button type="button" class="btn btn-secondary btn-sm" onclick="addSelectedAsMaterials()">출고 목록에 추가</button>
                 </div>
                 <div class="card-body">
@@ -309,16 +303,15 @@
                                     <th>자재 코드</th>
                                     <th>자재명</th>
                                     <th>규격</th>
-                                    <th style="width:90px">AS 입고 수량</th>
+                                    <th style="width:120px">AS 입고 수량</th>
                                     <th style="width:120px">출고 수량</th>
-                                    <th style="width:120px">교체출고 여부</th>
-                                     <th style="width:90px">품질</th>
+                                    <th style="width:120px">처리 유형</th>
                                     <th style="width:90px">시리얼</th>
                                 </tr>
                             </thead>
                             <tbody id="asMaterialList">
                                 <tr>
-                                     <td colspan="9" style="text-align:center;color:var(--gray-500);padding:1.5rem">
+                                     <td colspan="8" style="text-align:center;color:var(--gray-500);padding:1.5rem">
                                         현장을 선택하면 AS 자재가 표시됩니다.
                                     </td>
                                 </tr>
@@ -330,7 +323,7 @@
             
             <div class="card" style="margin-top:1rem">
                 <div class="card-header">
-                    <span class="card-title">📦 출고 자재 선택</span>
+                    <span class="card-title">출고 자재 선택</span>
                 </div>
                 <div class="card-body">
                     <div style="display:flex;gap:0.5rem;margin-bottom:1rem">
@@ -338,7 +331,7 @@
                             <input type="text" class="form-input" id="materialSearch" placeholder="자재 코드, 자재명, 카테고리로 검색..." style="width:100%" autocomplete="off" oninput="handleMaterialSearch()" onkeydown="handleMaterialKeydown(event)" onfocus="handleMaterialFocus()" onblur="setTimeout(() => hideMaterialAutocomplete(), 200)">
                             <div id="materialAutocomplete" class="autocomplete-dropdown" style="display:none"></div>
                         </div>
-                        <button class="btn btn-secondary btn-sm" onclick="addMaterial()">+ 자재 추가</button>
+                        <button class="btn btn-primary btn-sm" onclick="openShipmentMaterialSearchModal()">자재검색</button>
                     </div>
                     <div class="table-container" style="box-shadow:none">
                         <table>
@@ -347,11 +340,11 @@
                                     <th>자재 코드</th>
                                     <th>자재명</th>
                                     <th>규격</th>
-                                    <th>발주/출고</th>
+                                    <th>발주/기출고</th>
                                     <th style="width:120px">출고 수량</th>
                                     <th style="width:90px">품질</th>
                                     <th style="width:90px">시리얼 여부</th>
-                                    <th style="width:100px">시리얼</th>
+                                    <th style="width:150px">시리얼</th>
                                     <th style="width:50px">삭제</th>
                                 </tr>
                             </thead>
@@ -378,7 +371,7 @@
     <div class="modal" id="detailModal">
         <div class="modal-content lg">
             <div class="modal-header">
-                <h2 class="modal-title">🚚 출고 상세 - <span id="detailShipmentNo">OUT-2024-050</span></h2>
+                <h2 class="modal-title">출고 상세 - <span id="detailShipmentNo">OUT-2024-050</span></h2>
                 <button class="close-btn" onclick="closeModal('detailModal')">&times;</button>
             </div>
             <div class="modal-body">
@@ -391,14 +384,14 @@
                     <div class="info-row"><span class="info-label">상태</span><span class="status-badge status-complete" id="detailStatus">완료</span></div>
                 </div>
                 
-                <div id="overOrderReasonBox" style="display:none">
-                    <div class="info-box" style="background:#FFF8E1;border:1px solid var(--warning)">
-                        <div style="font-weight:600;color:var(--warning);margin-bottom:0.25rem">⚠️ 초과 출고</div>
-                        <div style="font-size:0.875rem" id="detailOverReason">현장 추가 요청으로 인한 긴급 출고</div>
+                <div id="preShipmentReasonBox" style="display:none">
+                    <div class="info-box" style="background:#FFF3E0;border:1px solid var(--warning)">
+                        <div style="font-weight:600;color:var(--warning);margin-bottom:0.25rem">선출고 사유</div>
+                        <div style="font-size:0.875rem" id="detailPreShipmentReason">긴급 현장 요청으로 인한 선출고</div>
                     </div>
                 </div>
                 
-                <div style="font-weight:600;margin:1rem 0 0.5rem;font-size:0.875rem">📦 출고 자재</div>
+                <div style="font-weight:600;margin:1rem 0 0.5rem;font-size:0.875rem">출고 자재</div>
                 <table>
                     <thead>
                         <tr>
@@ -449,7 +442,7 @@
     <div class="modal" id="confirmModal">
         <div class="modal-content lg">
             <div class="modal-header">
-                <h2 class="modal-title">✅ 출고 확인 - <span id="confirmShipmentNo">OUT-2024-050</span></h2>
+                <h2 class="modal-title">출고 확인 - <span id="confirmShipmentNo">OUT-2024-050</span></h2>
                 <button class="close-btn" onclick="closeModal('confirmModal')">&times;</button>
             </div>
             <div class="modal-body">
@@ -461,7 +454,7 @@
                     <div class="info-row"><span class="info-label">담당자</span><span id="confirmDetailUser">이출고</span></div>
                 </div>
 
-                <div style="font-weight:600;margin:1rem 0 0.5rem;font-size:0.875rem">📦 출고 자재</div>
+                <div style="font-weight:600;margin:1rem 0 0.5rem;font-size:0.875rem">출고 자재</div>
                 <table>
                     <thead>
                         <tr>
@@ -584,7 +577,7 @@
                         선택: <strong id="selectedCount">4</strong>개 / 출고수량: <strong id="requiredCount">4</strong>개
                     </div>
                     <div id="serialMatchStatus">
-                        <span style="color:var(--success);font-weight:600">✅ 일치</span>
+                        <span style="color:var(--success);font-weight:600">일치</span>
                     </div>
                 </div>
             </div>
@@ -599,7 +592,7 @@
     <div class="modal" id="recentOrdersModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title">📋 최근 발주 건 선택</h2>
+                <h2 class="modal-title">최근 발주 건 선택</h2>
                 <button class="close-btn" onclick="closeModal('recentOrdersModal')">&times;</button>
             </div>
             <div class="modal-body">
@@ -651,6 +644,124 @@
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="closeModal('serialListModal')">닫기</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 자재 검색 모달 (출고용) -->
+    <div class="modal" id="shipmentMaterialSearchModal">
+        <div class="modal-content lg">
+            <div class="modal-header">
+                <h2 class="modal-title">자재 마스터 검색</h2>
+                <button class="close-btn" onclick="closeModal('shipmentMaterialSearchModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="display:flex;gap:0.5rem;margin-bottom:1rem;align-items:flex-end">
+                    <div style="flex:0 0 130px">
+                        <label class="form-label" style="margin-bottom:0.25rem">대분류</label>
+                        <select class="form-select" id="shipmentMaterialMainCategory" onchange="updateShipmentSubCategoryOptions(); filterShipmentMaterialMaster()" style="padding:0.5rem">
+                            <option value="">대분류 전체</option>
+                            <option value="CCTV">CCTV</option>
+                            <option value="네트워크">네트워크</option>
+                            <option value="케이블">케이블</option>
+                            <option value="부자재">부자재</option>
+                            <option value="기타">기타</option>
+                        </select>
+                    </div>
+                    <div style="flex:0 0 130px">
+                        <label class="form-label" style="margin-bottom:0.25rem">소분류</label>
+                        <select class="form-select" id="shipmentMaterialSubCategory" onchange="filterShipmentMaterialMaster()" style="padding:0.5rem" disabled>
+                            <option value="">소분류 전체</option>
+                        </select>
+                    </div>
+                    <div style="flex:1">
+                        <label class="form-label" style="margin-bottom:0.25rem">검색</label>
+                        <input type="text" id="shipmentMaterialSearchInput" class="form-input" placeholder="자재 코드, 자재명, 규격으로 검색..." oninput="filterShipmentMaterialMaster()" style="padding:0.5rem">
+                    </div>
+                    <button class="btn btn-secondary" onclick="resetShipmentMaterialSearch()" style="padding:0.5rem 1rem;white-space:nowrap">초기화</button>
+                </div>
+                
+                <div style="max-height:400px;overflow-y:auto;border:1px solid var(--gray-200);border-radius:6px">
+                    <table style="margin:0">
+                        <thead style="position:sticky;top:0;background:#fff;z-index:1">
+                            <tr>
+                                <th style="width:40px">
+                                    <input type="checkbox" id="selectAllShipmentMaterials" onchange="toggleAllShipmentMaterials()">
+                                </th>
+                                <th style="width:120px">자재 코드</th>
+                                <th style="width:100px">카테고리</th>
+                                <th>자재명 / 규격</th>
+                                <th style="width:80px">단위</th>
+                                <th style="width:80px;text-align:center">시리얼 관리</th>
+                            </tr>
+                        </thead>
+                        <tbody id="shipmentMaterialMasterList">
+                            <!-- 동적으로 채워짐 -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="info-box" style="margin-top:1rem">
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                        <div>
+                            총 <strong id="shipmentMaterialCount">0</strong>개의 자재 | 
+                            선택: <strong id="selectedShipmentMaterialCount">0</strong>개
+                        </div>
+                        <div style="font-size:0.875rem;color:var(--gray-600)">자재를 선택하고 추가 버튼을 클릭하세요</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('shipmentMaterialSearchModal')">취소</button>
+                <button class="btn btn-primary" onclick="addSelectedShipmentMaterials()">선택 자재 추가</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 시리얼 관리 모달 (출고용) -->
+    <div class="modal" id="serialManagementModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">시리얼 관리 - <span id="serialMgmtMaterialName"></span></h2>
+                <button class="close-btn" onclick="closeModal('serialManagementModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="info-box highlight" style="margin-bottom:1rem">
+                    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
+                        <div>
+                            출고 수량: <strong id="serialMgmtQty">0</strong>개 
+                            (중고: <strong id="serialMgmtUsedQty">0</strong>개 / 신품: <strong id="serialMgmtNewQty">0</strong>개)
+                        </div>
+                        <div>
+                            선택된 시리얼: <strong id="serialMgmtCount">0</strong>개
+                        </div>
+                    </div>
+                    <div id="serialMgmtStatus" style="margin-top:0.5rem"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">재고에서 시리얼 선택</label>
+                    <div style="max-height:300px;overflow-y:auto;border:1px solid var(--gray-200);border-radius:6px">
+                        <table style="margin:0">
+                            <thead style="position:sticky;top:0;background:#fff">
+                                <tr>
+                                    <th style="width:40px"></th>
+                                    <th>시리얼 번호</th>
+                                    <th style="width:80px">품질</th>
+                                    <th>위치</th>
+                                    <th style="width:80px">상태</th>
+                                </tr>
+                            </thead>
+                            <tbody id="serialInventoryList">
+                                <tr><td colspan="5" style="text-align:center;color:var(--gray-500);padding:2rem">재고 시리얼을 불러오는 중...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('serialManagementModal')">취소</button>
+                <button class="btn btn-primary" onclick="saveShipmentSerials()">저장</button>
             </div>
         </div>
     </div>
@@ -844,7 +955,7 @@
                     materialTbody.innerHTML = `
                         <tr>
                             <td colspan="9" style="text-align:center;color:var(--gray-500);padding:1.5rem">
-                                선출고 건입니다. 우측 검색을 통해 출고 자재를 직접 추가해주세요.
+                                선출고 건입니다. 자재 검색을 통해 출고 자재를 직접 추가해주세요.
                             </td>
                         </tr>`;
                 }
@@ -872,7 +983,7 @@
                 // 발주 자재를 출고 자재 목록으로 자동 로드
                 if (materialTbody) {
                     materialTbody.innerHTML = '';
-                    order.materials.forEach(material => {
+                    order.materials.forEach((material, index) => {
                         const master = SHIPMENT_MATERIALS.find(m => m.name === material.name) || {};
                         const code = master.code || '-';
                         const spec = master.spec || '-';
@@ -884,9 +995,10 @@
                         const defaultQty = remaining > 0 ? remaining : 1;
                         const serialTracking = !!master.serialTracking;
                         const materialId = `ORD-${order.value}-${code}`;
+                        const rowId = `shipment-row-${Date.now()}-${index}`;
                         
                         materialTbody.insertAdjacentHTML('beforeend', `
-                            <tr data-material="${materialId}">
+                            <tr data-material="${materialId}" data-row-id="${rowId}" data-material-code="${code}" data-serial-tracking="${serialTracking}">
                                 <td><strong>${code}</strong></td>
                                 <td>${material.name}</td>
                                 <td style="font-size:0.8125rem;color:var(--gray-500)">${spec}</td>
@@ -904,11 +1016,12 @@
                                     </select>
                                 </td>
                                 <td>
-                                    <input type="checkbox" ${serialTracking ? '' : ''} onchange="toggleSerialButton(this)">
+                                    <input type="checkbox" ${serialTracking ? 'checked' : ''} onchange="toggleSerialButton(this)">
                                 </td>
                                 <td>
                                     ${serialTracking
-                                        ? `<button class="btn btn-sm btn-secondary serial-select-btn" onclick="openSerialModal('${code}', '${material.name}', ${defaultQty})" disabled>선택</button>`
+                                        ? `<button class="btn btn-sm btn-secondary" style="white-space:nowrap;font-size:0.75rem" onclick="openShipmentSerialManagement('${rowId}')">시리얼 관리 (0개)</button>
+                                           <input type="hidden" class="serial-data" value="[]">`
                                         : '<span style="color:var(--gray-500);font-size:0.75rem">-</span>'}
                                 </td>
                                 <td>
@@ -1059,7 +1172,7 @@
 
             if (!siteKey) {
                 container.style.display = 'none';
-                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--gray-500);padding:1.5rem">현장을 선택하면 AS 자재가 표시됩니다.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--gray-500);padding:1.5rem">현장을 선택하면 AS 자재가 표시됩니다.</td></tr>';
                 return;
             }
 
@@ -1067,7 +1180,7 @@
             const list = AS_MATERIALS_BY_SITE[siteKey] || [];
             if (!list.length) {
                 caption.textContent = '해당 현장에 출고 가능한 AS 자재가 없습니다.';
-                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--gray-500);padding:1.5rem">표시할 AS 자재가 없습니다.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--gray-500);padding:1.5rem">표시할 AS 자재가 없습니다.</td></tr>';
                 return;
             }
 
@@ -1088,15 +1201,9 @@
                             </div>
                         </td>
                         <td>
-                            <select class="form-select as-shipment-type" style="padding:0.25rem;font-size:0.8125rem">
-                                <option value="재출고" selected>재출고</option>
-                                <option value="교체출고">교체출고</option>
-                            </select>
-                        </td>
-                        <td>
-                            <select class="form-select as-material-quality" style="padding:0.25rem;font-size:0.8125rem">
-                                <option value="중고" selected>중고</option>
-                                <option value="신품">신품</option>
+                            <select class="form-select as-replacement" style="padding:0.25rem;font-size:0.8125rem">
+                                <option value="수리">수리 재출고</option>
+                                <option value="교체">교체 출고</option>
                             </select>
                         </td>
                         <td>
@@ -1124,6 +1231,12 @@
             }
 
             const tbody = document.getElementById('materialList');
+            
+            // 빈 메시지가 있으면 제거
+            if (tbody.querySelector('td[colspan]')) {
+                tbody.innerHTML = '';
+            }
+            
             let addedCount = 0;
 
             selected.forEach(row => {
@@ -1132,44 +1245,71 @@
                 if (!material) return;
                 const qtyInput = row.querySelector('.as-shipment-qty');
                 const shipQty = qtyInput ? parseInt(qtyInput.value, 10) : NaN;
-                if (!shipQty || shipQty < 1 || shipQty > material.requestQty) return;
-                const shipmentTypeSelect = row.querySelector('.as-shipment-type');
-                const shipmentType = shipmentTypeSelect ? shipmentTypeSelect.value : '재출고';
-                const qualitySelect = row.querySelector('.as-material-quality');
-                const selectedQuality = qualitySelect ? qualitySelect.value : '중고';
-
-                const exists = Array.from(tbody.querySelectorAll('tr[data-material]')).some(tr => {
+                if (!shipQty || shipQty < 1) return;
+                
+                // 총 출고 수량 체크 (이미 추가된 동일 자재의 수량 합산)
+                const existingRows = Array.from(tbody.querySelectorAll('tr[data-material]')).filter(tr => {
                     const codeCell = tr.querySelector('td:first-child strong');
                     return codeCell && codeCell.textContent.trim() === material.code;
                 });
-                if (exists) return;
+                
+                let totalShippedQty = shipQty;
+                existingRows.forEach(tr => {
+                    const qtyInput = tr.querySelector('input[type="number"]');
+                    if (qtyInput) {
+                        totalShippedQty += parseInt(qtyInput.value) || 0;
+                    }
+                });
+                
+                if (totalShippedQty > material.requestQty) {
+                    alert(`${material.name}: 총 출고 수량(${totalShippedQty}${material.unit})이 AS 입고 수량(${material.requestQty}${material.unit})을 초과합니다.`);
+                    return;
+                }
+                
+                const replacementSelect = row.querySelector('.as-replacement');
+                const replacement = replacementSelect ? replacementSelect.value : '수리';
 
                 const materialId = 'AS-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+                const rowId = 'ship-row-as-' + Date.now() + '-' + Math.floor(Math.random() * 10000);
+                const isSerialTracking = material.serial === true;
+                
+                const serialHtml = isSerialTracking 
+                    ? `<button type="button" class="btn btn-secondary btn-sm serial-select-btn" onclick="openShipmentSerialManagement('${rowId}', '${material.name}', '${material.code}')" style="width:100%;white-space:nowrap;font-size:0.75rem">
+                        시리얼 관리 (<span id="ship-serial-count-${rowId}">0</span>개)
+                       </button>
+                       <input type="hidden" id="ship-serial-data-${rowId}" value="">` 
+                    : `<button class="btn btn-sm btn-secondary serial-select-btn" disabled style="width:100%;white-space:nowrap;font-size:0.75rem">
+                        시리얼 관리 (<span id="ship-serial-count-${rowId}">0</span>개)
+                       </button>
+                       <input type="hidden" id="ship-serial-data-${rowId}" value="">`;
+                
                 tbody.insertAdjacentHTML('beforeend', `
-                    <tr data-material="${materialId}">
+                    <tr data-row-id="${rowId}" data-material-code="${material.code}" data-serial-tracking="${isSerialTracking}">
                         <td><strong>${material.code}</strong></td>
                         <td>${material.name}</td>
                         <td style="font-size:0.8125rem;color:var(--gray-500)">${material.spec}</td>
-                        <td>AS(${shipmentType}) / 0</td>
+                        <td>AS(${replacement}) / 0</td>
                         <td>
                             <div style="display:flex;align-items:center;gap:0.25rem">
-                                <input type="number" class="form-input" value="${shipQty}" min="1" max="${material.requestQty}" style="padding:0.25rem;width:60px" onchange="checkOverOrder(this, ${material.requestQty}, '${material.unit}')">
+                                <input type="number" class="form-input qty-input" value="${shipQty}" min="0" style="padding:0.25rem;width:60px">
                                 <span style="font-size:0.8125rem;color:var(--gray-500)">${material.unit}</span>
                             </div>
                         </td>
                         <td>
                             <select class="form-select" style="padding:0.25rem;font-size:0.8125rem">
-                                <option ${selectedQuality === '중고' ? 'selected' : ''}>중고</option>
-                                <option ${selectedQuality === '신품' ? 'selected' : ''}>신품</option>
+                                <option>신품</option>
+                                <option>중고</option>
                             </select>
                         </td>
                         <td>
-                            <input type="checkbox" onchange="toggleSerialButton(this)">
+                            <input type="checkbox" ${isSerialTracking ? 'checked' : ''} onchange="toggleSerialButton(this)">
+                        </td>
+                        <td style="text-align:center">
+                            ${serialHtml}
                         </td>
                         <td>
-                            <button class="btn btn-sm btn-secondary serial-select-btn" onclick="openSerialModal('${material.code}', '${material.name}', ${shipQty})" disabled>선택</button>
+                            <button class="btn btn-sm" style="background:var(--danger);color:#fff;white-space:nowrap" onclick="this.closest('tr').remove()">삭제</button>
                         </td>
-                        <td><button class="btn btn-sm" style="background:var(--danger);color:#fff" onclick="removeMaterialRow(this)">삭제</button></td>
                     </tr>
                 `);
                 addedCount += 1;
@@ -1297,22 +1437,35 @@
 
         function addMaterialFromData(material) {
             const tbody = document.getElementById('materialList');
-            const exists = Array.from(tbody.querySelectorAll('tr[data-material]')).some(tr => {
-                const codeCell = tr.querySelector('td:first-child strong');
-                return codeCell && codeCell.textContent.trim() === material.code;
-            });
-            if (exists) return alert('이미 추가된 자재입니다.');
+            
+            // 빈 메시지가 있으면 제거
+            if (tbody.querySelector('td[colspan]')) {
+                tbody.innerHTML = '';
+            }
 
             const materialId = 'MAT-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+            const rowId = 'ship-row-' + Date.now() + '-' + Math.floor(Math.random() * 10000);
+            const isSerialTracking = material.serialTracking === true;
+            
+            const serialHtml = isSerialTracking 
+                ? `<button type="button" class="btn btn-secondary btn-sm serial-select-btn" onclick="openShipmentSerialManagement('${rowId}', '${material.name}', '${material.code}')" style="width:100%;white-space:nowrap;font-size:0.75rem">
+                    시리얼 관리 (<span id="ship-serial-count-${rowId}">0</span>개)
+                   </button>
+                   <input type="hidden" id="ship-serial-data-${rowId}" value="">` 
+                : `<button class="btn btn-sm btn-secondary serial-select-btn" disabled style="width:100%;white-space:nowrap;font-size:0.75rem">
+                    시리얼 관리 (<span id="ship-serial-count-${rowId}">0</span>개)
+                   </button>
+                   <input type="hidden" id="ship-serial-data-${rowId}" value="">`;
+            
             tbody.insertAdjacentHTML('beforeend', `
-                <tr data-material="${materialId}">
+                <tr data-material="${materialId}" data-row-id="${rowId}" data-material-code="${material.code}" data-serial-tracking="${isSerialTracking}">
                     <td><strong>${material.code}</strong></td>
                     <td>${material.name}</td>
                     <td style="font-size:0.8125rem;color:var(--gray-500)">${material.spec}</td>
                     <td>- / -</td>
                     <td>
                         <div style="display:flex;align-items:center;gap:0.25rem">
-                            <input type="number" class="form-input" value="1" min="1" style="padding:0.25rem;width:60px" onchange="checkOverOrder(this, 0, '${material.unit}')">
+                            <input type="number" class="form-input qty-input" value="1" min="1" style="padding:0.25rem;width:60px" onchange="checkOverOrder(this, 0, '${material.unit}')">
                             <span style="font-size:0.8125rem;color:var(--gray-500)">${material.unit}</span>
                         </div>
                     </td>
@@ -1322,8 +1475,8 @@
                             <option>중고</option>
                         </select>
                     </td>
-                    <td><input type="checkbox" onchange="toggleSerialButton(this)"></td>
-                    <td><button class="btn btn-sm btn-secondary serial-select-btn" onclick="openSerialModal('${material.code}', '${material.name}', 1)" disabled>선택</button></td>
+                    <td><input type="checkbox" ${isSerialTracking ? 'checked' : ''} onchange="toggleSerialButton(this)"></td>
+                    <td>${serialHtml}</td>
                     <td><button class="btn btn-sm" style="background:var(--danger);color:#fff" onclick="removeMaterialRow(this)">삭제</button></td>
                 </tr>
             `);
@@ -1355,6 +1508,374 @@
             if (!search) return alert('자재를 검색해주세요');
             addMaterialByName(search);
             hideMaterialAutocomplete();
+        }
+        
+        // 카테고리 매핑 (자재정보 메뉴와 동일)
+        const CATEGORY_MAP = {
+            'CCTV': { main: 'CCTV', sub: '-' },
+            '녹화기': { main: 'CCTV', sub: '녹화기' },
+            '모니터': { main: 'CCTV', sub: '모니터' },
+            '네트워크': { main: '네트워크', sub: '-' },
+            '케이블': { main: '케이블', sub: '-' },
+            '부자재': { main: '부자재', sub: '-' },
+            '커넥터': { main: '기타', sub: '커넥터' },
+            '전원': { main: '기타', sub: '전원' },
+            '저장장치': { main: '기타', sub: '저장장치' },
+            '센서': { main: '기타', sub: '센서' }
+        };
+        
+        function getCategoryParts(category) {
+            if (category && CATEGORY_MAP[category]) {
+                return CATEGORY_MAP[category];
+            }
+            return { main: category || '-', sub: '-' };
+        }
+        
+        // 소분류 옵션 업데이트
+        function updateShipmentSubCategoryOptions() {
+            const mainCategory = document.getElementById('shipmentMaterialMainCategory')?.value || '';
+            const subCategorySelect = document.getElementById('shipmentMaterialSubCategory');
+            
+            if (!subCategorySelect) return;
+            
+            // 소분류 옵션 초기화
+            subCategorySelect.innerHTML = '<option value="">소분류 전체</option>';
+            
+            if (!mainCategory) {
+                subCategorySelect.disabled = true;
+                return;
+            }
+            
+            // 선택된 대분류에 해당하는 소분류 목록 생성
+            const subCategories = new Set();
+            Object.entries(CATEGORY_MAP).forEach(([category, parts]) => {
+                if (parts.main === mainCategory && parts.sub !== '-') {
+                    subCategories.add(parts.sub);
+                }
+            });
+            
+            if (subCategories.size > 0) {
+                subCategories.forEach(sub => {
+                    const option = document.createElement('option');
+                    option.value = sub;
+                    option.textContent = sub;
+                    subCategorySelect.appendChild(option);
+                });
+                subCategorySelect.disabled = false;
+            } else {
+                subCategorySelect.disabled = true;
+            }
+        }
+        
+        // 출고 자재 검색 모달 관련 함수
+        let allShipmentMasterMaterials = [];
+        let filteredShipmentMasterMaterials = [];
+        
+        function openShipmentMaterialSearchModal() {
+            allShipmentMasterMaterials = SHIPMENT_MATERIALS;
+            filteredShipmentMasterMaterials = [...allShipmentMasterMaterials];
+            renderShipmentMaterialMasterList();
+            document.getElementById('shipmentMaterialSearchInput').value = '';
+            document.getElementById('shipmentMaterialMainCategory').value = '';
+            document.getElementById('shipmentMaterialSubCategory').value = '';
+            document.getElementById('shipmentMaterialSubCategory').disabled = true;
+            document.getElementById('selectAllShipmentMaterials').checked = false;
+            updateSelectedShipmentMaterialCount();
+            document.getElementById('shipmentMaterialSearchModal').classList.add('active');
+        }
+        
+        function renderShipmentMaterialMasterList() {
+            const tbody = document.getElementById('shipmentMaterialMasterList');
+            const count = document.getElementById('shipmentMaterialCount');
+            
+            if (filteredShipmentMasterMaterials.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--gray-500);padding:2rem">검색 결과가 없습니다</td></tr>';
+                count.textContent = '0';
+                return;
+            }
+            
+            tbody.innerHTML = filteredShipmentMasterMaterials.map(material => {
+                const parts = getCategoryParts(material.category);
+                const categoryDisplay = parts.sub === '-' ? parts.main : `${parts.main} > ${parts.sub}`;
+                
+                return `
+                <tr onclick="toggleShipmentMaterialRow(event, '${material.code}')" style="cursor:pointer">
+                    <td style="text-align:center" onclick="event.stopPropagation()">
+                        <input type="checkbox" class="shipment-material-checkbox" value="${material.code}" onchange="updateSelectedShipmentMaterialCount()">
+                    </td>
+                    <td><strong>${material.code}</strong></td>
+                    <td>${categoryDisplay}</td>
+                    <td>
+                        <div style="font-weight:500">${material.name}</div>
+                        <div style="font-size:0.8125rem;color:var(--gray-500);margin-top:0.25rem">${material.spec}</div>
+                    </td>
+                    <td>${material.unit}</td>
+                    <td style="text-align:center">
+                        ${material.serialTracking ? '<span class="badge" style="background:var(--primary);color:#fff;font-size:0.75rem">시리얼</span>' : '-'}
+                    </td>
+                </tr>
+                `;
+            }).join('');
+            
+            count.textContent = filteredShipmentMasterMaterials.length;
+            updateSelectedShipmentMaterialCount();
+        }
+        
+        function filterShipmentMaterialMaster() {
+            const keyword = document.getElementById('shipmentMaterialSearchInput').value.trim().toLowerCase();
+            const mainCategory = document.getElementById('shipmentMaterialMainCategory')?.value || '';
+            const subCategory = document.getElementById('shipmentMaterialSubCategory')?.value || '';
+            
+            filteredShipmentMasterMaterials = allShipmentMasterMaterials.filter(material => {
+                // 대분류/소분류 필터
+                let categoryMatch = true;
+                if (mainCategory || subCategory) {
+                    const parts = getCategoryParts(material.category);
+                    if (mainCategory && parts.main !== mainCategory) {
+                        categoryMatch = false;
+                    }
+                    if (subCategory && parts.sub !== subCategory) {
+                        categoryMatch = false;
+                    }
+                }
+                
+                // 키워드 필터
+                const keywordMatch = !keyword || 
+                    material.code.toLowerCase().includes(keyword) ||
+                    material.name.toLowerCase().includes(keyword) ||
+                    material.spec.toLowerCase().includes(keyword);
+                
+                return categoryMatch && keywordMatch;
+            });
+            
+            document.getElementById('selectAllShipmentMaterials').checked = false;
+            renderShipmentMaterialMasterList();
+        }
+        
+        function resetShipmentMaterialSearch() {
+            document.getElementById('shipmentMaterialSearchInput').value = '';
+            document.getElementById('shipmentMaterialMainCategory').value = '';
+            document.getElementById('shipmentMaterialSubCategory').value = '';
+            document.getElementById('shipmentMaterialSubCategory').disabled = true;
+            document.getElementById('selectAllShipmentMaterials').checked = false;
+            filteredShipmentMasterMaterials = [...allShipmentMasterMaterials];
+            renderShipmentMaterialMasterList();
+        }
+        
+        function toggleAllShipmentMaterials() {
+            const selectAll = document.getElementById('selectAllShipmentMaterials').checked;
+            const checkboxes = document.querySelectorAll('.shipment-material-checkbox');
+            checkboxes.forEach(cb => cb.checked = selectAll);
+            updateSelectedShipmentMaterialCount();
+        }
+        
+        function updateSelectedShipmentMaterialCount() {
+            const selected = document.querySelectorAll('.shipment-material-checkbox:checked').length;
+            document.getElementById('selectedShipmentMaterialCount').textContent = selected;
+        }
+        
+        function toggleShipmentMaterialRow(event, materialCode) {
+            const checkbox = event.currentTarget.querySelector('.shipment-material-checkbox');
+            if (checkbox) {
+                checkbox.checked = !checkbox.checked;
+                updateSelectedShipmentMaterialCount();
+            }
+        }
+        
+        function addSelectedShipmentMaterials() {
+            const selectedCheckboxes = document.querySelectorAll('.shipment-material-checkbox:checked');
+            
+            if (selectedCheckboxes.length === 0) {
+                alert('선택된 자재가 없습니다.');
+                return;
+            }
+            
+            // 선택된 자재들을 출고 자재 목록에 추가
+            selectedCheckboxes.forEach(checkbox => {
+                const materialCode = checkbox.value;
+                const material = SHIPMENT_MATERIALS.find(m => m.code === materialCode);
+                if (material) {
+                    addMaterialFromData(material);
+                }
+            });
+            
+            // 모달 닫기
+            closeModal('shipmentMaterialSearchModal');
+            
+            alert(`${selectedCheckboxes.length}개의 자재가 추가되었습니다.`);
+        }
+        
+        // 출고 시리얼 관리 모달 관련 변수
+        let currentShipmentSerialRowId = null;
+        let currentShipmentSerials = { used: [], new: [] };
+        
+        // 시리얼 관리 모달 열기 (출고용)
+        function openShipmentSerialManagement(rowId, materialName, materialCode) {
+            currentShipmentSerialRowId = rowId;
+            
+            // 기존 시리얼 데이터 로드
+            const serialDataInput = document.getElementById(`ship-serial-data-${rowId}`);
+            if (serialDataInput && serialDataInput.value) {
+                currentShipmentSerials = JSON.parse(serialDataInput.value);
+            } else {
+                currentShipmentSerials = { used: [], new: [] };
+            }
+            
+            // 모달 정보 설정
+            document.getElementById('serialMgmtMaterialName').textContent = materialName;
+            
+            // 수량 가져오기
+            const row = document.querySelector(`tr[data-row-id="${rowId}"]`);
+            const qtyInput = row.querySelector('.qty-input');
+            const qualitySelect = row.querySelector('.form-select');
+            
+            const qty = parseInt(qtyInput.value) || 0;
+            const quality = qualitySelect ? qualitySelect.value : '신품';
+            
+            // 품질에 따라 중고/신품 수량 설정
+            let usedQty = 0;
+            let newQty = 0;
+            if (quality === '중고') {
+                usedQty = qty;
+            } else {
+                newQty = qty;
+            }
+            
+            const totalQty = qty;
+            
+            document.getElementById('serialMgmtQty').textContent = totalQty;
+            document.getElementById('serialMgmtUsedQty').textContent = usedQty;
+            document.getElementById('serialMgmtNewQty').textContent = newQty;
+            
+            // 재고 시리얼 목록 렌더링 (실제로는 서버에서 가져와야 함)
+            renderShipmentSerialInventory(materialCode, usedQty, newQty);
+            updateShipmentSerialStatus();
+            
+            // 모달 열기
+            document.getElementById('serialManagementModal').classList.add('active');
+        }
+        
+        // 재고 시리얼 목록 렌더링
+        function renderShipmentSerialInventory(materialCode, usedQty, newQty) {
+            const tbody = document.getElementById('serialInventoryList');
+            
+            // 샘플 데이터 (실제로는 서버에서 가져와야 함)
+            const sampleSerials = [
+                { serial: 'CAM-2024-001', quality: '신품', location: '본사창고 A-01-01', status: '정상' },
+                { serial: 'CAM-2024-002', quality: '신품', location: '본사창고 A-01-01', status: '정상' },
+                { serial: 'CAM-2024-003', quality: '신품', location: '본사창고 A-01-02', status: '정상' },
+                { serial: 'CAM-2024-004', quality: '중고', location: '본사창고 A-01-03', status: '정상' },
+                { serial: 'CAM-2024-005', quality: '중고', location: '본사창고 A-01-03', status: '정상' },
+                { serial: 'CAM-2024-006', quality: '신품', location: '본사창고 A-01-04', status: '정상' },
+            ];
+            
+            tbody.innerHTML = sampleSerials.map(item => {
+                const isChecked = currentShipmentSerials.used.includes(item.serial) || 
+                                 currentShipmentSerials.new.includes(item.serial);
+                return `
+                    <tr>
+                        <td style="text-align:center">
+                            <input type="checkbox" class="shipment-serial-check" 
+                                   value="${item.serial}" 
+                                   data-quality="${item.quality}"
+                                   onchange="updateShipmentSerialStatus()"
+                                   ${isChecked ? 'checked' : ''}>
+                        </td>
+                        <td><strong>${item.serial}</strong></td>
+                        <td>
+                            <span class="status-badge ${item.quality === '신품' ? 'status-ok' : 'status-approved'}" 
+                                  style="font-size:0.75rem">${item.quality}</span>
+                        </td>
+                        <td style="font-size:0.875rem">${item.location}</td>
+                        <td style="text-align:center">
+                            <span class="status-badge status-ok" style="font-size:0.75rem">${item.status}</span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        // 시리얼 선택 상태 업데이트
+        function updateShipmentSerialStatus() {
+            const usedQty = parseInt(document.getElementById('serialMgmtUsedQty').textContent) || 0;
+            const newQty = parseInt(document.getElementById('serialMgmtNewQty').textContent) || 0;
+            const totalQty = usedQty + newQty;
+            
+            const checkedBoxes = document.querySelectorAll('.shipment-serial-check:checked');
+            let usedCount = 0;
+            let newCount = 0;
+            
+            checkedBoxes.forEach(cb => {
+                if (cb.dataset.quality === '중고') usedCount++;
+                else newCount++;
+            });
+            
+            const totalSelected = usedCount + newCount;
+            document.getElementById('serialMgmtCount').textContent = totalSelected;
+            
+            const statusDiv = document.getElementById('serialMgmtStatus');
+            let statusHtml = '';
+            
+            if (totalSelected === totalQty && usedCount === usedQty && newCount === newQty) {
+                statusHtml = '<span style="color:var(--success);font-weight:600">수량 일치</span>';
+            } else {
+                const messages = [];
+                if (usedCount !== usedQty) {
+                    messages.push(`중고품 ${usedCount}/${usedQty}개`);
+                }
+                if (newCount !== newQty) {
+                    messages.push(`신품 ${newCount}/${newQty}개`);
+                }
+                statusHtml = `<span style="color:var(--warning);font-weight:600">${messages.join(', ')}</span>`;
+            }
+            
+            statusDiv.innerHTML = statusHtml;
+        }
+        
+        // 시리얼 저장
+        function saveShipmentSerials() {
+            if (!currentShipmentSerialRowId) return;
+            
+            const usedQty = parseInt(document.getElementById('serialMgmtUsedQty').textContent) || 0;
+            const newQty = parseInt(document.getElementById('serialMgmtNewQty').textContent) || 0;
+            
+            const checkedBoxes = document.querySelectorAll('.shipment-serial-check:checked');
+            const usedSerials = [];
+            const newSerials = [];
+            
+            checkedBoxes.forEach(cb => {
+                if (cb.dataset.quality === '중고') {
+                    usedSerials.push(cb.value);
+                } else {
+                    newSerials.push(cb.value);
+                }
+            });
+            
+            if (usedSerials.length !== usedQty || newSerials.length !== newQty) {
+                if (!confirm(`선택된 시리얼 수가 일치하지 않습니다.\n중고: ${usedSerials.length}/${usedQty}개, 신품: ${newSerials.length}/${newQty}개\n그래도 저장하시겠습니까?`)) {
+                    return;
+                }
+            }
+            
+            // 시리얼 데이터 저장
+            currentShipmentSerials = { used: usedSerials, new: newSerials };
+            const serialDataInput = document.getElementById(`ship-serial-data-${currentShipmentSerialRowId}`);
+            if (serialDataInput) {
+                serialDataInput.value = JSON.stringify(currentShipmentSerials);
+            }
+            
+            // 카운트 업데이트
+            const countSpan = document.getElementById(`ship-serial-count-${currentShipmentSerialRowId}`);
+            if (countSpan) {
+                const totalCount = usedSerials.length + newSerials.length;
+                countSpan.textContent = totalCount;
+                countSpan.style.color = '';
+            }
+            
+            // 모달 닫기
+            closeModal('serialManagementModal');
+            
+            alert('시리얼 정보가 저장되었습니다.');
         }
 
         function toggleSerialButton(checkbox) {
@@ -1390,7 +1911,7 @@
                         <tr class="over-reason-row" data-for="${materialId}" style="background:#FFF8E1">
                             <td colspan="9" style="padding:0.5rem 1rem">
                                 <div style="display:flex;align-items:center;gap:1rem">
-                                    <span style="color:var(--warning);font-weight:600;white-space:nowrap">⚠️ ${overQty}${unit} 초과</span>
+                                    <span style="color:var(--warning);font-weight:600;white-space:nowrap">${overQty}${unit} 초과</span>
                                     <input type="text" class="form-input over-reason-input" placeholder="초과 출고 사유 입력 *" style="flex:1;padding:0.375rem">
                                 </div>
                             </td>
@@ -1398,7 +1919,7 @@
                     `);
                 } else {
                     // 초과 수량 업데이트
-                    reasonRow.querySelector('span').innerHTML = `⚠️ ${overQty}${unit} 초과`;
+                    reasonRow.querySelector('span').innerHTML = `${overQty}${unit} 초과`;
                 }
             } else {
                 // 초과 아니면 사유 행 제거
@@ -1435,11 +1956,11 @@
             
             const statusEl = document.getElementById('serialMatchStatus');
             if (checked === requiredQty) {
-                statusEl.innerHTML = '<span style="color:var(--success);font-weight:600">✅ 일치</span>';
+                statusEl.innerHTML = '<span style="color:var(--success);font-weight:600">일치</span>';
             } else if (checked < requiredQty) {
-                statusEl.innerHTML = `<span style="color:var(--danger);font-weight:600">❌ ${requiredQty - checked}개 부족</span>`;
+                statusEl.innerHTML = `<span style="color:var(--danger);font-weight:600">${requiredQty - checked}개 부족</span>`;
             } else {
-                statusEl.innerHTML = `<span style="color:var(--warning);font-weight:600">⚠️ ${checked - requiredQty}개 초과</span>`;
+                statusEl.innerHTML = `<span style="color:var(--warning);font-weight:600">${checked - requiredQty}개 초과</span>`;
             }
         }
         
@@ -1457,7 +1978,7 @@
                 return;
             }
             
-            alert('✅ 시리얼이 선택되었습니다.');
+            alert('시리얼이 선택되었습니다.');
             closeModal('serialModal');
         }
         
@@ -1465,16 +1986,16 @@
             document.getElementById('detailShipmentNo').textContent = shipmentNo;
             document.getElementById('detailNo').textContent = shipmentNo;
             
-            // 초과 출고 건인 경우
-            if (shipmentNo === 'OUT-2024-048') {
-                document.getElementById('overOrderReasonBox').style.display = 'block';
-                document.getElementById('detailStatus').className = 'status-badge status-warning';
-                document.getElementById('detailStatus').textContent = '초과';
+            // 선출고 건인 경우
+            if (shipmentNo === 'OUT-2024-049') {
+                document.getElementById('preShipmentReasonBox').style.display = 'block';
+                document.getElementById('detailPreShipmentReason').textContent = '긴급 현장 요청으로 인한 선출고';
             } else {
-                document.getElementById('overOrderReasonBox').style.display = 'none';
-                document.getElementById('detailStatus').className = 'status-badge status-complete';
-                document.getElementById('detailStatus').textContent = '완료';
+                document.getElementById('preShipmentReasonBox').style.display = 'none';
             }
+            
+            document.getElementById('detailStatus').className = 'status-badge status-complete';
+            document.getElementById('detailStatus').textContent = '완료';
             
             document.getElementById('detailModal').classList.add('active');
         }
@@ -1560,7 +2081,7 @@
         }
         
         function submitShipmentConfirm() {
-            alert('✅ 출고가 확인되었습니다.\n(서명 데이터는 서버로 전송되는 것으로 가정합니다.)');
+            alert('출고가 확인되었습니다.\n(서명 데이터는 서버로 전송되는 것으로 가정합니다.)');
             closeModal('confirmModal');
         }
         
@@ -1602,7 +2123,7 @@
             }
             
             if (confirm('출고를 처리하시겠습니까?\n\n발주: IT260115-01\n현장: 강남 오피스텔')) {
-                alert('✅ 출고가 완료되었습니다!\n출고 번호: OUT-2024-051');
+                alert('출고가 완료되었습니다!\n출고 번호: OUT-2024-051');
                 switchTab('list');
             }
         }

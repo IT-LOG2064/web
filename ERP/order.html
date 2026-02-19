@@ -99,16 +99,16 @@
 </head>
 <body>
     <nav class="nav">
-        <a href="dashboard.html">📊 대시보드</a>
-        <a href="contract.html">📋 견적</a>
-        <a href="inventory.html">📦 재고</a>
-        <a href="order.html" class="active">📝 발주</a>
-        <a href="receiving.html">📥 입고</a>
-        <a href="shipment.html">🚚 출고</a>
-        <!-- <a href="purchase.html">🛒 구매</a> -->
-        <a href="as.html">🔧 AS</a>
-        <a href="materials.html">📁 자재정보</a>
-        <a href="project.html">📊 현장 통합 현황</a>
+        <a href="dashboard.html">대시보드</a>
+        <a href="contract.html">견적</a>
+        <a href="inventory.html">재고</a>
+        <a href="order.html" class="active">발주</a>
+        <a href="receiving.html">입고</a>
+        <a href="shipment.html">출고</a>
+        <!-- <a href="purchase.html">구매</a> -->
+        <a href="as.html">AS</a>
+        <a href="materials.html">자재정보</a>
+        <a href="project.html">현장 통합 현황</a>
     </nav>
     
     <main class="main">
@@ -203,13 +203,13 @@
         <!-- 발주 등록 탭 -->
         <div id="registerTab" class="tab-content" style="display:none">
             <div class="card" style="margin-bottom:0">
-                <div class="card-header" style="padding:0.5rem 1rem"><span class="card-title" style="font-size:0.9375rem">📝 발주 기본정보</span></div>
+                <div class="card-header" style="padding:0.5rem 1rem"><span class="card-title" style="font-size:0.9375rem">발주 기본정보</span></div>
                 <div class="card-body" style="padding:0.75rem 1rem">
                     <!-- 한 줄 배치: 검색(2) + 현장/견적 선택 + 최근 수주 건(1) -->
                     <div class="contract-select-grid" style="display:grid;grid-template-columns:1.5fr 1.2fr 1.2fr 1fr;gap:1rem;align-items:start">
                         <!-- 좌측: 통합 검색 -->
                         <div>
-                            <label class="form-label" style="margin-bottom:0.375rem">🔍 검색</label>
+                            <label class="form-label" style="margin-bottom:0.375rem">검색</label>
                             <div style="position:relative">
                                 <input type="text" class="form-input" id="regContractSearch" placeholder="본사, 현장 또는 견적명 검색..." oninput="handleContractSearch()" onfocus="handleContractSearch()" onkeydown="handleContractSearchKeydown(event)" onblur="setTimeout(() => hideContractSearchResults(), 200)">
                                 <div id="contractSearchResults" class="autocomplete-dropdown" style="display:none"></div>
@@ -237,21 +237,21 @@
                         
                         <!-- 우측: 최근 수주 건 -->
                         <div>
-                            <label class="form-label" style="margin-bottom:0.375rem">📋 최근 수주 건</label>
+                            <label class="form-label" style="margin-bottom:0.375rem">최근 수주 건</label>
                             <button type="button" class="btn btn-secondary btn-sm" onclick="openRecentContractsModal()" style="width:100%;font-size:0.8125rem;padding:0.5rem 0.75rem;white-space:nowrap;text-align:center">
                                 최근 수주 건 선택
                             </button>
                         </div>
                     </div>
                     <div class="info-box highlight" id="regContractInfo" style="display:none;margin-top:0.5rem;padding:0.5rem 0.75rem;font-size:0.8125rem">
-                        <div style="font-weight:600;margin-bottom:0.25rem">📋 견적 정보</div>
+                        <div style="font-weight:600;margin-bottom:0.25rem">견적 정보</div>
                         <div style="margin-bottom:0.5rem">현장: <strong>강남 오피스텔</strong> | 발주처: <strong>강남건설</strong> | 금액: <strong style="color:var(--primary)">150,000,000원</strong> | 소유구분: <strong>판매</strong> | 품질: <strong>신품</strong></div>
                         <div style="display:flex;gap:0.5rem;margin-top:0.5rem;padding-top:0.5rem;border-top:1px solid var(--gray-200)">
                             <button type="button" class="btn btn-secondary btn-sm" onclick="viewContractDocument()" style="font-size:0.8125rem;padding:0.375rem 0.75rem">
-                                📄 견적서 보기
+                                견적서 보기
                             </button>
                             <button type="button" class="btn btn-secondary btn-sm" onclick="downloadContractDocument()" style="font-size:0.8125rem;padding:0.375rem 0.75rem">
-                                ⬇️ 견적서 다운로드
+                                견적서 다운로드
                             </button>
                         </div>
                     </div>
@@ -259,23 +259,24 @@
             </div>
             
             <div class="card" style="margin-top:0.75rem">
-                <div class="card-header"><span class="card-title">📦 발주 자재 선택</span></div>
+                <div class="card-header"><span class="card-title">발주 자재 선택</span></div>
                 <div class="card-body">
                     <div style="display:flex;gap:1rem;align-items:stretch;min-height:620px">
                         <!-- 좌측: 자재 검색/추가 -->
                         <div style="flex:0 0 40%;min-width:320px;border:1px solid var(--gray-200);border-radius:8px;overflow:hidden;background:#fff">
                             <div style="padding:0.75rem;background:var(--gray-50);border-bottom:1px solid var(--gray-200);display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
-                                <select class="filter-select" id="regMaterialCategory" onchange="renderMaterialSearchResults()" style="min-width:130px">
-                                    <option value="">카테고리 전체</option>
+                                <select class="filter-select" id="regMaterialMainCategory" onchange="updateSubCategoryOptions(); renderMaterialSearchResults()" style="min-width:120px">
+                                    <option value="">대분류 전체</option>
                                     <option value="CCTV">CCTV</option>
                                     <option value="네트워크">네트워크</option>
+                                    <option value="케이블">케이블</option>
                                     <option value="부자재">부자재</option>
+                                    <option value="기타">기타</option>
                                 </select>
-                                <select class="filter-select" id="regMaterialSerial" onchange="renderMaterialSearchResults()" style="min-width:140px">
-                                    <option value="false" selected>시리얼 미대상</option>
-                                    <option value="true">시리얼 대상</option>
+                                <select class="filter-select" id="regMaterialSubCategory" onchange="renderMaterialSearchResults()" style="min-width:120px">
+                                    <option value="">소분류 전체</option>
                                 </select>
-                                <input type="text" id="regMaterialKeyword" class="form-input" placeholder="🔍 자재코드/자재명/규격 검색..." style="flex:1;min-width:160px" oninput="renderMaterialSearchResults()">
+                                <input type="text" id="regMaterialKeyword" class="form-input" placeholder="자재코드/자재명/규격 검색..." style="flex:1;min-width:160px" oninput="renderMaterialSearchResults()">
                             </div>
                             <div class="table-container" style="box-shadow:none;margin:0;min-height:560px;max-height:560px;overflow:auto">
                                 <table style="margin:0">
@@ -298,31 +299,23 @@
                         <div style="flex:0 0 60%;border:1px solid var(--gray-200);border-radius:8px;overflow:hidden;background:#fff">
                             <div style="padding:0.75rem;background:var(--gray-50);border-bottom:1px solid var(--gray-200);display:flex;justify-content:space-between;align-items:center;gap:0.75rem">
                                 <div style="display:flex;gap:0.75rem;align-items:center">
-                                    <div style="font-weight:600">📋 발주 품목</div>
+                                    <div style="font-weight:600">발주 품목</div>
                                     <div style="display:flex;gap:0.5rem;align-items:center;font-size:0.8125rem;color:var(--gray-500)">
                                         <span>품목 수: <strong id="regItemCount">0</strong></span>
                                         <span style="width:1px;height:12px;background:var(--gray-200)"></span>
                                         <span>총 수량: <strong id="regTotalQty">0</strong></span>
                                     </div>
                                 </div>
-                                <button type="button" class="btn btn-secondary btn-sm" onclick="openSetSelectModal()" style="white-space:nowrap">📦 세트 불러오기</button>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="openSetSelectModal()" style="white-space:nowrap">세트 불러오기</button>
                             </div>
-                            <!-- 묶음 수량 계산 영역 -->
-                            <div style="padding:0.5rem 0.75rem;border-bottom:1px solid var(--gray-200);display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;font-size:0.8125rem;color:var(--gray-600)">
-                                <span style="font-weight:600">🔗 묶음 수량 계산</span>
-                                <input type="text" id="bundleKeyInput" class="form-input" placeholder="예: CCTV-1식" style="width:130px;padding:0.35rem;font-size:0.8125rem">
-                                <span>×</span>
-                                <input type="number" id="bundleCountInput" class="form-input" min="1" value="1" style="width:80px;padding:0.35rem;font-size:0.8125rem">
-                                <button type="button" class="btn btn-secondary btn-sm" onclick="applyBundleQuantity()">계산</button>
-                                <span style="color:var(--gray-400)">※ 묶음 ID가 같은 행들의 [1식 기준 수량] × 식 수량으로 발주 수량을 계산합니다.</span>
-                            </div>
+
                             <div class="table-container" style="box-shadow:none;margin:0;min-height:560px;max-height:560px;overflow:auto">
                                 <table style="margin:0">
                                     <thead>
                                         <tr>
                                             <th style="width:30px"></th>
+                                            <th style="width:100px">코드</th>
                                             <th>자재명 / 규격</th>
-                                            <th style="width:120px">묶음 ID</th>
                                             <th style="width:110px">발주 수량</th>
                                             <th style="width:70px">단위</th>
                                             <th style="width:100px">품질</th>
@@ -395,14 +388,14 @@
                     <div class="info-row"><span class="info-label">발주일</span><span>2024-01-15</span></div>
                     <div class="info-row"><span class="info-label">상태</span><span class="status-badge status-active">출고완료</span></div>
                 </div>
-                <div style="font-weight:600;margin-bottom:0.5rem;font-size:0.875rem">📦 발주 자재</div>
+                <div style="font-weight:600;margin-bottom:0.5rem;font-size:0.875rem">발주 자재</div>
                 <table><thead><tr><th>자재명</th><th>수량</th><th>단위</th></tr></thead>
                 <tbody>
                     <tr><td>IP카메라 2MP</td><td>50</td><td>개</td></tr>
                     <tr><td>NVR 16채널</td><td>10</td><td>개</td></tr>
                     <tr><td>UTP 케이블</td><td>30</td><td>박스</td></tr>
                 </tbody></table>
-                <div style="font-weight:600;margin:1.25rem 0 0.5rem;font-size:0.875rem">📋 수정 이력</div>
+                <div style="font-weight:600;margin:1.25rem 0 0.5rem;font-size:0.875rem">수정 이력</div>
                 <div class="table-container" style="box-shadow:none;margin:0">
                     <table>
                         <thead><tr><th style="width:140px">수정일시</th><th style="width:80px">수정자</th><th>수정 사유</th></tr></thead>
@@ -446,7 +439,7 @@
                     </div>
                 </div>
                 <div class="info-box highlight" id="editContractInfo">
-                    <div style="font-weight:600;margin-bottom:0.5rem">📋 견적 정보</div>
+                    <div style="font-weight:600;margin-bottom:0.5rem">견적 정보</div>
                     <div style="font-size:0.875rem;margin-bottom:0.375rem">본사: <strong>강남건설</strong> | 현장: <strong>강남 오피스텔</strong> | 금액: <strong style="color:var(--primary)">150,000,000원</strong></div>
                     <div style="font-size:0.875rem">소유구분: <strong>판매</strong> | 품질: <strong>신품</strong></div>
                 </div>
@@ -458,14 +451,15 @@
                                 <input type="text" id="editMaterialSearch" class="form-input" placeholder="자재 코드, 자재명, 카테고리로 검색..." style="width:100%" autocomplete="off" oninput="handleEditMaterialSearch()" onkeydown="handleEditMaterialKeydown(event)" onfocus="handleEditMaterialFocus()" onblur="setTimeout(() => hideEditMaterialAutocomplete(), 200)">
                                 <div id="editMaterialAutocomplete" class="autocomplete-dropdown" style="display:none"></div>
                             </div>
+                            <button type="button" class="btn btn-primary btn-sm" onclick="openEditMaterialSearchModal()">자재검색</button>
                             <button type="button" class="btn btn-secondary btn-sm" onclick="openSetSelectModal()">세트 선택</button>
                         </div>
                         <table style="margin:0">
-                            <thead><tr><th style="width:30px"></th><th style="width:100px">자재 코드</th><th>자재명</th><th style="width:150px">규격</th><th style="width:100px">수량</th><th style="width:80px">단위</th><th style="width:100px">품질</th><th style="width:60px">삭제</th></tr></thead>
+                            <thead><tr><th style="width:30px"></th><th style="width:100px">자재 코드</th><th>자재명 / 규격</th><th style="width:150px">수량 / 단위</th><th style="width:100px">품질</th><th style="width:60px">삭제</th></tr></thead>
                             <tbody id="editMaterialList">
-                                <tr draggable="true" class="draggable-row"><td style="cursor:move;color:var(--gray-400);text-align:center">⋮⋮</td><td><strong>CAM-001</strong></td><td>IP카메라 2MP</td><td>2MP, IP67</td><td><input type="number" class="form-input" value="50" min="1" style="padding:0.25rem"></td><td>개</td><td><select class="form-select" style="padding:0.25rem;font-size:0.875rem"><option value="new" selected>신품</option><option value="used">중고</option></select></td><td><button type="button" class="btn btn-sm" style="background:var(--danger);color:#fff" onclick="this.closest('tr').remove(); initEditDragAndDrop();">삭제</button></td></tr>
-                                <tr draggable="true" class="draggable-row"><td style="cursor:move;color:var(--gray-400);text-align:center">⋮⋮</td><td><strong>NVR-016</strong></td><td>NVR 16채널</td><td>16CH, H.265</td><td><input type="number" class="form-input" value="10" min="1" style="padding:0.25rem"></td><td>개</td><td><select class="form-select" style="padding:0.25rem;font-size:0.875rem"><option value="new" selected>신품</option><option value="used">중고</option></select></td><td><button type="button" class="btn btn-sm" style="background:var(--danger);color:#fff" onclick="this.closest('tr').remove(); initEditDragAndDrop();">삭제</button></td></tr>
-                                <tr draggable="true" class="draggable-row"><td style="cursor:move;color:var(--gray-400);text-align:center">⋮⋮</td><td><strong>CBL-C6</strong></td><td>UTP 케이블</td><td>CAT6, 305m</td><td><input type="number" class="form-input" value="30" min="1" style="padding:0.25rem"></td><td>박스</td><td><select class="form-select" style="padding:0.25rem;font-size:0.875rem"><option value="new" selected>신품</option><option value="used">중고</option></select></td><td><button type="button" class="btn btn-sm" style="background:var(--danger);color:#fff" onclick="this.closest('tr').remove(); initEditDragAndDrop();">삭제</button></td></tr>
+                                <tr draggable="true" class="draggable-row"><td style="cursor:move;color:var(--gray-400);text-align:center">⋮⋮</td><td><strong>CAM-001</strong></td><td><div style="font-weight:500">IP카메라 2MP</div><div style="font-size:0.8125rem;color:var(--gray-500);margin-top:0.25rem">2MP, IP67</div></td><td><div style="display:flex;align-items:center;gap:0.25rem"><input type="number" class="form-input" value="50" min="1" style="padding:0.25rem;flex:1"><span style="font-size:0.875rem;color:var(--gray-600)">개</span></div></td><td><select class="form-select" style="padding:0.25rem;font-size:0.875rem"><option value="new" selected>신품</option><option value="used">중고</option></select></td><td><button type="button" class="btn btn-sm" style="background:var(--danger);color:#fff" onclick="this.closest('tr').remove(); initEditDragAndDrop();">삭제</button></td></tr>
+                                <tr draggable="true" class="draggable-row"><td style="cursor:move;color:var(--gray-400);text-align:center">⋮⋮</td><td><strong>NVR-016</strong></td><td><div style="font-weight:500">NVR 16채널</div><div style="font-size:0.8125rem;color:var(--gray-500);margin-top:0.25rem">16CH, H.265</div></td><td><div style="display:flex;align-items:center;gap:0.25rem"><input type="number" class="form-input" value="10" min="1" style="padding:0.25rem;flex:1"><span style="font-size:0.875rem;color:var(--gray-600)">개</span></div></td><td><select class="form-select" style="padding:0.25rem;font-size:0.875rem"><option value="new" selected>신품</option><option value="used">중고</option></select></td><td><button type="button" class="btn btn-sm" style="background:var(--danger);color:#fff" onclick="this.closest('tr').remove(); initEditDragAndDrop();">삭제</button></td></tr>
+                                <tr draggable="true" class="draggable-row"><td style="cursor:move;color:var(--gray-400);text-align:center">⋮⋮</td><td><strong>CBL-C6</strong></td><td><div style="font-weight:500">UTP 케이블</div><div style="font-size:0.8125rem;color:var(--gray-500);margin-top:0.25rem">CAT6, 305m</div></td><td><div style="display:flex;align-items:center;gap:0.25rem"><input type="number" class="form-input" value="30" min="1" style="padding:0.25rem;flex:1"><span style="font-size:0.875rem;color:var(--gray-600)">박스</span></div></td><td><select class="form-select" style="padding:0.25rem;font-size:0.875rem"><option value="new" selected>신품</option><option value="used">중고</option></select></td><td><button type="button" class="btn btn-sm" style="background:var(--danger);color:#fff" onclick="this.closest('tr').remove(); initEditDragAndDrop();">삭제</button></td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -595,6 +589,68 @@
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="closeMaterialQtyModal()">취소</button>
                 <button class="btn btn-primary" onclick="confirmMaterialQty()">추가</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 자재 마스터 검색 모달 (발주 수정용) -->
+    <div class="modal" id="editMaterialSearchModal">
+        <div class="modal-content lg">
+            <div class="modal-header">
+                <h2 class="modal-title">자재 마스터 검색</h2>
+                <button class="close-btn" onclick="closeModal('editMaterialSearchModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <div style="display:flex;gap:0.5rem">
+                        <select id="editMaterialMainCategoryFilter" class="form-select" style="width:130px" onchange="updateEditSubCategoryOptions(); filterEditMaterialMaster()">
+                            <option value="">대분류 전체</option>
+                            <option value="CCTV">CCTV</option>
+                            <option value="네트워크">네트워크</option>
+                            <option value="케이블">케이블</option>
+                            <option value="부자재">부자재</option>
+                            <option value="기타">기타</option>
+                        </select>
+                        <select id="editMaterialSubCategoryFilter" class="form-select" style="width:130px" onchange="filterEditMaterialMaster()" disabled>
+                            <option value="">소분류 전체</option>
+                        </select>
+                        <input type="text" id="editMaterialSearchKeyword" class="form-input" placeholder="자재 코드, 자재명, 규격으로 검색..." style="flex:1" oninput="filterEditMaterialMaster()">
+                        <button class="btn btn-secondary" onclick="resetEditMaterialSearch()">초기화</button>
+                    </div>
+                </div>
+                
+                <div style="max-height:400px;overflow-y:auto;border:1px solid var(--gray-200);border-radius:6px">
+                    <table style="margin:0">
+                        <thead style="position:sticky;top:0;background:#fff;z-index:1">
+                            <tr>
+                                <th style="width:40px">
+                                    <input type="checkbox" id="selectAllEditMaterials" onchange="toggleAllEditMaterials()">
+                                </th>
+                                <th style="width:120px">자재 코드</th>
+                                <th style="width:100px">카테고리</th>
+                                <th>자재명 / 규격</th>
+                                <th style="width:80px">단위</th>
+                            </tr>
+                        </thead>
+                        <tbody id="editMaterialMasterList">
+                            <!-- 동적으로 채워짐 -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="info-box" style="margin-top:1rem">
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                        <div>
+                            총 <strong id="editMaterialCount">0</strong>개의 자재 | 
+                            선택: <strong id="selectedEditMaterialCount">0</strong>개
+                        </div>
+                        <div style="font-size:0.875rem;color:var(--gray-600)">자재를 선택하고 추가 버튼을 클릭하세요</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('editMaterialSearchModal')">취소</button>
+                <button class="btn btn-primary" onclick="addSelectedEditMaterials()">선택 자재 추가</button>
             </div>
         </div>
     </div>
@@ -974,24 +1030,22 @@
         
         function addEditMaterialFromData(material) {
             const tbody = document.getElementById('editMaterialList');
-            // 이미 추가된 자재인지 확인
-            const existingRows = tbody.querySelectorAll('tr.draggable-row');
-            for (let row of existingRows) {
-                const nameCell = row.querySelector('td:nth-child(2)');
-                if (nameCell && nameCell.textContent.trim() === material.name) {
-                    alert('이미 추가된 자재입니다.');
-                    return;
-                }
-            }
+            // 이미 추가된 자재인지 확인 (중복 추가 가능하므로 체크하지 않음)
             
             tbody.insertAdjacentHTML('beforeend',
                 '<tr draggable="true" class="draggable-row">' +
                     '<td style="cursor:move;color:var(--gray-400);text-align:center">⋮⋮</td>' +
                     '<td><strong>' + material.code + '</strong></td>' +
-                    '<td>' + material.name + '</td>' +
-                    '<td>' + material.spec + '</td>' +
-                    '<td><input type="number" class="form-input" value="1" min="1" style="padding:0.25rem"></td>' +
-                    '<td>' + material.unit + '</td>' +
+                    '<td>' +
+                        '<div style="font-weight:500">' + material.name + '</div>' +
+                        '<div style="font-size:0.8125rem;color:var(--gray-500);margin-top:0.25rem">' + material.spec + '</div>' +
+                    '</td>' +
+                    '<td>' +
+                        '<div style="display:flex;align-items:center;gap:0.25rem">' +
+                            '<input type="number" class="form-input" value="1" min="1" style="padding:0.25rem;flex:1">' +
+                            '<span style="font-size:0.875rem;color:var(--gray-600)">' + material.unit + '</span>' +
+                        '</div>' +
+                    '</td>' +
                     '<td><select class="form-select" style="padding:0.25rem;font-size:0.875rem"><option value="new" selected>신품</option><option value="used">중고</option></select></td>' +
                     '<td><button type="button" class="btn btn-sm" style="background:var(--danger);color:#fff" onclick="this.closest(\'tr\').remove(); initEditDragAndDrop();">삭제</button></td>' +
                 '</tr>'
@@ -1008,10 +1062,16 @@
                 '<tr draggable="true" class="draggable-row">' +
                     '<td style="cursor:move;color:var(--gray-400);text-align:center">⋮⋮</td>' +
                     '<td>-</td>' +
-                    '<td>' + name.trim() + '</td>' +
-                    '<td>-</td>' +
-                    '<td><input type="number" class="form-input" value="1" min="1" style="padding:0.25rem"></td>' +
-                    '<td>개</td>' +
+                    '<td>' +
+                        '<div style="font-weight:500">' + name.trim() + '</div>' +
+                        '<div style="font-size:0.8125rem;color:var(--gray-500);margin-top:0.25rem">-</div>' +
+                    '</td>' +
+                    '<td>' +
+                        '<div style="display:flex;align-items:center;gap:0.25rem">' +
+                            '<input type="number" class="form-input" value="1" min="1" style="padding:0.25rem;flex:1">' +
+                            '<span style="font-size:0.875rem;color:var(--gray-600)">개</span>' +
+                        '</div>' +
+                    '</td>' +
                     '<td><select class="form-select" style="padding:0.25rem;font-size:0.875rem"><option value="new" selected>신품</option><option value="used">중고</option></select></td>' +
                     '<td><button type="button" class="btn btn-sm" style="background:var(--danger);color:#fff" onclick="this.closest(\'tr\').remove(); initEditDragAndDrop();">삭제</button></td>' +
                 '</tr>'
@@ -1318,18 +1378,83 @@
             document.getElementById('contractViewModal').classList.remove('active');
         }
         
+        // 카테고리 매핑 (자재정보 메뉴와 동일)
+        const CATEGORY_MAP = {
+            'CCTV': { main: 'CCTV', sub: '-' },
+            '녹화기': { main: 'CCTV', sub: '녹화기' },
+            '모니터': { main: 'CCTV', sub: '모니터' },
+            '네트워크': { main: '네트워크', sub: '-' },
+            '케이블': { main: '케이블', sub: '-' },
+            '부자재': { main: '부자재', sub: '-' },
+            '커넥터': { main: '기타', sub: '커넥터' },
+            '전원': { main: '기타', sub: '전원' },
+            '저장장치': { main: '기타', sub: '저장장치' },
+            '센서': { main: '기타', sub: '센서' }
+        };
+        
+        function getCategoryParts(category) {
+            if (category && CATEGORY_MAP[category]) {
+                return CATEGORY_MAP[category];
+            }
+            return { main: category || '-', sub: '-' };
+        }
+        
+        // 소분류 옵션 업데이트
+        function updateSubCategoryOptions() {
+            const mainCategory = document.getElementById('regMaterialMainCategory')?.value || '';
+            const subCategorySelect = document.getElementById('regMaterialSubCategory');
+            
+            if (!subCategorySelect) return;
+            
+            // 소분류 옵션 초기화
+            subCategorySelect.innerHTML = '<option value="">소분류 전체</option>';
+            
+            if (!mainCategory) {
+                subCategorySelect.disabled = true;
+                return;
+            }
+            
+            // 선택된 대분류에 해당하는 소분류 목록 생성
+            const subCategories = new Set();
+            Object.entries(CATEGORY_MAP).forEach(([category, parts]) => {
+                if (parts.main === mainCategory && parts.sub !== '-') {
+                    subCategories.add(parts.sub);
+                }
+            });
+            
+            if (subCategories.size > 0) {
+                subCategories.forEach(sub => {
+                    const option = document.createElement('option');
+                    option.value = sub;
+                    option.textContent = sub;
+                    subCategorySelect.appendChild(option);
+                });
+                subCategorySelect.disabled = false;
+            } else {
+                subCategorySelect.disabled = true;
+            }
+        }
+        
         function renderMaterialSearchResults() {
             const keyword = (document.getElementById('regMaterialKeyword')?.value || '').trim().toLowerCase();
-            const category = document.getElementById('regMaterialCategory')?.value || '';
-            const serialFilter = document.getElementById('regMaterialSerial')?.value || 'false';
+            const mainCategory = document.getElementById('regMaterialMainCategory')?.value || '';
+            const subCategory = document.getElementById('regMaterialSubCategory')?.value || '';
             
             let rows = MATERIALS.slice();
             // 사용 중인 자재만 표시
             rows = rows.filter(m => m.useYn === 'Y');
-            // 시리얼 필터 적용 (항상 필터링됨)
-            const isSerial = serialFilter === 'true';
-            rows = rows.filter(m => m.serialTracking === isSerial);
-            if (category) rows = rows.filter(m => m.category === category);
+            
+            // 대분류/소분류 필터
+            if (mainCategory || subCategory) {
+                rows = rows.filter(m => {
+                    const parts = getCategoryParts(m.category);
+                    const mainMatch = !mainCategory || parts.main === mainCategory;
+                    const subMatch = !subCategory || parts.sub === subCategory;
+                    return mainMatch && subMatch;
+                });
+            }
+            
+            // 키워드 필터
             if (keyword) {
                 rows = rows.filter(m =>
                     (m.code || '').toLowerCase().includes(keyword) ||
@@ -1341,8 +1466,6 @@
             const tbody = document.getElementById('regMaterialResultBody');
             if (!tbody) return;
             
-            // 시리얼 필터는 항상 적용되므로, 검색어나 카테고리가 없어도 결과 표시
-            // (시리얼 필터가 기본값으로 설정되어 있음)
             if (!rows.length) {
                 tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--gray-500);padding:1.5rem">검색 결과가 없습니다</td></tr>`;
                 return;
@@ -1416,17 +1539,15 @@
             const uniqueId = Date.now() + Math.random(); // 고유 ID 생성
             
             tbody.insertAdjacentHTML('beforeend', `
-                <tr draggable="true" class="draggable-row" data-code="${material.code}" data-row-id="${uniqueId}" data-unit-per-set="${qtyToAdd}">
+                <tr draggable="true" class="draggable-row" data-code="${material.code}" data-row-id="${uniqueId}">
                     <td style="cursor:move;color:var(--gray-400);text-align:center">⋮⋮</td>
+                    <td><strong>${material.code}</strong></td>
                     <td>
                         <div style="font-weight:500">${material.name}</div>
                         <div style="font-size:0.8125rem;color:var(--gray-500);margin-top:0.25rem">${material.spec}</div>
                     </td>
                     <td>
-                        <input data-role="bundle" type="text" class="form-input" placeholder="예: CCTV-1식" style="padding:0.25rem;font-size:0.8125rem" oninput="markRegisterDirty()">
-                    </td>
-                    <td>
-                        <input data-role="qty" type="number" class="form-input" value="${qtyToAdd}" min="0" style="padding:0.25rem" onchange="updateRegisterSummary(); markRegisterDirty()">
+                        <input data-role="qty" type="number" class="form-input" value="${qtyToAdd}" min="1" style="padding:0.25rem" onchange="updateRegisterSummary(); markRegisterDirty()">
                     </td>
                     <td>${material.unit}</td>
                     <td>
@@ -1448,54 +1569,30 @@
         
         function removeRegisterRowById(rowId) {
             const row = document.querySelector(`#regSelectedBody tr[data-row-id="${rowId}"]`);
-            let bundleKey = '';
             if (row) {
-                const bundleInput = row.querySelector('input[data-role="bundle"]');
-                bundleKey = (bundleInput?.value || '').trim();
                 row.remove();
             }
             
             const tbody = document.getElementById('regSelectedBody');
-            if (tbody && !tbody.querySelector('tr')) {
+            if (tbody && !tbody.querySelector('tr[data-code]')) {
                 tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--gray-500);padding:2rem">좌측에서 자재를 추가해주세요</td></tr>`;
             }
             initRegisterDragAndDrop();
-            updateRegisterSummary();
-            // 해당 묶음에 더 이상 행이 없으면 헤더도 제거
-            if (bundleKey) {
-                const stillExists = tbody && tbody.querySelectorAll('tr[data-code] input[data-role="bundle"]').length &&
-                    Array.from(tbody.querySelectorAll('tr[data-code] input[data-role="bundle"]')).some(input => (input.value || '').trim() === bundleKey);
-                if (!stillExists) {
-                    document.querySelectorAll(`#regSelectedBody tr[data-bundle-header="${bundleKey}"]`).forEach(h => h.remove());
-                }
-            }
             updateRegisterSummary();
             markRegisterDirty();
         }
         
         function removeRegisterRow(code) {
             const row = getSelectedRowByCode(code);
-            let bundleKey = '';
             if (row) {
-                const bundleInput = row.querySelector('input[data-role="bundle"]');
-                bundleKey = (bundleInput?.value || '').trim();
                 row.remove();
             }
             
             const tbody = document.getElementById('regSelectedBody');
-            if (tbody && !tbody.querySelector('tr')) {
+            if (tbody && !tbody.querySelector('tr[data-code]')) {
                 tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--gray-500);padding:2rem">좌측에서 자재를 추가해주세요</td></tr>`;
             }
             initRegisterDragAndDrop();
-            updateRegisterSummary();
-            // 해당 묶음에 더 이상 행이 없으면 헤더도 제거
-            if (bundleKey) {
-                const stillExists = tbody && tbody.querySelectorAll('tr[data-code] input[data-role="bundle"]').length &&
-                    Array.from(tbody.querySelectorAll('tr[data-code] input[data-role="bundle"]')).some(input => (input.value || '').trim() === bundleKey);
-                if (!stillExists) {
-                    document.querySelectorAll(`#regSelectedBody tr[data-bundle-header="${bundleKey}"]`).forEach(h => h.remove());
-                }
-            }
             updateRegisterSummary();
             markRegisterDirty();
         }
@@ -1600,10 +1697,9 @@
             document.getElementById('regOrderNote').value = '';
             document.getElementById('regContractInfo').style.display = 'none';
             document.getElementById('regMaterialKeyword').value = '';
-            document.getElementById('regMaterialCategory').value = '';
-            document.getElementById('regMaterialSerial').value = 'false';
-            document.getElementById('bundleKeyInput').value = '';
-            document.getElementById('bundleCountInput').value = '1';
+            document.getElementById('regMaterialMainCategory').value = '';
+            document.getElementById('regMaterialSubCategory').value = '';
+            updateSubCategoryOptions();
             document.getElementById('regSelectedBody').innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--gray-500);padding:2rem">좌측에서 자재를 추가해주세요</td></tr>`;
             updateRegisterSummary();
             isRegisterDirty = false;
@@ -1631,53 +1727,7 @@
             switchTab('list');
         }
         
-        function applyBundleQuantity() {
-            const key = (document.getElementById('bundleKeyInput')?.value || '').trim();
-            const count = parseInt(document.getElementById('bundleCountInput')?.value || '0', 10);
-            
-            if (!key) return alert('묶음 ID를 입력해주세요. (예: CCTV-1식)');
-            if (!count || count <= 0) return alert('식 수량을 1 이상으로 입력해주세요.');
-            
-            const rows = Array.from(document.querySelectorAll('#regSelectedBody tr[data-code]'));
-            let affected = 0;
-            let firstMatchedRow = null;
-            rows.forEach(row => {
-                const bundleInput = row.querySelector('input[data-role="bundle"]');
-                const qtyInput = row.querySelector('input[data-role="qty"]');
-                if (!bundleInput || !qtyInput) return;
-                
-                if ((bundleInput.value || '').trim() === key) {
-                    const base = parseInt(row.getAttribute('data-unit-per-set') || qtyInput.value || '0', 10) || 0;
-                    qtyInput.value = String(base * count);
-                    affected++;
-                    if (!firstMatchedRow) firstMatchedRow = row;
-                }
-            });
-            
-            if (!affected) {
-                alert('해당 묶음 ID를 가진 행이 없습니다.\n발주 품목의 묶음 ID를 먼저 입력해주세요.');
-                return;
-            }
-            
-            updateRegisterSummary();
-            markRegisterDirty();
-            
-            // 묶음 요약 헤더(시각적 구분용) 추가/갱신
-            if (firstMatchedRow) {
-                let header = document.querySelector(`#regSelectedBody tr[data-bundle-header="${key}"]`);
-                if (!header) {
-                    header = document.createElement('tr');
-                    header.setAttribute('data-bundle-header', key);
-                    header.style.background = 'var(--gray-50)';
-                    firstMatchedRow.parentNode.insertBefore(header, firstMatchedRow);
-                }
-                header.innerHTML = `<td colspan="7" style="font-size:0.8125rem;color:var(--gray-600);padding:0.35rem 0.75rem">
-                    묶음: <strong>${key}</strong> (${count}식)
-                </td>`;
-            }
-            alert(`🔗 묶음 "${key}"의 발주 수량이 식 수량 ${count} 기준으로 계산되었습니다.`);
-        }
-        
+
         // 세트 선택 모달
         function openSetSelectModal() {
             document.getElementById('setSelectModal').classList.add('active');
@@ -1692,6 +1742,172 @@
             selectedSetId = setId;
             document.querySelectorAll('input[name="setSelect"]').forEach(r => r.checked = false);
             event.target.closest('label').querySelector('input').checked = true;
+        }
+        
+        // 발주 수정 모달 - 자재 마스터 검색 모달 관련 함수
+        let allEditMasterMaterials = [];
+        let filteredEditMasterMaterials = [];
+        
+        function updateEditSubCategoryOptions() {
+            const mainCategory = document.getElementById('editMaterialMainCategoryFilter')?.value || '';
+            const subCategorySelect = document.getElementById('editMaterialSubCategoryFilter');
+            
+            if (!subCategorySelect) return;
+            
+            // 소분류 옵션 초기화
+            subCategorySelect.innerHTML = '<option value="">소분류 전체</option>';
+            
+            if (!mainCategory) {
+                subCategorySelect.disabled = true;
+                return;
+            }
+            
+            // 선택된 대분류에 해당하는 소분류 목록 생성
+            const subCategories = new Set();
+            Object.entries(CATEGORY_MAP).forEach(([category, parts]) => {
+                if (parts.main === mainCategory && parts.sub !== '-') {
+                    subCategories.add(parts.sub);
+                }
+            });
+            
+            if (subCategories.size > 0) {
+                subCategories.forEach(sub => {
+                    const option = document.createElement('option');
+                    option.value = sub;
+                    option.textContent = sub;
+                    subCategorySelect.appendChild(option);
+                });
+                subCategorySelect.disabled = false;
+            } else {
+                subCategorySelect.disabled = true;
+            }
+        }
+        
+        function openEditMaterialSearchModal() {
+            allEditMasterMaterials = MATERIALS.filter(m => m.useYn === 'Y');
+            filteredEditMasterMaterials = [...allEditMasterMaterials];
+            renderEditMaterialMasterList();
+            document.getElementById('editMaterialSearchKeyword').value = '';
+            document.getElementById('editMaterialMainCategoryFilter').value = '';
+            document.getElementById('editMaterialSubCategoryFilter').value = '';
+            updateEditSubCategoryOptions();
+            document.getElementById('selectAllEditMaterials').checked = false;
+            updateSelectedEditMaterialCount();
+            document.getElementById('editMaterialSearchModal').classList.add('active');
+        }
+        
+        function renderEditMaterialMasterList() {
+            const tbody = document.getElementById('editMaterialMasterList');
+            const count = document.getElementById('editMaterialCount');
+            
+            if (filteredEditMasterMaterials.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--gray-500);padding:2rem">검색 결과가 없습니다</td></tr>';
+                count.textContent = '0';
+                return;
+            }
+            
+            tbody.innerHTML = filteredEditMasterMaterials.map(material => `
+                <tr onclick="toggleEditMaterialRow(event, '${material.code}')" style="cursor:pointer">
+                    <td style="text-align:center" onclick="event.stopPropagation()">
+                        <input type="checkbox" class="edit-material-checkbox" value="${material.code}" onchange="updateSelectedEditMaterialCount()">
+                    </td>
+                    <td><strong>${material.code}</strong></td>
+                    <td>${material.category}</td>
+                    <td>
+                        <div style="font-weight:500">${material.name}</div>
+                        <div style="font-size:0.8125rem;color:var(--gray-500);margin-top:0.25rem">${material.spec}</div>
+                    </td>
+                    <td>${material.unit}</td>
+                </tr>
+            `).join('');
+            
+            count.textContent = filteredEditMasterMaterials.length;
+            updateSelectedEditMaterialCount();
+        }
+        
+        function filterEditMaterialMaster() {
+            const keyword = document.getElementById('editMaterialSearchKeyword').value.trim().toLowerCase();
+            const mainCategory = document.getElementById('editMaterialMainCategoryFilter')?.value || '';
+            const subCategory = document.getElementById('editMaterialSubCategoryFilter')?.value || '';
+            
+            filteredEditMasterMaterials = allEditMasterMaterials.filter(material => {
+                // 대분류/소분류 필터
+                let categoryMatch = true;
+                if (mainCategory || subCategory) {
+                    const parts = getCategoryParts(material.category);
+                    const mainMatch = !mainCategory || parts.main === mainCategory;
+                    const subMatch = !subCategory || parts.sub === subCategory;
+                    categoryMatch = mainMatch && subMatch;
+                }
+                
+                // 키워드 필터
+                const keywordMatch = !keyword || 
+                    material.code.toLowerCase().includes(keyword) ||
+                    material.name.toLowerCase().includes(keyword) ||
+                    material.spec.toLowerCase().includes(keyword);
+                
+                return categoryMatch && keywordMatch;
+            });
+            
+            document.getElementById('selectAllEditMaterials').checked = false;
+            renderEditMaterialMasterList();
+        }
+        
+        function resetEditMaterialSearch() {
+            document.getElementById('editMaterialSearchKeyword').value = '';
+            document.getElementById('editMaterialMainCategoryFilter').value = '';
+            document.getElementById('editMaterialSubCategoryFilter').value = '';
+            updateEditSubCategoryOptions();
+            document.getElementById('selectAllEditMaterials').checked = false;
+            filteredEditMasterMaterials = [...allEditMasterMaterials];
+            renderEditMaterialMasterList();
+        }
+        
+        function toggleAllEditMaterials() {
+            const selectAll = document.getElementById('selectAllEditMaterials').checked;
+            const checkboxes = document.querySelectorAll('.edit-material-checkbox');
+            checkboxes.forEach(cb => cb.checked = selectAll);
+            updateSelectedEditMaterialCount();
+        }
+        
+        function updateSelectedEditMaterialCount() {
+            const selected = document.querySelectorAll('.edit-material-checkbox:checked').length;
+            document.getElementById('selectedEditMaterialCount').textContent = selected;
+        }
+        
+        function toggleEditMaterialRow(event, materialCode) {
+            const checkbox = event.currentTarget.querySelector('.edit-material-checkbox');
+            if (checkbox) {
+                checkbox.checked = !checkbox.checked;
+                updateSelectedEditMaterialCount();
+            }
+        }
+        
+        function addSelectedEditMaterials() {
+            const selectedCheckboxes = document.querySelectorAll('.edit-material-checkbox:checked');
+            
+            if (selectedCheckboxes.length === 0) {
+                alert('선택된 자재가 없습니다.');
+                return;
+            }
+            
+            // 선택된 자재들을 발주 자재 목록에 추가
+            selectedCheckboxes.forEach(checkbox => {
+                const materialCode = checkbox.value;
+                const material = MATERIALS.find(m => m.code === materialCode);
+                if (material) {
+                    addEditMaterialFromData(material);
+                }
+            });
+            
+            // 모달 닫기
+            closeModal('editMaterialSearchModal');
+            
+            alert(`${selectedCheckboxes.length}개의 자재가 추가되었습니다.`);
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
         }
         
         function loadSelectedSet() {
@@ -1743,10 +1959,16 @@
                             '<tr draggable="true" class="draggable-row">' +
                                 '<td style="cursor:move;color:var(--gray-400);text-align:center">⋮⋮</td>' +
                                 '<td><strong>' + code + '</strong></td>' +
-                                '<td>' + name + '</td>' +
-                                '<td>' + spec + '</td>' +
-                                '<td><input type="number" class="form-input" value="' + qty + '" min="1" style="padding:0.25rem"></td>' +
-                                '<td>' + unit + '</td>' +
+                                '<td>' +
+                                    '<div style="font-weight:500">' + name + '</div>' +
+                                    '<div style="font-size:0.8125rem;color:var(--gray-500);margin-top:0.25rem">' + spec + '</div>' +
+                                '</td>' +
+                                '<td>' +
+                                    '<div style="display:flex;align-items:center;gap:0.25rem">' +
+                                        '<input type="number" class="form-input" value="' + qty + '" min="1" style="padding:0.25rem;flex:1">' +
+                                        '<span style="font-size:0.875rem;color:var(--gray-600)">' + unit + '</span>' +
+                                    '</div>' +
+                                '</td>' +
                                 '<td><select class="form-select" style="padding:0.25rem;font-size:0.875rem"><option value="new" selected>신품</option><option value="used">중고</option></select></td>' +
                                 '<td><button type="button" class="btn btn-sm" style="background:var(--danger);color:#fff" onclick="this.closest(\'tr\').remove(); initEditDragAndDrop();">삭제</button></td>' +
                             '</tr>'

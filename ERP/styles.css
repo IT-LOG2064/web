@@ -86,6 +86,8 @@ tr:last-child td { border-bottom: none; }
 .status-approved { background: #DBEAFE; color: #1E40AF; }
 .status-complete { background: #F3F4F6; color: #6B7280; }
 .status-inactive { background: #F3F4F6; color: #6B7280; }
+.status-primary { background: #E0E7FF; color: #4338CA; }
+.status-info { background: #DBEAFE; color: #1E40AF; }
 
 /* Progress */
 .progress-bar { height: 6px; background: var(--gray-200); border-radius: 3px; overflow: hidden; }

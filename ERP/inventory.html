@@ -70,16 +70,16 @@
 
 <body>
     <nav class="nav">
-        <a href="dashboard.html">📊 대시보드</a>
-        <a href="contract.html">📋 견적</a>
-        <a href="inventory.html" class="active">📦 재고</a>
-        <a href="order.html">📝 발주</a>
-        <a href="receiving.html">📥 입고</a>
-        <a href="shipment.html">🚚 출고</a>
-        <!-- <a href="purchase.html">🛒 구매</a> -->
-        <a href="as.html">🔧 AS</a>
-        <a href="materials.html">📁 자재정보</a>
-        <a href="project.html">📊 현장 통합 현황</a>
+        <a href="dashboard.html">대시보드</a>
+        <a href="contract.html">견적</a>
+        <a href="inventory.html" class="active">재고</a>
+        <a href="order.html">발주</a>
+        <a href="receiving.html">입고</a>
+        <a href="shipment.html">출고</a>
+        <!-- <a href="purchase.html">구매</a> -->
+        <a href="as.html">AS</a>
+        <a href="materials.html">자재정보</a>
+        <a href="project.html">현장 통합 현황</a>
     </nav>
 
     <main class="main">
@@ -108,7 +108,8 @@
                     <select class="filter-select">
                         <option>상태 전체</option>
                         <option>정상</option>
-                        <option>부족</option>
+                        <option>안전재고 미달</option>
+                        <option>예약 초과</option>
                     </select>
                     <div style="display:flex;gap:0.5rem;flex:1;min-width:200px">
                         <input type="text" class="search-input" placeholder="자재명/코드 검색..." style="flex:1">
@@ -129,8 +130,8 @@
                     <span class="summary-item">가용 재고: <strong>14,523개</strong></span>
                 </div>
                 <div style="display:flex;gap:0.5rem">
-                    <button class="btn btn-secondary" onclick="openAdjustModal()" style="white-space:nowrap">📝 재고 조정</button>
-                    <button class="btn btn-primary" style="white-space:nowrap">📥 Excel 다운로드</button>
+                    <button class="btn btn-secondary" onclick="openAdjustModal()" style="white-space:nowrap">재고 조정</button>
+                    <button class="btn btn-primary" style="white-space:nowrap">Excel 다운로드</button>
                 </div>
             </div>
 
@@ -160,7 +161,7 @@
                             <td>20</td>
                             <td><span class="status-badge status-ok">정상</span></td>
                             <td onclick="event.stopPropagation()">
-                                <button class="btn btn-primary btn-sm" onclick="openAdjustModal('CAM-001')">조정</button>
+                                <button class="btn btn-primary btn-sm" onclick="openAdjustModal('CAM-001', 'IP카메라 2MP', 25)">조정</button>
                             </td>
                         </tr>
                         <tr onclick="showDetail()" style="cursor:pointer">
@@ -173,7 +174,7 @@
                             <td>6</td>
                             <td><span class="status-badge status-warning">안전재고 미달</span></td>
                             <td onclick="event.stopPropagation()">
-                                <button class="btn btn-primary btn-sm" onclick="openAdjustModal('CAM-002')">조정</button>
+                                <button class="btn btn-primary btn-sm" onclick="openAdjustModal('CAM-002', 'IP카메라 4MP', 8)">조정</button>
                             </td>
                         </tr>
                         <tr onclick="showDetail()" style="cursor:pointer">
@@ -186,7 +187,7 @@
                             <td>5</td>
                             <td><span class="status-badge status-ok">정상</span></td>
                             <td onclick="event.stopPropagation()">
-                                <button class="btn btn-primary btn-sm" onclick="openAdjustModal('NVR-001')">조정</button>
+                                <button class="btn btn-primary btn-sm" onclick="openAdjustModal('NVR-001', 'NVR 16채널', 5)">조정</button>
                             </td>
                         </tr>
                         <tr onclick="showDetail()" style="cursor:pointer">
@@ -199,7 +200,7 @@
                             <td>40</td>
                             <td><span class="status-badge status-ok">정상</span></td>
                             <td onclick="event.stopPropagation()">
-                                <button class="btn btn-primary btn-sm" onclick="openAdjustModal('CBL-001')">조정</button>
+                                <button class="btn btn-primary btn-sm" onclick="openAdjustModal('CBL-001', 'UTP 케이블', 50)">조정</button>
                             </td>
                         </tr>
                         <tr onclick="showDetail()" style="cursor:pointer">
@@ -212,7 +213,20 @@
                             <td>2</td>
                             <td><span class="status-badge status-warning">안전재고 미달</span></td>
                             <td onclick="event.stopPropagation()">
-                                <button class="btn btn-primary btn-sm" onclick="openAdjustModal('SEN-001')">조정</button>
+                                <button class="btn btn-primary btn-sm" onclick="openAdjustModal('SEN-001', '온도 센서', 3)">조정</button>
+                            </td>
+                        </tr>
+                        <tr onclick="showDetail()" style="cursor:pointer">
+                            <td><strong>BRK-001</strong></td>
+                            <td>브라켓</td>
+                            <td style="font-size:0.8125rem;color:var(--gray-500)">범용형</td>
+                            <td>본사 C-02-01</td>
+                            <td><strong>5</strong><div style="font-size:0.8125rem;color:var(--gray-600)">신품 5 · 중고 0</div></td>
+                            <td>8</td>
+                            <td style="color:var(--danger);font-weight:600">-3</td>
+                            <td><span class="status-badge status-danger">예약 초과</span></td>
+                            <td onclick="event.stopPropagation()">
+                                <button class="btn btn-primary btn-sm" onclick="openAdjustModal('BRK-001', '브라켓', 5)">조정</button>
                             </td>
                         </tr>
                     </tbody>
@@ -231,7 +245,7 @@
         <div id="serialTab" class="tab-content" style="display:none">
             <div class="search-box">
                 <div class="search-row">
-                    <input type="text" class="search-input" placeholder="🔍 시리얼번호/자재명 검색...">
+                    <input type="text" class="search-input" placeholder="시리얼번호/자재명 검색...">
                     <select class="filter-select">
                         <option>상태 전체</option>
                         <option>정상</option>
@@ -384,7 +398,7 @@
                         <option>신품</option>
                         <option>중고</option>
                     </select>
-                    <input type="text" class="search-input" placeholder="🔍 자재명/시리얼 검색..." style="flex:1">
+                    <input type="text" class="search-input" placeholder="자재명/시리얼 검색..." style="flex:1">
                     <select class="filter-select">
                         <option>현장 전체</option>
                         <option>강남 오피스텔</option>
@@ -396,9 +410,10 @@
             <div class="summary-box">
                 <span class="summary-item">입고: <strong>120건</strong></span>
                 <span class="summary-item">출고: <strong>85건</strong></span>
-                <span class="summary-item">회수: <strong>23건</strong></span>
+                <span class="summary-item">회수: <strong>25건</strong></span>
                 <span class="summary-item">재출고: <strong>8건</strong></span>
-                <span class="summary-item">파손/분실: <strong>5건</strong></span>
+                <span class="summary-item">파손/분실: <strong>7건</strong></span>
+                <span class="summary-item">재고조정: <strong>12건</strong></span>
             </div>
 
             <div class="table-container">
@@ -409,11 +424,10 @@
                             <th>이동유형</th>
                             <th>자재명</th>
                             <th>수량</th>
-                            <th>From → To</th>
-                            <th>현장/발주</th>
-                            <th>상태변경</th>
+                            <th>이동구간</th>
+                            <th>참조번호</th>
+                            <th>사유/상태</th>
                             <th>담당자</th>
-                            <th>상세</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -424,9 +438,8 @@
                             <td>50개</td>
                             <td>한화테크윈 → 본사창고</td>
                             <td><a href="#" class="btn-link">PO-2024-001</a></td>
-                            <td>-</td>
+                            <td>구매입고</td>
                             <td>김창고</td>
-                            <td></td>
                         </tr>
                         <tr>
                             <td>2024-02-04 09:00</td>
@@ -435,20 +448,28 @@
                             <td>30개</td>
                             <td>본사창고 → 강남현장</td>
                             <td><a href="#" class="btn-link">IT260115-01</a></td>
-                            <td>-</td>
+                            <td>현장출고</td>
                             <td>이출고</td>
-                            <td></td>
                         </tr>
                         <tr>
                             <td>2024-02-10 15:00</td>
-                            <td><span class="status-badge status-approved">회수</span></td>
+                            <td><span class="status-badge status-ok">입고</span></td>
                             <td>IP카메라 2MP</td>
                             <td>5개</td>
                             <td>강남현장 → 본사창고</td>
                             <td><a href="#" class="btn-link">IT260115-01</a></td>
-                            <td>미사용</td>
+                            <td>현장회수 (미사용)</td>
                             <td>김창고</td>
-                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>2024-02-11 10:30</td>
+                            <td><span class="status-badge status-ok">입고</span></td>
+                            <td>NVR 16채널</td>
+                            <td>2개</td>
+                            <td>판교현장 → 본사창고</td>
+                            <td><a href="#" class="btn-link">IT260118-01</a></td>
+                            <td>현장회수 (고장)</td>
+                            <td>박현장</td>
                         </tr>
                         <tr>
                             <td>2024-02-02 11:00</td>
@@ -459,40 +480,86 @@
                             <td><a href="#" class="btn-link">AS-2024-001</a></td>
                             <td>초기불량</td>
                             <td>김창고</td>
-                            <td></td>
                         </tr>
                         <tr>
                             <td>2024-02-05 10:00</td>
-                            <td><span class="status-badge status-primary">재출고</span></td>
+                            <td><span class="status-badge status-primary">AS재출고</span></td>
                             <td>IP카메라 2MP</td>
                             <td>1개</td>
                             <td>AS창고 → 강남현장</td>
                             <td><a href="#" class="btn-link">IT260115-01</a></td>
-                            <td>수리완료</td>
+                            <td>교체출고</td>
                             <td>이출고</td>
-                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>2024-02-06 14:20</td>
+                            <td><span class="status-badge status-warning">AS입고</span></td>
+                            <td>NVR 32채널</td>
+                            <td>1개</td>
+                            <td>판교현장 → AS창고</td>
+                            <td><a href="#" class="btn-link">AS-2024-003</a></td>
+                            <td>파손</td>
+                            <td>김창고</td>
+                        </tr>
+                        <tr>
+                            <td>2024-02-07 16:30</td>
+                            <td><span class="status-badge status-ok">입고</span></td>
+                            <td>브라켓</td>
+                            <td>8개</td>
+                            <td>강남현장 → 본사창고</td>
+                            <td><a href="#" class="btn-link">IT260115-01</a></td>
+                            <td>현장회수 (파손)</td>
+                            <td>김창고</td>
+                        </tr>
+                        <tr>
+                            <td>2024-02-08 11:20</td>
+                            <td><span class="status-badge status-ok">입고</span></td>
+                            <td>UTP 케이블</td>
+                            <td>3개</td>
+                            <td>판교현장 → 본사창고</td>
+                            <td><a href="#" class="btn-link">IT260118-01</a></td>
+                            <td>현장회수 (미사용)</td>
+                            <td>박현장</td>
                         </tr>
                         <tr>
                             <td>2024-01-28 16:00</td>
-                            <td><span class="status-badge status-danger">분실</span></td>
+                            <td><span class="status-badge status-info">재고조정</span></td>
                             <td>온도 센서</td>
-                            <td>1개</td>
+                            <td>-1개</td>
                             <td>판교현장 → -</td>
                             <td><a href="#" class="btn-link">IT260118-01</a></td>
-                            <td>현장분실</td>
+                            <td>분실 (현장분실)</td>
                             <td>박현장</td>
-                            <td></td>
                         </tr>
                         <tr>
                             <td>2024-01-30 14:00</td>
-                            <td><span class="status-badge status-warning">파손</span></td>
+                            <td><span class="status-badge status-info">재고조정</span></td>
                             <td>NVR 32채널</td>
-                            <td>1개</td>
+                            <td>-1개</td>
                             <td>본사창고 → 불용재고</td>
                             <td>-</td>
-                            <td>외관파손</td>
+                            <td>파손 (외관파손)</td>
                             <td>김창고</td>
-                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>2024-02-12 09:15</td>
+                            <td><span class="status-badge status-info">재고조정</span></td>
+                            <td>브라켓</td>
+                            <td>+10개</td>
+                            <td>본사창고</td>
+                            <td>-</td>
+                            <td>실사조정</td>
+                            <td>김창고</td>
+                        </tr>
+                        <tr>
+                            <td>2024-02-13 11:00</td>
+                            <td><span class="status-badge status-info">재고조정</span></td>
+                            <td>UTP 케이블</td>
+                            <td>-5개</td>
+                            <td>본사창고</td>
+                            <td>-</td>
+                            <td>오입력수정</td>
+                            <td>이자재</td>
                         </tr>
                     </tbody>
                 </table>
@@ -526,7 +593,7 @@
                     <div class="info-row"><span class="info-label">현장</span><span>-</span></div>
                     <div class="info-row"><span class="info-label">입고일</span><span>2024-01-15</span></div>
                 </div>
-                <div style="font-weight:600;margin-bottom:0.5rem;font-size:0.875rem;margin-top:1rem">📋 이동 이력</div>
+                <div style="font-weight:600;margin-bottom:0.5rem;font-size:0.875rem;margin-top:1rem">이동 이력</div>
                 <div class="timeline">
                     <div class="timeline-item">
                         <div class="timeline-time">2024-01-15 10:00</div>
@@ -632,6 +699,61 @@
         </div>
     </div>
 
+    <!-- 자재 마스터 검색 모달 (재고 조정용) -->
+    <div class="modal" id="materialSearchModal">
+        <div class="modal-content lg">
+            <div class="modal-header">
+                <h2 class="modal-title">자재 마스터 검색 - 재고 조정</h2>
+                <button class="close-btn" onclick="closeModal('materialSearchModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <div style="display:flex;gap:0.5rem">
+                        <select id="materialCategoryFilter" class="form-select" style="width:150px" onchange="filterMaterialMaster()">
+                            <option value="">전체 카테고리</option>
+                            <option value="CCTV">CCTV</option>
+                            <option value="네트워크">네트워크</option>
+                            <option value="케이블">케이블</option>
+                            <option value="부자재">부자재</option>
+                        </select>
+                        <input type="text" id="materialSearchInput" class="form-input" placeholder="자재 코드, 자재명, 규격으로 검색..." style="flex:1" oninput="filterMaterialMaster()">
+                        <button class="btn btn-secondary" onclick="resetMaterialSearch()">초기화</button>
+                    </div>
+                </div>
+                
+                <div style="max-height:400px;overflow-y:auto;border:1px solid var(--gray-200);border-radius:6px">
+                    <table style="margin:0">
+                        <thead style="position:sticky;top:0;background:#fff;z-index:1">
+                            <tr>
+                                <th style="width:120px">자재 코드</th>
+                                <th style="width:100px">카테고리</th>
+                                <th>자재명 / 규격</th>
+                                <th style="width:100px">현재 재고</th>
+                                <th style="width:80px">단위</th>
+                                <th style="width:80px">선택</th>
+                            </tr>
+                        </thead>
+                        <tbody id="materialMasterList">
+                            <!-- 동적으로 채워짐 -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="info-box" style="margin-top:1rem">
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                        <div>
+                            총 <strong id="materialCount">0</strong>개의 자재
+                        </div>
+                        <div style="font-size:0.875rem;color:var(--gray-600)">자재를 선택하고 조정 버튼을 클릭하세요</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('materialSearchModal')">취소</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 재고 조정 모달 -->
     <div class="modal" id="adjustModal">
         <div class="modal-content">
@@ -640,12 +762,10 @@
                 <button class="close-btn" onclick="closeModal('adjustModal')">&times;</button>
             </div>
             <div class="modal-body">
-                <div class="form-group">
-                    <label class="form-label">자재 *</label>
-                    <input type="text" class="form-input" id="adjustMaterial" placeholder="자재 검색..." required>
-                </div>
-                <div class="info-box highlight" id="currentStock" style="display:none">
+                <div class="info-box highlight">
                     <div style="font-size:0.875rem">
+                        <div>자재 코드: <strong id="adjustMaterialCode">-</strong></div>
+                        <div>자재명: <strong id="adjustMaterialName">-</strong></div>
                         <div>현재 재고: <strong id="currentQty">0개</strong></div>
                         <div>창고: <strong id="currentWarehouse">-</strong></div>
                         <div>위치: <strong id="currentLocation">-</strong></div>
@@ -719,7 +839,7 @@
                     <div class="info-row"><span class="info-label">안전 재고</span><span>10개</span></div>
                 </div>
                 <div class="info-box highlight">
-                    <div style="font-weight:600;margin-bottom:0.5rem;font-size:0.875rem">📦 발주 정보</div>
+                    <div style="font-weight:600;margin-bottom:0.5rem;font-size:0.875rem">발주 정보</div>
                     <div style="font-size:0.875rem">
                         <div style="margin-bottom:0.25rem">안전재고: <strong>10개</strong></div>
                         <div style="margin-bottom:0.25rem">납기 소요일: <strong>7일</strong></div>
@@ -784,45 +904,120 @@
                 return;
             }
 
-            alert(`✅ 시리얼 상태가 변경되었습니다!\n\n시리얼: ${document.getElementById('statusChangeSerial').textContent}\n상태: ${newStatus}\n사유: ${reason}`);
+            alert(`시리얼 상태가 변경되었습니다!\n\n시리얼: ${document.getElementById('statusChangeSerial').textContent}\n상태: ${newStatus}\n사유: ${reason}`);
             closeModal('serialStatusModal');
         }
 
         function showDetail() { document.getElementById('detailModal').classList.add('active'); }
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-        function openAdjustModal(materialCode) {
-            const modal = document.getElementById('adjustModal');
-            const materialInput = document.getElementById('adjustMaterial');
-            const currentStock = document.getElementById('currentStock');
+        // 자재 마스터 데이터 (목업)
+        const MASTER_MATERIALS = [
+            { code: 'CAM-001', name: 'IP카메라 2MP', spec: '2MP, IP67', category: 'CCTV', unit: '개', stock: 25 },
+            { code: 'CAM-002', name: 'IP카메라 4MP', spec: '4MP, 실내용', category: 'CCTV', unit: '개', stock: 8 },
+            { code: 'NVR-001', name: 'NVR 16채널', spec: '16CH, H.265', category: 'CCTV', unit: '개', stock: 5 },
+            { code: 'CBL-001', name: 'UTP 케이블', spec: 'CAT6, 305m', category: '케이블', unit: '롤', stock: 50 },
+            { code: 'SEN-001', name: '온도 센서', spec: '-20~80℃', category: '부자재', unit: '개', stock: 3 }
+        ];
 
-            if (materialCode) {
-                materialInput.value = materialCode + ' - IP카메라 2MP';
-                currentStock.style.display = 'block';
-                document.getElementById('currentQty').textContent = '25개';
-                document.getElementById('currentWarehouse').textContent = '본사 창고';
-                document.getElementById('currentLocation').textContent = 'A-01-01';
-            } else {
-                materialInput.value = '';
-                currentStock.style.display = 'none';
+        let allMaterials = [];
+        let filteredMaterials = [];
+
+        function openMaterialSearchModal() {
+            allMaterials = [...MASTER_MATERIALS];
+            filteredMaterials = [...allMaterials];
+            renderMaterialList();
+            document.getElementById('materialSearchModal').classList.add('active');
+        }
+
+        function filterMaterialMaster() {
+            const category = document.getElementById('materialCategoryFilter').value;
+            const keyword = document.getElementById('materialSearchInput').value.toLowerCase();
+
+            filteredMaterials = allMaterials.filter(m => {
+                const matchCategory = !category || m.category === category;
+                const matchKeyword = !keyword || 
+                    m.code.toLowerCase().includes(keyword) ||
+                    m.name.toLowerCase().includes(keyword) ||
+                    m.spec.toLowerCase().includes(keyword);
+                return matchCategory && matchKeyword;
+            });
+
+            renderMaterialList();
+        }
+
+        function resetMaterialSearch() {
+            document.getElementById('materialCategoryFilter').value = '';
+            document.getElementById('materialSearchInput').value = '';
+            filteredMaterials = [...allMaterials];
+            renderMaterialList();
+        }
+
+        function renderMaterialList() {
+            const tbody = document.getElementById('materialMasterList');
+            document.getElementById('materialCount').textContent = filteredMaterials.length;
+
+            if (filteredMaterials.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--gray-500);padding:2rem">검색 결과가 없습니다</td></tr>';
+                return;
             }
 
-            modal.classList.add('active');
+            tbody.innerHTML = filteredMaterials.map(m => `
+                <tr>
+                    <td><strong>${m.code}</strong></td>
+                    <td>${m.category}</td>
+                    <td>
+                        <div style="font-weight:500">${m.name}</div>
+                        <div style="font-size:0.8125rem;color:var(--gray-500)">${m.spec}</div>
+                    </td>
+                    <td><strong>${m.stock}${m.unit}</strong></td>
+                    <td>${m.unit}</td>
+                    <td>
+                        <button class="btn btn-primary btn-sm" onclick="selectMaterialForAdjust('${m.code}', '${m.name}', ${m.stock})">조정</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function selectMaterialForAdjust(code, name, stock) {
+            document.getElementById('adjustMaterialCode').textContent = code;
+            document.getElementById('adjustMaterialName').textContent = name;
+            document.getElementById('currentQty').textContent = stock + '개';
+            document.getElementById('currentWarehouse').textContent = '본사 창고';
+            document.getElementById('currentLocation').textContent = 'A-01-01';
+            
+            closeModal('materialSearchModal');
+            document.getElementById('adjustModal').classList.add('active');
+        }
+
+        function openAdjustModal(materialCode, materialName, stock) {
+            if (materialCode && materialName && stock !== undefined) {
+                // 목록에서 [조정] 버튼 클릭 시 - 바로 재고 조정 모달
+                document.getElementById('adjustMaterialCode').textContent = materialCode;
+                document.getElementById('adjustMaterialName').textContent = materialName;
+                document.getElementById('currentQty').textContent = stock + '개';
+                document.getElementById('currentWarehouse').textContent = '본사 창고';
+                document.getElementById('currentLocation').textContent = 'A-01-01';
+                document.getElementById('adjustModal').classList.add('active');
+            } else {
+                // 요약 영역 [재고 조정] 버튼 클릭 시 - 자재 마스터 검색 모달
+                openMaterialSearchModal();
+            }
         }
 
         function submitAdjustment() {
-            const material = document.getElementById('adjustMaterial').value;
+            const code = document.getElementById('adjustMaterialCode').textContent;
             const type = document.getElementById('adjustType').value;
             const qty = document.getElementById('adjustQty').value;
             const reason = document.getElementById('adjustReason').value;
 
-            if (!material || !type || !qty || !reason) {
+            if (code === '-' || !type || !qty || !reason) {
                 alert('필수 항목을 모두 입력해주세요');
                 return;
             }
 
             const typeText = type === 'increase' ? '증가' : type === 'decrease' ? '감소' : '설정';
-            alert(`✅ 재고 조정이 완료되었습니다!\n\n자재: ${material}\n조정 유형: ${typeText}\n수량: ${qty}개\n사유: ${reason}`);
+            alert(`재고 조정이 완료되었습니다!\n\n자재: ${code}\n조정 유형: ${typeText}\n수량: ${qty}개\n사유: ${reason}`);
             closeModal('adjustModal');
         }
 

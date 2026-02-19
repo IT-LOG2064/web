@@ -10,16 +10,16 @@
 
 <body>
     <nav class="nav">
-        <a href="dashboard.html">📊 대시보드</a>
-        <a href="contract.html" class="active">📋 견적</a>
-        <a href="inventory.html">📦 재고</a>
-        <a href="order.html">📝 발주</a>
-        <a href="receiving.html">📥 입고</a>
-        <a href="shipment.html">🚚 출고</a>
-        <!-- <a href="purchase.html">🛒 구매</a> -->
-        <a href="as.html">🔧 AS</a>
-        <a href="materials.html">📁 자재정보</a>
-        <a href="project.html">📊 현장 통합 현황</a>
+        <a href="dashboard.html">대시보드</a>
+        <a href="contract.html" class="active">견적</a>
+        <a href="inventory.html">재고</a>
+        <a href="order.html">발주</a>
+        <a href="receiving.html">입고</a>
+        <a href="shipment.html">출고</a>
+        <!-- <a href="purchase.html">구매</a> -->
+        <a href="as.html">AS</a>
+        <a href="materials.html">자재정보</a>
+        <a href="project.html">현장 통합 현황</a>
     </nav>
 
     <main class="main">
@@ -180,7 +180,7 @@
     <div class="modal" id="officeModal">
         <div class="modal-content" style="max-width:400px">
             <div class="modal-header">
-                <h2 class="modal-title">🏛️ 본사 등록</h2>
+                <h2 class="modal-title">본사 등록</h2>
                 <button class="close-btn" onclick="closeModal('officeModal')">&times;</button>
             </div>
             <div class="modal-body">
@@ -208,7 +208,7 @@
     <div class="modal" id="contractDetailModal">
         <div class="modal-content lg">
             <div class="modal-header">
-                <h2 class="modal-title">📋 견적 상세 - QT260110-01</h2>
+                <h2 class="modal-title">견적 상세 - QT260110-01</h2>
                 <button class="close-btn" onclick="closeModal('contractDetailModal')">&times;</button>
             </div>
             <div class="modal-body">
@@ -239,7 +239,7 @@
                                 id="statusBadge">발주</span></div>
                     </div>
                     <div class="info-box highlight">
-                        <div style="font-weight:600;margin-bottom:0.5rem">📊 진행 현황</div>
+                        <div style="font-weight:600;margin-bottom:0.5rem">진행 현황</div>
                         <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem"><span>전체
                                 진행률</span><strong style="color:var(--primary)">80%</strong></div>
                         <div class="progress-bar" style="height:8px">
@@ -250,7 +250,7 @@
                             <span>남은 자재: <strong>24개</strong></span>
                         </div>
                     </div>
-                    <div style="font-weight:600;margin:1.25rem 0 0.5rem;font-size:0.875rem">📋 상태 이력</div>
+                    <div style="font-weight:600;margin:1.25rem 0 0.5rem;font-size:0.875rem">상태 이력</div>
                     <div class="table-container" style="box-shadow:none;margin:0">
                         <table>
                             <thead><tr><th style="width:140px">변경일시</th><th style="width:80px">변경 전</th><th style="width:80px">변경 후</th><th style="width:80px">변경자</th><th>비고</th></tr></thead>
@@ -269,18 +269,17 @@
                         <span class="summary-item">진행률: <strong>80%</strong></span>
                         <span class="summary-item">출고 완료: <strong>96 / 120</strong></span>
                         <span class="summary-item">미출고(잔여): <strong style="color:var(--danger)">24</strong></span>
-                        <span class="summary-item">부족(예상): <strong style="color:var(--danger)">6개</strong></span>
                         <span class="summary-item">품목 수: <strong>6종</strong></span>
                     </div>
                     
                     <!-- 전체 테이블(진행 중심 컬럼) -->
-                    <div style="font-weight:600;margin:1.25rem 0 0.5rem;font-size:0.875rem">📦 자재 진행 현황</div>
+                    <div style="font-weight:600;margin:1.25rem 0 0.5rem;font-size:0.875rem">자재 진행 현황</div>
                     <div class="table-container" style="box-shadow:none;margin:0">
                         <table>
                             <thead>
                                 <tr>
                                     <th>자재</th>
-                                    <th style="width:120px">견적 기준</th>
+                                    <th style="width:120px">발주 기준</th>
                                     <th style="width:120px">출고</th>
                                     <th style="width:120px">잔여</th>
                                     <th style="width:110px">상태</th>
@@ -343,15 +342,27 @@
                                     <td style="font-weight:700">120</td>
                                     <td style="font-weight:700">96</td>
                                     <td style="font-weight:700;color:var(--danger)">24</td>
-                                    <td colspan="2" style="color:var(--gray-500);font-size:0.8125rem">* 잔여 = 견적 기준 - 출고 (목업)</td>
+                                    <td colspan="2" style="color:var(--gray-500);font-size:0.8125rem">* 잔여 = 발주 기준 - 출고 (목업)</td>
                                 </tr>
                             </tfoot>
                         </table>
+                    </div>
+                    
+                    <!-- 발주 미등록 시 안내 메시지 (조건부 표시) -->
+                    <div id="noOrderMessage" style="display:none;text-align:center;padding:3rem 1rem;color:var(--gray-500)">
+                        <div style="font-weight:600;margin-bottom:0.25rem">발주 등록 후 확인 가능합니다</div>
+                        <div style="font-size:0.875rem">발주 관리 화면에서 발주를 등록하면 자재별 진행 현황을 확인할 수 있습니다.</div>
                     </div>
                 </div>
                 
                 <!-- 출고 이력 탭(기존은 분리만) -->
                 <div id="contractDetailShipmentTab" class="detail-tab-content" style="display:none">
+                    <!-- 출고 이력 없음 안내 메시지 (조건부 표시) -->
+                    <div id="noShipmentMessage" style="display:none;text-align:center;padding:3rem 1rem;color:var(--gray-500)">
+                        <div style="font-weight:600;margin-bottom:0.25rem">출고 이력이 없습니다</div>
+                        <div style="font-size:0.875rem">발주 등록 후 출고가 진행되면 이력을 확인할 수 있습니다.</div>
+                    </div>
+                    
                     <div class="summary-box">
                         <span class="summary-item">출고 건: <strong>3건</strong></span>
                         <span class="summary-item">완료: <strong>1건</strong></span>
@@ -385,7 +396,7 @@
                                 </tr>
                                 <tr id="shipmentDetail-OUT-2024-050" style="display:none;background:var(--gray-50)">
                                     <td colspan="6" style="padding:0.75rem 1rem">
-                                        <div style="font-weight:600;margin-bottom:0.5rem;font-size:0.875rem">📦 출고 자재</div>
+                                        <div style="font-weight:600;margin-bottom:0.5rem;font-size:0.875rem">출고 자재</div>
                                         <table style="margin:0">
                                             <thead>
                                                 <tr>
@@ -432,7 +443,7 @@
                                 </tr>
                                 <tr id="shipmentDetail-OUT-2024-049" style="display:none;background:var(--gray-50)">
                                     <td colspan="6" style="padding:0.75rem 1rem">
-                                        <div style="font-weight:600;margin-bottom:0.5rem;font-size:0.875rem">📦 출고 자재</div>
+                                        <div style="font-weight:600;margin-bottom:0.5rem;font-size:0.875rem">출고 자재</div>
                                         <table style="margin:0">
                                             <thead>
                                                 <tr>
@@ -473,7 +484,7 @@
                                 </tr>
                                 <tr id="shipmentDetail-OUT-2024-048" style="display:none;background:var(--gray-50)">
                                     <td colspan="6" style="padding:0.75rem 1rem">
-                                        <div style="font-weight:600;margin-bottom:0.5rem;font-size:0.875rem">📦 출고 자재</div>
+                                        <div style="font-weight:600;margin-bottom:0.5rem;font-size:0.875rem">출고 자재</div>
                                         <table style="margin:0">
                                             <thead>
                                                 <tr>
@@ -647,17 +658,8 @@
                         <div class="form-group"><label class="form-label">견적일 *</label><input type="date"
                                 class="form-input" id="editContractDate" value="2024-01-10" required></div>
                     </div>
-                    <div class="form-row">
-                        <div class="form-group"><label class="form-label">견적 금액 *</label><input type="number"
-                                class="form-input" id="editContractAmount" value="150000000" required></div>
-                        <div class="form-group"><label class="form-label">상태</label><select class="form-select"
-                                id="editContractStatus">
-                                <option value="quote">견적</option>
-                                <option value="approved">수주</option>
-                                <option value="order" selected>발주</option>
-                                <option value="complete">완료</option>
-                            </select></div>
-                    </div>
+                    <div class="form-group"><label class="form-label">견적 금액 *</label><input type="number"
+                            class="form-input" id="editContractAmount" value="150000000" required style="max-width:100%"></div>
                     <div class="form-group"><label class="form-label">비고</label><textarea class="form-textarea"
                             id="editContractScope" placeholder="작업 범위 및 상세 내용">CCTV 카메라 60대 설치, 관제실 구축, 네트워크 배선 공사</textarea></div>
                     <div class="form-group"><label class="form-label">수정 사유 *</label><textarea class="form-textarea"
@@ -743,9 +745,9 @@
                     <div class="form-group"><label class="form-label">비고</label><textarea class="form-textarea"
                             placeholder="작업 범위 및 상세 내용"></textarea></div>
                     <div class="form-group">
-                        <label class="form-label">견적서 파일 (이미지/PDF/Excel)</label>
+                        <label class="form-label">견적서 파일 (이미지/PDF/Excel) *</label>
                         <input type="file" class="form-input" accept="image/*,.pdf,.xlsx,.xls" multiple
-                            onchange="previewImages(this)">
+                            onchange="previewImages(this)" required>
                         <div id="imagePreview" style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.5rem"></div>
                     </div>
                 </form>
@@ -786,7 +788,7 @@
             var name = document.getElementById('officeName').value.trim();
             if (!name) { alert('본사명을 입력해주세요.'); return; }
             if (confirm('본사를 등록하시겠습니까?')) {
-                alert('✅ 본사가 등록되었습니다!\n본사: ' + name);
+                alert('본사가 등록되었습니다!\n본사: ' + name);
                 closeModal('officeModal');
             }
         }
@@ -794,13 +796,13 @@
             var office = document.getElementById('addOffice').value;
             if (!office) { alert('본사를 선택해주세요.'); return; }
             if (confirm('새 현장을 등록하시겠습니까?\n본사: ' + office)) {
-                alert('✅ 현장이 등록되었습니다!\n현장 코드: SITE-006');
+                alert('현장이 등록되었습니다!\n현장 코드: SITE-006');
                 closeModal('siteAddModal');
             }
         }
         function updateSite() {
             if (confirm('현장 정보를 수정하시겠습니까?')) {
-                alert('✅ 현장 정보가 수정되었습니다.');
+                alert('현장 정보가 수정되었습니다.');
                 closeModal('siteEditModal');
             }
         }
@@ -814,6 +816,10 @@
             const modal = document.getElementById('contractDetailModal');
             const statusBadge = document.getElementById('statusBadge');
             const orderCodeRow = document.getElementById('orderCodeRow');
+            const orderCodeElement = document.getElementById('orderCode');
+
+            // 발주 등록 여부 (목업: 견적/수주는 미등록, 발주/완료는 등록됨)
+            const hasOrder = (status === 'order' || status === 'complete');
 
             // 상태별 UI 업데이트
             if (status === 'quote') {
@@ -824,52 +830,39 @@
                 statusBadge.className = 'status-badge status-approved';
                 statusBadge.textContent = '수주';
                 orderCodeRow.style.display = 'flex';
+                // 수주 상태: 발주 미등록
+                if (orderCodeElement) orderCodeElement.textContent = '미등록';
             } else if (status === 'order') {
                 statusBadge.className = 'status-badge status-active';
                 statusBadge.textContent = '발주';
                 orderCodeRow.style.display = 'flex';
+                // 발주 상태: 실제 발주 번호 표시 (목업)
+                if (orderCodeElement) orderCodeElement.textContent = 'IT260204-01';
             } else if (status === 'complete') {
                 statusBadge.className = 'status-badge status-complete';
                 statusBadge.textContent = '완료';
                 orderCodeRow.style.display = 'flex';
+                // 완료 상태: 실제 발주 번호 표시 (목업)
+                if (orderCodeElement) orderCodeElement.textContent = 'IT260204-01';
             }
 
             modal.classList.add('active');
             // 기본 정보 탭으로 초기화
-            switchContractDetailTab('info');
+            switchContractDetailTab('info', null, hasOrder);
         }
 
-        function handleAction(event) {
-            if (event) event.stopPropagation();
-            if (currentStatus === 'quote') {
-                if (confirm('수주를 확정하시겠습니까?\n발주코드가 자동 생성됩니다.')) {
-                    const orderCode = generateOrderCode();
-                    alert(`✅ 수주가 확정되었습니다!\n발주코드: ${orderCode}`);
-                    currentStatus = 'approved';
-                    showDetail('approved');
-                }
-                return;
-            }
-            if (currentStatus === 'approved') {
-                if (confirm('상태를 "발주"로 변경하시겠습니까?')) {
-                    alert('✅ 상태가 발주로 변경되었습니다.');
-                    currentStatus = 'order';
-                    showDetail('order');
-                }
-                return;
-            }
-            if (currentStatus === 'order') {
-                if (confirm('상태를 "완료"로 변경하시겠습니까?')) {
-                    alert('✅ 상태가 완료로 변경되었습니다.');
-                    currentStatus = 'complete';
-                    showDetail('complete');
-                }
-                return;
-            }
-        }
+        function openContractAddModal() { document.getElementById('contractAddModal').classList.add('active'); }
 
-        function switchContractDetailTab(tab, event) {
+        let statusChangeTargetRow = null;
+
+        function switchContractDetailTab(tab, event, hasOrder) {
             if (event) event.stopPropagation();
+            
+            // hasOrder가 전달되지 않으면 현재 상태 기반으로 판단 (목업)
+            if (hasOrder === undefined) {
+                hasOrder = (currentStatus === 'order' || currentStatus === 'complete');
+            }
+            
             document.querySelectorAll('#contractDetailModal .tabs .tab').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('#contractDetailModal .detail-tab-content').forEach(c => c.style.display = 'none');
 
@@ -878,8 +871,39 @@
 
             if (tab === 'materials') {
                 document.getElementById('contractDetailMaterialsTab').style.display = 'block';
+                // 발주 미등록 시 안내 메시지 표시
+                const tableContainer = document.querySelector('#contractDetailMaterialsTab .table-container');
+                const noOrderMessage = document.getElementById('noOrderMessage');
+                const summaryBox = document.querySelector('#contractDetailMaterialsTab .summary-box');
+                const tableTitle = document.querySelector('#contractDetailMaterialsTab > div[style*="font-weight:600"]');
+                
+                if (hasOrder) {
+                    if (tableContainer) tableContainer.style.display = 'block';
+                    if (summaryBox) summaryBox.style.display = 'flex';
+                    if (tableTitle) tableTitle.style.display = 'block';
+                    if (noOrderMessage) noOrderMessage.style.display = 'none';
+                } else {
+                    if (tableContainer) tableContainer.style.display = 'none';
+                    if (summaryBox) summaryBox.style.display = 'none';
+                    if (tableTitle) tableTitle.style.display = 'none';
+                    if (noOrderMessage) noOrderMessage.style.display = 'block';
+                }
             } else if (tab === 'shipment') {
                 document.getElementById('contractDetailShipmentTab').style.display = 'block';
+                // 발주 미등록 시 출고 이력 없음 메시지 표시
+                const summaryBox = document.querySelector('#contractDetailShipmentTab .summary-box');
+                const tableContainer = document.querySelector('#contractDetailShipmentTab .table-container');
+                const noShipmentMessage = document.getElementById('noShipmentMessage');
+                
+                if (hasOrder) {
+                    if (summaryBox) summaryBox.style.display = 'flex';
+                    if (tableContainer) tableContainer.style.display = 'block';
+                    if (noShipmentMessage) noShipmentMessage.style.display = 'none';
+                } else {
+                    if (summaryBox) summaryBox.style.display = 'none';
+                    if (tableContainer) tableContainer.style.display = 'none';
+                    if (noShipmentMessage) noShipmentMessage.style.display = 'block';
+                }
             } else {
                 document.getElementById('contractDetailInfoTab').style.display = 'block';
             }
@@ -896,21 +920,6 @@
             if (!row) return;
             const isOpen = row.style.display !== 'none';
             row.style.display = isOpen ? 'none' : 'table-row';
-        }
-
-        function openContractAddModal() { document.getElementById('contractAddModal').classList.add('active'); }
-
-        let statusChangeTargetRow = null;
-
-        function generateOrderCode() {
-            const now = new Date();
-            const year = String(now.getFullYear()).slice(2);
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            const seq = '01'; // 실제로는 서버에서 순번 관리
-            const code = `IT${year}${month}${day}-${seq}`;
-            document.getElementById('orderCode').textContent = code;
-            return code;
         }
 
 
@@ -949,7 +958,7 @@
                 editContractReason.focus();
                 return;
             }
-            alert('✅ 견적 정보가 수정되었습니다.');
+            alert('견적 정보가 수정되었습니다.');
             closeEditContractModal();
         }
 
@@ -1037,7 +1046,7 @@
 
             const contractNo = statusChangeTargetRow.querySelector('td:first-child strong')?.textContent || '';
             const noteText = note ? `\n수정사유: ${note}` : '';
-            alert(`✅ 상태가 변경되었습니다.\n견적번호: ${contractNo}\n변경 상태: ${meta.text}${noteText}`);
+            alert(`상태가 변경되었습니다.\n견적번호: ${contractNo}\n변경 상태: ${meta.text}${noteText}`);
             closeStatusChangeModal();
         }
 
@@ -1056,7 +1065,7 @@
             });
         }
 
-        function submitForm() { alert('✅ 견적이 등록되었습니다!'); closeModal('contractAddModal'); }
+        function submitForm() { alert('견적이 등록되었습니다!'); closeModal('contractAddModal'); }
 
         function handleSearch() {
             const searchInput = document.querySelector('.search-input');
@@ -1066,7 +1075,7 @@
                 return;
             }
             // 검색 로직 (목업)
-            alert('🔍 검색 기능: ' + keyword);
+            alert('검색 기능: ' + keyword);
         }
 
         function resetFilters() {
@@ -1077,9 +1086,17 @@
             filterSelects.forEach(select => {
                 select.selectedIndex = 0;
             });
-            alert('✅ 필터가 초기화되었습니다.');
+            alert('필터가 초기화되었습니다.');
         }
     </script>
 </body>
 
 </html>
+
+                    
+                    <!-- 출고 이력 없음 안내 메시지 (조건부 표시) -->
+                    <div id="noShipmentMessage" style="display:none;text-align:center;padding:3rem 1rem;color:var(--gray-500)">
+                        <div style="font-size:1.125rem;margin-bottom:0.5rem">📦</div>
+                        <div style="font-weight:600;margin-bottom:0.25rem">출고 이력이 없습니다</div>
+                        <div style="font-size:0.875rem">발주 등록 후 출고가 진행되면 이력을 확인할 수 있습니다.</div>
+                    </div>

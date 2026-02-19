@@ -24,16 +24,16 @@
 </head>
 <body>
     <nav class="nav">
-        <a href="dashboard.html">📊 대시보드</a>
-        <a href="contract.html">📋 견적</a>
-        <a href="inventory.html">📦 재고</a>
-        <a href="order.html">📝 발주</a>
-        <a href="receiving.html">📥 입고</a>
-        <a href="shipment.html">🚚 출고</a>
-        <!-- <a href="purchase.html">🛒 구매</a> -->
-        <a href="as.html">🔧 AS</a>
-        <a href="materials.html" class="active">📁 자재정보</a>
-        <a href="project.html">📊 현장 통합 현황</a>
+        <a href="dashboard.html">대시보드</a>
+        <a href="contract.html">견적</a>
+        <a href="inventory.html">재고</a>
+        <a href="order.html">발주</a>
+        <a href="receiving.html">입고</a>
+        <a href="shipment.html">출고</a>
+        <!-- <a href="purchase.html">구매</a> -->
+        <a href="as.html">AS</a>
+        <a href="materials.html" class="active">자재정보</a>
+        <a href="project.html">현장 통합 현황</a>
     </nav>
     
     <main class="main">
@@ -156,7 +156,7 @@
                     <div class="info-row"><span class="info-label">자재 수</span><span>8종</span></div>
                     <div class="info-row"><span class="info-label">작성일</span><span>2024-01-10</span></div>
                 </div>
-                <div style="font-weight:600;margin-bottom:0.5rem;font-size:0.875rem">📦 구성 자재</div>
+                <div style="font-weight:600;margin-bottom:0.5rem;font-size:0.875rem">구성 자재</div>
                 <table>
                     <thead><tr><th>자재명</th><th>규격</th><th>수량</th><th>단위</th></tr></thead>
                     <tbody>
@@ -715,7 +715,7 @@
             if (detailImagePreview) {
                 detailImagePreview.innerHTML = `
                     <div style="position:relative">
-                        <img src="image.png" alt="자재 이미지 예시" style="width:120px;height:120px;object-fit:cover;border-radius:8px;border:1px solid var(--gray-200)">
+                        <img src="hikcamera.png" alt="자재 이미지 예시" style="width:120px;height:120px;object-fit:cover;border-radius:8px;border:1px solid var(--gray-200)">
                     </div>
                 `;
             }
@@ -723,7 +723,7 @@
             document.getElementById('detailModal').classList.add('active');
         }
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-        function submitForm() { alert('✅ 자재 정보가 저장되었습니다!'); closeModal('formModal'); }
+        function submitForm() { alert('자재 정보가 저장되었습니다!'); closeModal('formModal'); }
         // 자재 세트 관리
         function showSetDetail(setId) { document.getElementById('setDetailModal').classList.add('active'); }
         function closeSetDetailModal() { document.getElementById('setDetailModal').classList.remove('active'); }
@@ -765,7 +765,7 @@
             if (!nameInput || !nameInput.value.trim()) return alert('세트명을 입력해주세요');
             if (tbody.querySelector('td[colspan]')) return alert('자재를 추가해주세요');
             var isEdit = modal.querySelector('.modal-title').textContent.indexOf('수정') !== -1;
-            alert(isEdit ? '✅ 세트가 수정되었습니다!' : '✅ 세트가 등록되었습니다!');
+            alert(isEdit ? '세트가 수정되었습니다!' : '세트가 등록되었습니다!');
             closeSetModal();
         }
         

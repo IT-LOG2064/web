@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>통합 운영 관리 시스템 PRO</title>
+    <style>
+        :root {
+            --primary: #2196F3; --success: #4CAF50; --warning: #FF9800; --danger: #F44336;
+            --bg: #f0f2f5; --white: #ffffff; --border: #e0e0e0;
+        }
+
+        body { font-family: 'Pretendard', sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #333; }
+        .dashboard-container { max-width: 1400px; margin: 0 auto; display: flex; flex-direction: column; gap: 15px; }
+
+        /* 1. KPI 섹션 */
+        .kpi-section { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+        .kpi-card { 
+            background: var(--white); padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
+            cursor: pointer; transition: all 0.2s; border-bottom: 4px solid var(--border);
+        }
+        .kpi-card:hover { transform: translateY(-3px); }
+        .kpi-card.active { border-bottom-color: var(--primary); background: #e3f2fd; }
+        .kpi-title { font-size: 13px; color: #777; font-weight: 600; }
+        .kpi-value { font-size: 26px; font-weight: 800; margin-top: 8px; }
+
+        /* 2. 검색 필터 섹션 */
+        .search-filter-section {
+            background: var(--white); padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; align-items: end;
+        }
+        .filter-group { display: flex; flex-direction: column; gap: 5px; }
+        .filter-group label { font-size: 12px; font-weight: bold; color: #666; }
+        .filter-group input, .filter-group select { 
+            padding: 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; 
+        }
+        .search-btn { 
+            background: var(--primary); color: white; border: none; padding: 10px; border-radius: 6px; 
+            cursor: pointer; font-weight: bold; transition: opacity 0.2s;
+        }
+        .search-btn:hover { opacity: 0.8; }
+
+        /* 3. 중앙 메인 레이아웃 (가변형) */
+        .main-content { display: grid; grid-template-columns: 350px 1fr; gap: 20px; transition: all 0.3s; }
+        .main-content.full-width { grid-template-columns: 1fr; } /* 목록 숨김 시 1단 구성 */
+
+        /* 사이드바 현장 목록 */
+        .site-list-card { background: var(--white); border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .company-group { margin-bottom: 10px; }
+        .company-header {
+            background: #f8f9fa; padding: 12px 15px; border-radius: 8px; font-weight: bold;
+            cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+            border: 1px solid var(--border);
+        }
+        .company-header:hover { background: #eef2f5; }
+        .company-header::after { content: '▼'; font-size: 12px; transition: transform 0.3s; }
+        .company-group.active .company-header::after { transform: rotate(-180deg); }
+        
+        .site-items { display: none; padding-top: 8px; flex-direction: column; gap: 5px; }
+        .company-group.active .site-items { display: flex; }
+        
+        .site-item { 
+            padding: 12px 15px; border-bottom: 1px solid #eee; cursor: pointer; 
+            border-radius: 6px; background: var(--white); transition: background 0.2s;
+        }
+        .site-item:hover:not(.disabled) { background: #f0f7ff; }
+        .site-item.selected { background: #e3f2fd; border-left: 4px solid var(--primary); }
+        .site-item.disabled { cursor: not-allowed; opacity: 0.6; background: #fafafa; }
+        
+        .site-name { font-weight: 600; display: block; margin-bottom: 4px; font-size: 14px; }
+        .site-status { font-size: 12px; color: var(--primary); }
+        .site-status.done { color: #666; }
+        .tag-sample { font-size: 11px; color: #999; background: #eee; padding: 2px 6px; border-radius: 4px; margin-left: 5px; font-weight: normal; }
+
+        /* 타임라인 섹션 */
+        .timeline-card { background: var(--white); border-radius: 12px; padding: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+		.timeline-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
+
+		.timeline-content-area { display: none; } /* JS로 제어 */
+        .timeline-content-area.active { display: block; }
+
+        .timeline-list { 
+            max-height: 500px; overflow-y: auto; padding-left: 30px; border-left: 2px solid #e0e0e0; margin-left: 10px;
+            max-height: 450px; overflow-y: auto; padding-right: 10px;
+        }
+		/* 스크롤바 디자인 */
+		.timeline-list::-webkit-scrollbar { width: 6px; }
+        .timeline-list::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+        
+        .timeline-item { position: relative; padding-bottom: 20px; }
+        .timeline-item::before {
+            content: ""; position: absolute; left: -39px; top: 0; width: 14px; height: 14px; 
+            border-radius: 50%; background: var(--primary); border: 4px solid var(--white);
+        }
+		.time-stamp { font-size: 12px; color: #999; margin-bottom: 5px; }
+		/* 타임 라인 */
+        .process-log { 
+            background: #f8f9fa; padding: 15px; border-radius: 8px; display: flex; 
+            justify-content: space-between; align-items: center; border: 1px solid transparent;
+        }
+        .process-log.clickable:hover { border-color: var(--primary); cursor: pointer; background: #fff; }
+        .process-log.clickable:hover { background: #fff; border-color: var(--primary); box-shadow: 0 2px 5px rgba(33,150,243,0.1); }
+		
+        .log-content { font-weight: 500; font-size: 14px; }
+        .log-content span { color: var(--primary); font-weight: bold; margin-right: 8px; }
+        .log-user { font-size: 12px; color: #666; background: #eee; padding: 4px 8px; border-radius: 4px; display: flex; align-items: center; gap: 5px; }
+        .icon-search { font-size: 10px; color: var(--primary); }
+        
+        /* 다중 현장 표시용 태그 */
+        .log-info-tags { margin-bottom: 8px; display: flex; gap: 10px; font-size: 11px; }
+        .tag-comp { color: #666; font-weight: bold; }
+        .tag-site { color: var(--primary); font-weight: bold; }
+
+        /* 4. 하단 푸터 영역: 재고 및 대여 */
+        .footer-inventory { 
+            display: grid; grid-template-columns: 1fr 1fr; gap: 20px; 
+            margin-top: 10px; padding-top: 10px;
+        }
+        .inventory-box { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .badge-low { color: var(--danger); font-weight: bold; }
+
+        /* 모달창 스타일 */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: #fff; padding: 30px; border-radius: 12px; width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .modal-header { font-size: 18px; font-weight: bold; margin-bottom: 15px; border-bottom: 2px solid var(--bg); padding-bottom: 10px; display: flex; justify-content: space-between; }
+        .modal-close { cursor: pointer; font-size: 20px; color: #999; border: none; background: none; }
+        .modal-body { font-size: 14px; line-height: 1.6; color: #444; }
+        .modal-row { display: flex; margin-bottom: 10px; }
+        .modal-row strong { width: 100px; color: #333; }
+		
+    </style>
+</head>
+<body>
+
+<div class="dashboard-container">
+    <div class="kpi-section">
+        <div class="kpi-card active" onclick="changeView('all', this)">
+            <div class="kpi-title">전체 현장</div>
+            <div class="kpi-value">6건</div>
+        </div>
+        <div class="kpi-card" onclick="changeView('progress', this)">
+            <div class="kpi-title">진행 중 현장</div>
+            <div class="kpi-value">12건</div>
+        </div>
+        <div class="kpi-card" onclick="changeView('today', this)">
+            <div class="kpi-title">금일 프로세스</div>
+            <div class="kpi-value">8건</div>
+        </div>
+        <div class="kpi-card" onclick="changeView('unresolved', this)">
+            <div class="kpi-title" style="color:var(--danger)">⚠️ 미결 처리</div>
+            <div class="kpi-value" style="color:var(--danger)">3건</div>
+        </div>
+    </div>
+
+    <div class="search-filter-section">
+        <div class="filter-group">
+            <label>회사명</label>
+            <input type="text" id="filterCompany" placeholder="회사명 입력">
+        </div>
+        <div class="filter-group">
+            <label>현장명</label>
+            <input type="text" id="filterSite" placeholder="현장명 입력">
+        </div>
+        <div class="filter-group">
+            <label>기간 (시작)</label>
+            <input type="date" id="filterDateStart">
+        </div>
+        <div class="filter-group">
+            <label>기간 (종료)</label>
+            <input type="date" id="filterDateEnd">
+        </div>
+        <div class="filter-group">
+            <label>프로세스 상태</label>
+            <select id="filterStatus">
+                <option value="">전체 상태</option>
+                <option value="견적">견적</option>
+                <option value="발주">발주</option>
+                <option value="입고">입고</option>
+                <option value="출고">출고</option>
+                <option value="설치">설치</option>
+                <option value="AS">AS</option>
+            </select>
+        </div>
+        <button class="search-btn" onclick="alert('필터 조건으로 검색을 실행합니다.')">조회하기</button>
+    </div>
+
+    <div class="main-content" id="mainLayout">
+        <div class="site-list-card" id="siteSidebar">
+            <h3 style="margin-top:0; border-bottom: 1px solid var(--border); padding-bottom:10px;">현장 목록</h3>
+
+			<div class="company-group active" data-status="progress">
+                <div class="company-header" onclick="toggleCompany(this)">제일건설 (2건)</div>
+                <div class="site-items">
+                    <div class="site-item selected site-progress" onclick="showTimeline('site-A', this)">
+                        <span class="site-name">서울 A 아파트 101동</span>
+                        <span class="site-status">● 설치/AS 진행 중</span>
+                    </div>
+                    <div class="site-item site-progress" onclick="showTimeline('site-B', this)">
+                        <span class="site-name">경기 B 빌라 리모델링</span>
+                        <span class="site-status">● 자재 입고 대기</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="company-group active" data-status="mixed">
+                <div class="company-header" onclick="toggleCompany(this)">한라건설 (3건)</div>
+                <div class="site-items">
+                    <div class="site-item disabled site-progress">
+                        <span class="site-name">대전 D 상가 <span class="tag-sample">미구현</span></span>
+                        <span class="site-status">● 견적 진행 중</span>
+                    </div>
+                    <div class="site-item disabled site-done">
+                        <span class="site-name">부산 C 오피스텔 <span class="tag-sample">샘플</span></span>
+                        <span class="site-status done">○ 프로젝트 완료</span>
+                    </div>
+                    <div class="site-item disabled site-done">
+                        <span class="site-name">강원 C 리조트 <span class="tag-sample">샘플</span></span>
+                        <span class="site-status done">○ 프로젝트 완료</span>
+                    </div>
+                </div>
+            </div>
+            <div class="company-group active" data-status="done">
+                <div class="company-header" onclick="toggleCompany(this)">개인고객 (1건)</div>
+                <div class="site-items">
+                    <div class="site-item disabled site-done">
+                        <span class="site-name">제주 E 전원주택 <span class="tag-sample">샘플</span></span>
+                        <span class="site-status done">○ 프로젝트 완료</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="timeline-card">
+            <h3 id="timelineTitle" style="margin-top:0; border-bottom:1px solid #eee; padding-bottom:15px;">
+                최근 프로세스 이력
+            </h3>
+            <div class="timeline-list" id="timelineList">
+                </div>
+        </div>
+    </div>
+
+    <footer class="footer-inventory">
+        <div class="inventory-box">
+            <h4 style="margin:0 0 10px 0">📦 주요 자재 재고</h4>
+            <div style="font-size:13px; color:#666;">LED 조명 A형: 5개 미만 | 스위치 B형: 120개 | 콘센트: 45개</div>
+        </div>
+        <div class="inventory-box">
+            <h4 style="margin:0 0 10px 0">🛠️ 장비 대여 현황</h4>
+            <div style="font-size:13px; color:#666;">사다리(김철수), 전동드릴(박민수), 수평기(지연)</div>
+        </div>
+    </footer>
+</div>
+
+<div class="modal-overlay" id="modal">
+    <div class="modal-content">
+        <h3 id="modalTitle">상세 이력</h3>
+        <hr>
+        <div id="modalBody" style="line-height:1.6; font-size:14px;"></div>
+        <br>
+        <button onclick="closeModal()" style="width:100%; padding:10px; cursor:pointer;">닫기</button>
+    </div>
+</div>
+
+<script>
+    // 샘플 데이터
+    const allData = [
+        { id: 1, type: 'AS', company: '제일건설', site: '서울 A 아파트', title: '거실 월패드 통신 불량 접수', user: '고객센터', date: '2026-03-25 15:30', unresolved: true, today: true },
+        { id: 2, type: '설치', company: '제일건설', site: '서울 A 아파트', title: '101동 전세대 스위치 설치 완료', user: '김철수 팀장', date: '2026-03-25 14:20', unresolved: false, today: true },
+        { id: 3, type: '출고', company: '한라건설', site: '강원 C 리조트', title: '기초 자재 1차 반출', user: '이영희 대리', date: '2026-03-25 09:30', unresolved: false, today: true },
+        { id: 4, type: '지연', company: '제일건설', site: '경기 B 빌라', title: 'B타입 자재 수급 지연 (입고 대기)', user: '박민수 사원', date: '2026-03-24 16:00', unresolved: true, today: false },
+        { id: 5, type: '발주', company: '개인고객', site: '제주 전원주택', title: '시스템 창호 부자재 발주', user: '최현우 과장', date: '2026-03-24 11:00', unresolved: false, today: false },
+        { id: 6, type: 'AS', company: '현대개발', site: '인천 D 상가', title: '현관 센서등 작동 불량 AS 대기', user: '관리자', date: '2026-03-23 10:00', unresolved: true, today: false },
+		// allData 배열 안에 추가 (스크롤 테스트용)
+		{ id: 7, type: '입고', company: '제일건설', site: '서울 A 아파트', title: '월패드 모듈 100ea 입고', user: '박민수 사원', date: '2026-03-14 09:00', unresolved: false, today: false },
+		{ id: 8, type: '견적', company: '제일건설', site: '서울 A 아파트', title: '추가 배선 공사 견적 제출', user: '최현우 과장', date: '2026-03-12 14:00', unresolved: false, today: false },
+		{ id: 9, type: '발주', company: '제일건설', site: '서울 A 아파트', title: '거실 조명 세트 최종 발주', user: '김철수 팀장', date: '2026-03-10 11:00', unresolved: false, today: false },
+		{ id: 10, type: 'AS', company: '제일건설', site: '서울 A 아파트', title: '사전 점검시 스위치 불량 교체', user: '김철수 팀장', date: '2026-03-08 16:00', unresolved: false, today: false },
+		{ id: 11, type: '입고', company: '제일건설', site: '서울 A 아파트', title: '케이블 및 자재 1차 입고', user: '박민수 사원', date: '2026-03-05 10:00', unresolved: false, today: false },
+		{ id: 12, type: '견적', company: '제일건설', site: '서울 A 아파트', title: '최초 현장 실사 및 견적 확정', user: '최현우 과장', date: '2026-03-01 13:00', unresolved: false, today: false }
+    ];
+
+    // 1. 화면 뷰 전환 (핵심 로직)
+    function changeView(viewType, element) {
+        document.querySelectorAll('.kpi-card').forEach(c => c.classList.remove('active'));
+        element.classList.add('active');
+
+        const sidebar = document.getElementById('siteSidebar');
+        const layout = document.getElementById('mainLayout');
+        const filterStatus = document.getElementById('filterStatus');
+
+		const allSites = document.querySelectorAll('.site-item');
+		const companyGroups = document.querySelectorAll('.company-group');
+
+		// 현장 목록 내부 필터링 로직 추가
+		if (viewType === 'all') {
+			allSites.forEach(s => s.style.display = 'block');
+			companyGroups.forEach(g => g.style.display = 'block');
+		} else if (viewType === 'progress') {
+				// 진행 중인 현장만 표시
+            allSites.forEach(site => {
+                if (site.classList.contains('site-progress')) {
+                    site.style.display = 'block';
+                } else {
+                    site.style.display = 'none';
+                }
+            });
+            // 하위 현장이 모두 숨겨진 회사 그룹도 숨김 처리
+            companyGroups.forEach(group => {
+                const visibleItems = group.querySelectorAll('.site-progress');
+                group.style.display = visibleItems.length > 0 ? 'block' : 'none';
+            });
+		}
+
+        if (viewType === 'all' || viewType === 'progress') {
+            // 사이드바 노출 뷰
+            sidebar.style.display = 'block';
+            layout.classList.remove('full-width');
+            renderTimeline(allData.filter(d => d.company === '제일건설' && d.site === '서울 A 아파트'), "서울 A 아파트 이력");
+            filterStatus.value = "";
+        } else {
+            // 사이드바 숨김 뷰 (금일, 미결)
+            sidebar.style.display = 'none';
+            layout.classList.add('full-width');
+            
+            if (viewType === 'today') {
+                filterStatus.value = "";
+                renderTimeline(allData.filter(d => d.today), "전체 현장 금일 프로세스", true);
+            } else if (viewType === 'unresolved') {
+                filterStatus.value = "AS"; // 필터 자동 세팅
+                renderTimeline(allData.filter(d => d.unresolved), "전체 현장 미결/AS 처리 현황", true);
+            }
+        }
+    }
+
+    // 2. 타임라인 렌더링
+    function renderTimeline(data, title, showMeta = false) {
+        document.getElementById('timelineTitle').innerText = title;
+        const list = document.getElementById('timelineList');
+        list.innerHTML = '';
+
+        data.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'timeline-item';
+            div.innerHTML = `
+                <div class="time-stamp">${item.date}</div>
+                <div class="process-log clickable" onclick="openModal(${item.id})">
+                    <div class="log-body">
+                        ${showMeta ? `<div class="log-info-tags"><span class="tag-comp">${item.company}</span> <span class="tag-site">${item.site}</span></div>` : ''}
+                        <div class="log-content"><span style="color:var(--primary)">[${item.type}]</span> ${item.title}</div>
+                    </div>
+                    <div class="log-user">🔍 ${item.user}</div>
+                </div>
+            `;
+            list.appendChild(div);
+        });
+    }
+
+    // 3. 기타 인터랙션
+    function toggleCompany(header) {
+        header.parentElement.classList.toggle('active');
+    }
+
+    function showTimeline(site, element) {
+        document.querySelectorAll('.site-item').forEach(s => s.classList.remove('selected'));
+        element.classList.add('selected');
+        renderTimeline(allData.filter(d => d.site.includes(site.split('-')[1])), site + " 상세 이력");
+    }
+
+    function openModal(id) {
+        const item = allData.find(d => d.id === id);
+        document.getElementById('modalTitle').innerText = `[${item.type}] 상세 내역`;
+        document.getElementById('modalBody').innerHTML = `
+            <p><strong>발생 일시:</strong> ${item.date}</p>
+            <p><strong>소속 현장:</strong> ${item.company} - ${item.site}</p>
+            <p><strong>상세 내용:</strong> ${item.title}에 대한 상세 로그 데이터입니다. 시스템 연동을 통해 관련 문서를 불러올 수 있습니다.</p>
+            <p><strong>최종 처리자:</strong> ${item.user}</p>
+        `;
+        document.getElementById('modal').classList.add('active');
+    }
+
+    function closeModal() { document.getElementById('modal').classList.remove('active'); }
+
+    // 초기 실행
+    window.onload = () => renderTimeline(allData.filter(d => d.site === '서울 A 아파트'), "서울 A 아파트 이력");
+</script>
+
+</body>
+</html>

@@ -142,8 +142,13 @@
 			justify-content: space-between;
 			align-items: center;
 		}
-.summary-info { font-size: 13px; color: #444; display: flex; gap: 15px; }
-.summary-info b { color: var(--primary); }
+		.summary-info { font-size: 13px; color: #444; display: flex; gap: 15px; }
+		.summary-info b { color: var(--primary); }
+		/* 모달 내 상세 테이블 스타일 */
+		.detail-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
+		.detail-table th, .detail-table td { border: 1px solid #eee; padding: 10px; text-align: left; }
+		.detail-table th { background: #f8f9fa; color: #666; }
+		.status-badge { padding: 2px 6px; border-radius: 4px; font-size: 11px; background: #e3f2fd; color: var(--primary); }
     </style>
 </head>
 <body>
@@ -156,14 +161,14 @@
         </div>
         <div class="kpi-card" onclick="changeView('progress', this)">
             <div class="kpi-title">진행 중 현장</div>
-            <div class="kpi-value">12건</div>
+            <div class="kpi-value">3건</div>
         </div>
         <div class="kpi-card" onclick="changeView('today', this)">
             <div class="kpi-title">금일 프로세스</div>
             <div class="kpi-value">8건</div>
         </div>
         <div class="kpi-card" onclick="changeView('unresolved', this)">
-            <div class="kpi-title" style="color:var(--danger)">⚠️ 미결 처리</div>
+            <div class="kpi-title" style="color:var(--danger)">?? 미결 처리</div>
             <div class="kpi-value" style="color:var(--danger)">3건</div>
         </div>
     </div>
@@ -264,11 +269,11 @@
 
     <footer class="footer-inventory">
         <div class="inventory-box">
-            <h4 style="margin:0 0 10px 0">📦 주요 자재 재고</h4>
+            <h4 style="margin:0 0 10px 0">?? 주요 자재 재고</h4>
             <div style="font-size:13px; color:#666;">LED 조명 A형: 5개 미만 | 스위치 B형: 120개 | 콘센트: 45개</div>
         </div>
         <div class="inventory-box">
-            <h4 style="margin:0 0 10px 0">🛠️ 장비 대여 현황</h4>
+            <h4 style="margin:0 0 10px 0">??? 장비 대여 현황</h4>
             <div style="font-size:13px; color:#666;">사다리(김철수), 전동드릴(박민수), 수평기(지연)</div>
         </div>
     </footer>
@@ -325,16 +330,21 @@
 		} else if (viewType === 'progress') {
 				// 진행 중인 현장만 표시
             allSites.forEach(site => {
-                if (site.classList.contains('site-progress')) {
-                    site.style.display = 'block';
-                } else {
-                    site.style.display = 'none';
-                }
+				// 'site-progress' 클래스가 있는 것만 표시
+				site.style.display = site.classList.contains('site-progress') ? 'block' : 'none';
+                //if (site.classList.contains('site-progress')) {
+                //    site.style.display = 'block';
+                //} else {
+                //    site.style.display = 'none';
+                //}
             });
             // 하위 현장이 모두 숨겨진 회사 그룹도 숨김 처리
             companyGroups.forEach(group => {
-                const visibleItems = group.querySelectorAll('.site-progress');
-                group.style.display = visibleItems.length > 0 ? 'block' : 'none';
+				// 그룹 내에 표시되는(block) 현장이 하나라도 있는지 확인
+				const hasVisible = Array.from(group.querySelectorAll('.site-item')).some(s => s.style.display === 'block');
+				group.style.display = hasVisible ? 'block' : 'none';
+                //const visibleItems = group.querySelectorAll('.site-progress');
+                //group.style.display = visibleItems.length > 0 ? 'block' : 'none';
             });
 		}
 
@@ -359,6 +369,94 @@
         }
     }
 
+    // 3. 기타 인터랙션
+    function toggleCompany(header) {
+        header.parentElement.classList.toggle('active');
+    }
+
+    function showTimeline(site, element) {
+		if (element.classList.contains('disabled')) return;
+		
+        document.querySelectorAll('.site-item').forEach(s => s.classList.remove('selected'));
+        element.classList.add('selected');
+
+		// 요약 바 업데이트 및 노출
+		const summaryBar = document.getElementById('siteSummaryBar');
+		const summaryContent = document.getElementById('summaryContent');
+		const meta = siteMeta[site];
+		
+		if (meta) {
+			summaryBar.style.display = 'flex';
+			summaryContent.innerHTML = `
+			<span>?? <b>설치 시스템:</b> ${meta.desc}</span>
+            <span>?? <b>CCTV:</b> ${meta.cctv}대</span>
+            <span>?? <b>출입관리:</b> ${meta.access}소</span>
+            <span>??? <b>AS이력:</b> ${meta.as}건</span>
+			`;
+		} else {
+			summaryBar.style.display = 'none';
+		}
+
+		const siteName = element.querySelector('.site-name').innerText.split(' ')[0];
+		renderTimeline(allData.filter(d => d.site.includes(siteName)), siteName + " 상세 이력");
+    }
+
+    function openModal(id) {
+		const modalTitle = document.getElementById('modalTitle');
+		const modalBody = document.getElementById('modalBody');
+		
+		// 1. 현장 상세 정보 버튼을 눌렀을 때 ('site-detail-sample' 처리)
+		if (id === 'site-detail-sample') {
+			const selectedSite = document.querySelector('.site-item.selected');
+			const siteId = selectedSite ? selectedSite.getAttribute('onclick').match(/'([^']+)'/)[1] : 'site-A';
+			const meta = siteMeta[siteId];
+			
+			modalTitle.innerText = `[${siteId}] 시스템 구성 상세`;
+			modalBody.innerHTML = `
+			<div style="margin-bottom:15px; padding:10px; background:#f0f7ff; border-radius:8px;">
+                <strong>설치 패키지:</strong> ${meta.desc}
+            </div>
+            <table class="detail-table">
+                <thead>
+                    <tr><th>구분</th><th>장비명</th><th>수량</th><th>상태</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>보안</td><td>CCTV 카메라 (4MP)</td><td>${meta.cctv}대</td><td><span class="status-badge">정상</span></td></tr>
+                    <tr><td>출입</td><td>RFID 카드리더</td><td>${meta.access}소</td><td><span class="status-badge">정상</span></td></tr>
+                    <tr><td>네트워크</td><td>PoE 허브 (8포트)</td><td>1대</td><td><span class="status-badge">정상</span></td></tr>
+                    <tr><td>기타</td><td>스마트 월패드</td><td>1대</td><td><span class="status-badge">정상</span></td></tr>
+                </tbody>
+            </table>
+            <p style="font-size:12px; color:#999; margin-top:15px;">* 위 정보는 현장 실사 데이터를 기반으로 자동 생성되었습니다.</p>
+			`;
+		} 
+		// 2. 기존 로그 이력을 눌렀을 때 (숫자 ID 처리)
+		else {
+			const item = allData.find(d => d.id == id);
+			if (!item) return;
+			
+			modalTitle.innerText = `[${item.type}] 상세 내역`;
+			modalBody.innerHTML = `
+				<p><strong>발생 일시:</strong> ${item.date}</p>
+	            <p><strong>소속 현장:</strong> ${item.company} - ${item.site}</p>
+		        <p><strong>상세 내용:</strong> ${item.title}에 대한 상세 데이터입니다.</p>
+			    <p><strong>최종 처리자:</strong> ${item.user}</p>
+	        `;
+		}
+		document.getElementById('modal').classList.add('active');
+	}
+
+    function closeModal() { document.getElementById('modal').classList.remove('active'); }
+
+    // 초기 실행
+	//    window.onload = () => renderTimeline(allData.filter(d => d.site === '서울 A 아파트'), "서울 A 아파트 이력");
+	window.onload = () => {
+		const firstSite = document.querySelector('.site-item.selected');
+		if (firstSite) {
+			// 첫 번째 현장을 클릭한 것과 동일한 효과를 줌
+			showTimeline('site-A', firstSite);
+		}
+	};
     // 2. 타임라인 렌더링
     function renderTimeline(data, title, showMeta = false) {
         document.getElementById('timelineTitle').innerText = title;
@@ -375,61 +473,13 @@
                         ${showMeta ? `<div class="log-info-tags"><span class="tag-comp">${item.company}</span> <span class="tag-site">${item.site}</span></div>` : ''}
                         <div class="log-content"><span style="color:var(--primary)">[${item.type}]</span> ${item.title}</div>
                     </div>
-                    <div class="log-user">🔍 ${item.user}</div>
+                    <div class="log-user"> ${item.user}</div>
                 </div>
             `;
             list.appendChild(div);
         });
     }
 
-    // 3. 기타 인터랙션
-    function toggleCompany(header) {
-        header.parentElement.classList.toggle('active');
-    }
-
-    function showTimeline(site, element) {
-		if (element.classList.contains('disabled')) return;
-		
-        document.querySelectorAll('.site-item').forEach(s => s.classList.remove('selected'));
-        element.classList.add('selected');
-
-		// 요약 바 업데이트 및 노출
-		const summaryBar = document.getElementById('siteSummaryBar');
-		const summaryContent = document.getElementById('summaryContent');
-		const meta = siteMeta[siteId];
-		
-		if (meta) {
-			summaryBar.style.display = 'flex';
-			summaryContent.innerHTML = `
-			<span> <b>설치 시스템:</b> ${meta.desc}</span>
-            <span> <b>CCTV:</b> ${meta.cctv}대</span>
-            <span> <b>출입관리:</b> ${meta.access}소</span>
-            <span> <b>AS이력:</b> ${meta.as}건</span>
-			`;
-		} else {
-			summaryBar.style.display = 'none';
-		}
-
-		const siteName = element.querySelector('.site-name')?.innerText || siteId;
-        renderTimeline(allData.filter(d => d.site.includes(site.split('-')[1])), site + " 상세 이력");
-    }
-
-    function openModal(id) {
-        const item = allData.find(d => d.id === id);
-        document.getElementById('modalTitle').innerText = `[${item.type}] 상세 내역`;
-        document.getElementById('modalBody').innerHTML = `
-            <p><strong>발생 일시:</strong> ${item.date}</p>
-            <p><strong>소속 현장:</strong> ${item.company} - ${item.site}</p>
-            <p><strong>상세 내용:</strong> ${item.title}에 대한 상세 로그 데이터입니다. 시스템 연동을 통해 관련 문서를 불러올 수 있습니다.</p>
-            <p><strong>최종 처리자:</strong> ${item.user}</p>
-        `;
-        document.getElementById('modal').classList.add('active');
-    }
-
-    function closeModal() { document.getElementById('modal').classList.remove('active'); }
-
-    // 초기 실행
-    window.onload = () => renderTimeline(allData.filter(d => d.site === '서울 A 아파트'), "서울 A 아파트 이력");
 </script>
 
 </body>
